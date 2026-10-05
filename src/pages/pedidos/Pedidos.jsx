@@ -1,45 +1,36 @@
+import { usePaginacion, BarraListado, Paginador } from "../../components/Listado.jsx";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BotonEliminar from "../../components/BotonEliminar";
+import BotonAnular from "../../components/BotonAnular.jsx";
+import { conEstado } from "../../utils/listados.js";
+import HistorialEstados from "../../components/HistorialEstados.jsx";
+import { formatearFecha } from "../../data/insumosVinculos.js";
+import {
+  pedidosMock as pedidosIniciales,
+  codigoPedido,
+  etiquetaEstadoPedido,
+  pagoCompletoPedido,
+} from "../../data/pedidosMock.js";
+import Permiso from "../../components/Permiso.jsx";
+import { puedeVerDato } from "../../permisos.js";
 
-const pedidosIniciales = [
-  {
-    id_pedido: 1,
-    cliente: "M&M Trading S.A.S.",
-    acopio: "Acopio Chocó",
-    fecha_pedido: "2026-09-20",
-    estado: "ABIERTO",
-    moneda: "COP",
-    tasa_cambio: null,
-    valor_total: 125000000,
-    valor_pagado: 112500000,
-    porcentaje_pago_inicial: 0.9,
-  },
-  {
-    id_pedido: 2,
-    cliente: "Global Metals International",
-    acopio: "Acopio Bolívar",
-    fecha_pedido: "2026-09-18",
-    estado: "EN_PRODUCCION",
-    moneda: "USD",
-    tasa_cambio: 4200,
-    valor_total: 28500,
-    valor_pagado: 25650,
-    porcentaje_pago_inicial: 0.9,
-  },
-  {
-    id_pedido: 3,
-    cliente: "M&M Trading S.A.S.",
-    acopio: "Acopio Chocó",
-    fecha_pedido: "2026-09-15",
-    estado: "LISTO",
-    moneda: "COP",
-    tasa_cambio: null,
-    valor_total: 85000000,
-    valor_pagado: 76500000,
-    porcentaje_pago_inicial: 0.9,
-  },
+// Columnas del Excel: lo mismo que se ve en pantalla, con fechas y valores legibles.
+const columnasExcel = [
+  { titulo: "Pedido", valor: (p) => codigoPedido(p.id_pedido) },
+  { titulo: "Cliente", valor: (p) => p.cliente },
+  { titulo: "Acopio", valor: (p) => p.acopio },
+  { titulo: "Fecha del pedido", valor: (p) => formatearFecha(p.fecha_pedido) },
+  { titulo: "Estado", valor: (p) => etiquetaEstadoPedido(p.estado) },
+  { titulo: "Fecha del estado", valor: (p) => formatearFecha(p.fecha_estado || p.fecha_pedido) },
+  { titulo: "Moneda", valor: (p) => p.moneda },
+  { titulo: "Tasa de cambio", valor: (p) => p.tasa_cambio || "No aplica" },
+  { titulo: "Valor total", valor: (p) => Number(p.valor_total) },
+  { titulo: "Valor pagado", valor: (p) => Number(p.valor_pagado) },
+  { titulo: "Saldo pendiente", valor: (p) => Number(p.valor_total) - Number(p.valor_pagado) },
+  { titulo: "Pago completo", valor: (p) => (pagoCompletoPedido(p) ? "Sí" : "No") },
 ];
+
+const COLUMNAS_PRECIO = ["Tasa de cambio", "Valor total", "Valor pagado", "Saldo pendiente", "Pago completo"];
 
 const formatearValor = (valor, moneda) => {
   if (moneda === "USD") {
@@ -70,11 +61,8 @@ export default function Pedidos() {
   const [busqueda, setBusqueda] = useState("");
   const [estado, setEstado] = useState("TODOS");
 
-  const eliminarPedido = (id) => {
-    setPedidos((actuales) =>
-      actuales.filter((p) => p.id_pedido !== id)
-    );
-  };
+  const anularPedido = (id, motivo) =>
+    setPedidos((a) => a.map((p) => (p.id_pedido === id ? conEstado(p, "ANULADO", motivo) : p)));
 
   const pedidosFiltrados = pedidos.filter((pedido) => {
     const texto = busqueda.toLowerCase();
@@ -100,6 +88,8 @@ export default function Pedidos() {
     (pedido) => pedido.estado === "EN_PRODUCCION"
   ).length;
 
+  const pag = usePaginacion(pedidosFiltrados);
+
   return (
     <div className="pedidos-page">
 
@@ -109,12 +99,12 @@ export default function Pedidos() {
           <p>Gestión de pedidos registrados</p>
         </div>
 
-        <button
+        <Permiso accion="crear"><button
           className="btn-registrar-pedido"
           onClick={() => navigate("/pedidos/registrar")}
         >
           + Registrar pedido
-        </button>
+        </button></Permiso>
       </div>
 
       {/* BARRA DE BÚSQUEDA Y ESTADO */}
@@ -145,14 +135,14 @@ export default function Pedidos() {
           </option>
           <option value="LISTO">Listo</option>
           <option value="ENTREGADO">Entregado</option>
-          <option value="CANCELADO">Cancelado</option>
+          <option value="ANULADO">Anulado</option>
         </select>
 
       </div>
 
       {/* RESUMEN */}
 
-      <div className="pedidos-resumen">
+      <Permiso dato="estadisticas"><div className="pedidos-resumen">
 
         <div className="resumen-pedido-item">
           <span>Total pedidos</span>
@@ -169,11 +159,13 @@ export default function Pedidos() {
           <strong>{pedidosProduccion}</strong>
         </div>
 
-      </div>
+      </div></Permiso>
 
       {/* LISTA */}
 
       <div className="pedidos-lista">
+
+        <BarraListado pag={pag} archivo="pedidos" excel columnas={puedeVerDato("precios") ? columnasExcel : columnasExcel.filter((c) => !COLUMNAS_PRECIO.includes(c.titulo))} />
 
         {pedidosFiltrados.length === 0 ? (
           <div className="sin-pedidos">
@@ -183,7 +175,7 @@ export default function Pedidos() {
             </p>
           </div>
         ) : (
-          pedidosFiltrados.map((pedido) => (
+          pag.items.map((pedido) => (
             <div
               className="pedido-card"
               key={pedido.id_pedido}
@@ -216,7 +208,17 @@ export default function Pedidos() {
 
                 <div className="dato-pedido">
                   <span>Fecha del pedido</span>
-                  <strong>{pedido.fecha_pedido}</strong>
+                  <strong>{formatearFecha(pedido.fecha_pedido)}</strong>
+                </div>
+
+                <div className="dato-pedido">
+                  <span>Estado</span>
+                  <strong>{formatearEstado(pedido.estado)}</strong>
+                </div>
+
+                <div className="dato-pedido">
+                  <span>Fecha del estado</span>
+                  <strong>{formatearFecha(pedido.fecha_estado || pedido.fecha_pedido)}</strong>
                 </div>
 
                 <div className="dato-pedido">
@@ -224,16 +226,16 @@ export default function Pedidos() {
                   <strong>{pedido.moneda}</strong>
                 </div>
 
-                <div className="dato-pedido">
+                <Permiso dato="precios"><div className="dato-pedido">
                   <span>Tasa de cambio</span>
                   <strong>
                     {pedido.tasa_cambio
                       ? pedido.tasa_cambio
                       : "No aplica"}
                   </strong>
-                </div>
+                </div></Permiso>
 
-                <div className="dato-pedido">
+                <Permiso dato="precios"><div className="dato-pedido">
                   <span>Valor total</span>
                   <strong>
                     {formatearValor(
@@ -241,9 +243,9 @@ export default function Pedidos() {
                       pedido.moneda
                     )}
                   </strong>
-                </div>
+                </div></Permiso>
 
-                <div className="dato-pedido">
+                <Permiso dato="precios"><div className="dato-pedido">
                   <span>Valor pagado</span>
                   <strong>
                     {formatearValor(
@@ -251,17 +253,7 @@ export default function Pedidos() {
                       pedido.moneda
                     )}
                   </strong>
-                </div>
-
-                <div className="dato-pedido">
-                  <span>Pago inicial</span>
-                  <strong>
-                    {(
-                      pedido.porcentaje_pago_inicial * 100
-                    ).toFixed(0)}
-                    %
-                  </strong>
-                </div>
+                </div></Permiso>
 
               </div>
 
@@ -278,8 +270,9 @@ export default function Pedidos() {
                   Consultar
                 </button>
 
-                <button
+                <Permiso accion="editar"><button
                   className="btn-editar-pedido"
+                  disabled={pedido.estado === "ANULADO"}
                   onClick={() =>
                     navigate(
                       `/pedidos/editar/${pedido.id_pedido}`
@@ -287,13 +280,15 @@ export default function Pedidos() {
                   }
                 >
                   Editar
-                </button>
+                </button></Permiso>
 
-                <BotonEliminar
-                  entidad="pedido"
-                  nombre={`el pedido #${pedido.id_pedido} de ${pedido.cliente}`}
-                  onConfirmar={() => eliminarPedido(pedido.id_pedido)}
+                <HistorialEstados
+                  titulo={`Historial del pedido #${pedido.id_pedido}`}
+                  historial={pedido.historial || []}
+                  etiqueta={etiquetaEstadoPedido}
                 />
+
+                <BotonAnular entidad="pedido" nombre={`el pedido #${pedido.id_pedido} de ${pedido.cliente}`} deshabilitado={pedido.estado === "ANULADO"} onConfirmar={(m) => anularPedido(pedido.id_pedido, m)} />
 
               </div>
 
@@ -303,6 +298,8 @@ export default function Pedidos() {
 
       </div>
 
+
+      <Paginador pag={pag} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { comprasDisponibles, ventasDisponibles } from "../../data/insumosVinculos.js";
 import { filtrarSoloLetras, validarCampo } from "../../utils/validaciones.js";
 
 export default function InsumoPolimetalicoForm({
@@ -27,9 +28,19 @@ export default function InsumoPolimetalicoForm({
     datosIniciales.acopio || ""
   );
 
-  const [estado, setEstado] = useState(
-    datosIniciales.estado || "ACTIVO"
+  const [fechaIngreso, setFechaIngreso] = useState(
+    datosIniciales.fecha_ingreso || ""
   );
+
+  const [compraAsociada, setCompraAsociada] = useState(
+    datosIniciales.compra_asociada || ""
+  );
+
+  const [ventaAsociada, setVentaAsociada] = useState(
+    datosIniciales.venta_asociada ? String(datosIniciales.venta_asociada) : ""
+  );
+
+  const hoy = new Date().toISOString().slice(0, 10);
 
   const [error, setError] = useState("");
 
@@ -61,6 +72,17 @@ export default function InsumoPolimetalicoForm({
       return;
     }
 
+    if (!fechaIngreso) {
+      setError("La fecha de ingreso es obligatoria.");
+      return;
+    }
+
+    if (fechaIngreso > hoy) {
+      setError("La fecha de ingreso no puede ser posterior a hoy.");
+      return;
+    }
+
+
     const datos = {
       tipo_insumo: "POLIMETALICO",
       nombre: nombre.trim(),
@@ -68,7 +90,9 @@ export default function InsumoPolimetalicoForm({
       unidad_medida: unidadMedida,
       mina,
       acopio,
-      estado,
+      fecha_ingreso: fechaIngreso,
+      compra_asociada: compraAsociada,
+      venta_asociada: ventaAsociada ? Number(ventaAsociada) : null,
     };
 
     onGuardar(datos);
@@ -218,12 +242,47 @@ export default function InsumoPolimetalicoForm({
               </option>
             </select>
           </div>
+          <div className="form-campo">
+            <label htmlFor="fecha-ingreso-insumo-polimetalico">Fecha de ingreso</label>
+            <input
+              id="fecha-ingreso-insumo-polimetalico"
+              type="date"
+              max={hoy}
+              value={fechaIngreso}
+              onChange={(e) => setFechaIngreso(e.target.value)}
+            />
+          </div>
+
+          <div className="form-campo">
+            <label htmlFor="compra-insumo-polimetalico">Compra asociada (opcional)</label>
+            <select
+              id="compra-insumo-polimetalico"
+              value={compraAsociada}
+              onChange={(e) => setCompraAsociada(e.target.value)}
+            >
+              <option value="">Sin compra (ingreso manual)</option>
+              {comprasDisponibles().map((c) => (
+                <option key={c.id} value={c.id}>
+                  {`Compra #${c.id} · ${c.proveedor}`}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {modo === "editar" && (
             <div className="form-campo">
-              <label htmlFor="estado-insumo-polimetalico">Estado</label>
-              <select id="estado-insumo-polimetalico" value={estado} onChange={(e) => setEstado(e.target.value)}>
-                <option value="ACTIVO">Activo</option>
-                <option value="INACTIVO">Inactivo</option>
+              <label htmlFor="venta-insumo-polimetalico">Venta asociada (salida del insumo)</label>
+              <select
+                id="venta-insumo-polimetalico"
+                value={ventaAsociada}
+                onChange={(e) => setVentaAsociada(e.target.value)}
+              >
+                <option value="">Aún no ha salido</option>
+                {ventasDisponibles("POLIMETALICO").map((v) => (
+                  <option key={v.id_venta} value={String(v.id_venta)}>
+                    {`Venta #${v.id_venta} · ${v.cliente} · ${v.cantidad}`}
+                  </option>
+                ))}
               </select>
             </div>
           )}

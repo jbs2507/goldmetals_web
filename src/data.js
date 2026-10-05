@@ -22,6 +22,12 @@ export const pedidos = [
   { cliente: 'Compraventa Rápida', entrega: '20 sep 2026', kg: '430', piden: '430' },
 ]
 
+export const pedidosOro = [
+  { cliente: 'Mumbai Gold Traders', entrega: '12 oct 2026', gr: '1,000', piden: '1,000' },
+  { cliente: 'Shenzhen Precious Metals', entrega: '28 oct 2026', gr: '650', piden: '800' },
+  { cliente: 'Miami Bullion Group', entrega: '05 nov 2026', gr: '300', piden: '500' },
+]
+
 export const produccion = [
   { etapa: 'Recepción de material', pct: 100 },
   { etapa: 'Procesamiento', pct: 75 },
@@ -30,6 +36,8 @@ export const produccion = [
   { etapa: 'Empaque y despacho', pct: 0 },
 ]
 
+// Orden de los módulos según la ficha del proyecto:
+// Configuración → Compras → Producción → Ventas.
 export const menu = [
   {
     seccion: 'PRINCIPAL',
@@ -49,32 +57,26 @@ export const menu = [
   {
     seccion: 'COMPRAS',
     items: [
-      { label: 'Compras', path: '/compras' },
-      { label: 'Proveedores', path: '/proveedores' }
+      { label: 'Insumos', path: '/insumos' },
+      { label: 'Proveedores', path: '/proveedores' },
+      { label: 'Compras', path: '/compras' }
     ]
   },
 
   {
-    seccion: 'OPERACIÓN',
+    seccion: 'PRODUCCIÓN',
     items: [
-      { label: 'Producción', path: '/produccion' },
-      { label: 'Empleados', path: '/empleados' }
-    ]
-  },
-
-  {
-    seccion: 'INSUMOS',
-    items: [
-      { label: 'Insumos', path: '/insumos' }
+      { label: 'Empleados', path: '/empleados' },
+      { label: 'Producción', path: '/produccion' }
     ]
   },
 
   {
     seccion: 'VENTAS',
     items: [
-      { label: 'Ventas', path: '/ventas' },
       { label: 'Clientes', path: '/clientes' },
-      { label: 'Pedidos', path: '/pedidos' }
+      { label: 'Pedidos', path: '/pedidos' },
+      { label: 'Ventas', path: '/ventas' }
     ]
   }
 ];

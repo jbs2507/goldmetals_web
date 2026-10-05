@@ -1,59 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import VentaForm from "../../components/ventas/VentaForm.jsx";
+import { ventasVisibles as ventas } from "../../data/ventasMock.js";
 
-const ventas = [
-  {
-    id_venta: 1,
-    cliente: "M&M Trading S.A.S.",
-    pedido: "PED-001",
-    tipo_material: "Oro en lingote",
-    cantidad: "500 g",
-    precio: "120000000",
-    moneda: "COP",
-    fecha: "2026-09-20",
-    pais_destino: "India",
-    encargado_transporte: "Carlos Gómez",
-    placa_vehiculo: "ABC123",
-    estado: "REGISTRADA",
-    documentos: true,
-    pago_completo: false,
-    produccion_lista: false,
-  },
-  {
-    id_venta: 2,
-    cliente: "Global Metals International",
-    pedido: "PED-002",
-    tipo_material: "Arena procesada",
-    cantidad: "1.000 kg",
-    precio: "85000000",
-    moneda: "COP",
-    fecha: "2026-09-18",
-    pais_destino: "China",
-    encargado_transporte: "Juan Rodríguez",
-    placa_vehiculo: "XYZ789",
-    estado: "DESPACHADA",
-    documentos: true,
-    pago_completo: false,
-    produccion_lista: false,
-  },
-  {
-    id_venta: 3,
-    cliente: "Global Metals International",
-    pedido: "PED-003",
-    tipo_material: "Oro en lingote",
-    cantidad: "250 g",
-    precio: "62000000",
-    moneda: "COP",
-    fecha: "2026-09-15",
-    pais_destino: "Estados Unidos",
-    encargado_transporte: "Laura Pérez",
-    placa_vehiculo: "DEF456",
-    estado: "CANCELADA",
-    documentos: false,
-    pago_completo: false,
-    produccion_lista: false,
-  },
-];
 
 export default function EditarVenta() {
   const navigate = useNavigate();

@@ -44,8 +44,8 @@ export default function VentaFiltros({
           ENTREGADA
         </option>
 
-        <option value="CANCELADA">
-          CANCELADA
+        <option value="ANULADA">
+          ANULADA
         </option>
       </select>
 

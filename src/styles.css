@@ -2002,9 +2002,9 @@ body {
   border: 1px solid #b9ddc5;
 }
 
-/* CANCELADA - ROJO */
+/* ANULADA - ROJO */
 
-.estado-cancelada {
+.estado-anulada {
   background: #fbeaea;
   color: #b84a4a;
   border: 1px solid #e7b5b5;
@@ -3738,9 +3738,9 @@ body {
   border: 1px solid #b9ddc5;
 }
 
-/* CANCELADA - ROJO */
+/* ANULADA - ROJO */
 
-.estado-produccion-cancelada {
+.estado-produccion-anulada {
   background: #fbeaea;
   color: #b84a4a;
   border: 1px solid #e7b5b5;
@@ -5056,7 +5056,7 @@ body {
   border: 1px solid #b9ddc5;
 }
 
-.estado-venta-cancelada {
+.estado-venta-anulada {
   background: #fbeaea;
   color: #b84a4a;
   border: 1px solid #e7b5b5;
@@ -6648,9 +6648,9 @@ body {
   border: 1px solid #b9ddc5;
 }
 
-/* CANCELADO - ROJO */
+/* ANULADO - ROJO */
 
-.estado-cancelado {
+.estado-anulado {
   background: #fbeaea;
   color: #b84a4a;
   border: 1px solid #e7b5b5;
@@ -7125,7 +7125,7 @@ body {
   border-color: #39634a;
 }
 
-[data-theme="dark"] .estado-cancelado {
+[data-theme="dark"] .estado-anulado {
   background: #422626;
   color: #e59a9a;
   border-color: #714040;
@@ -11027,4 +11027,1393 @@ body {
 
 .btn-modal-eliminar:hover {
   background: #a5301f;
+}
+
+/* ===== Listados: barra, paginador, anular, obligatorios ===== */
+.barra-listado{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 6px;font-size:13px;opacity:.85;grid-column:1/-1}
+.btn-descargar{height:34px;padding:0 16px;border:0;border-radius:10px;background:var(--met);color:#2a1d05;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 10px #a8730f18;transition:.2s ease}
+.btn-descargar:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 13px #a8730f25}
+.btn-descargar:disabled{opacity:.5;cursor:not-allowed}
+.paginador{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:16px 0}
+.paginador button{min-width:36px;padding:6px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.15);background:transparent;color:inherit;font-weight:600;cursor:pointer}
+.paginador button.on{background:#4a2f1b;color:#fff;border-color:#4a2f1b}
+.paginador button:disabled{opacity:.4;cursor:not-allowed}
+.btn-eliminar:disabled,.btn-editar-pedido:disabled{opacity:.45;cursor:not-allowed}
+.motivo-anulacion{display:block;margin:10px 0 4px;font-weight:600;font-size:13px}
+.motivo-anulacion span{color:#b3261e}
+.motivo-anulacion textarea{display:block;width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,.2);font:inherit;resize:vertical}
+div:has(> input[required], > select[required], > textarea[required]) > label::after{content:" *";color:#b3261e;font-weight:700}
+
+/* ===== Documentos: ver / descargar ===== */
+.documento-acciones{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn-doc-accion{padding:7px 12px;border-radius:10px;border:1px solid rgba(74,47,27,.35);background:transparent;color:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.btn-doc-accion:hover{background:rgba(201,150,26,.18)}
+.form-campo textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(0,0,0,.15);font:inherit;resize:vertical;background:inherit;color:inherit;box-sizing:border-box}
+.produccion-filtros{flex-wrap:wrap}
+
+/* ============================================================
+   PEDIDOS - DETALLE Y PAGOS REORGANIZADOS
+============================================================ */
+
+.pedido-form .pedido-detalle-form {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: start;
+}
+
+.pedido-detalle-form .pedido-detalle-titulo {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ln);
+  color: var(--tx);
+  font-size: 13px;
+}
+
+.pedido-detalle-form .pd-producto,
+.pedido-detalle-form .pd-insumo { grid-column: span 3; }
+.pedido-detalle-form .pd-descripcion { grid-column: 1 / -1; }
+.pedido-detalle-form .pd-cantidad,
+.pedido-detalle-form .pd-precio,
+.pedido-detalle-form .pd-total { grid-column: span 2; }
+
+.pedido-form .form-campo textarea {
+  width: 100%;
+  min-height: 84px;
+  padding: 10px 13px;
+  background: var(--bg);
+  color: var(--tx);
+  border: 1px solid var(--ln);
+  border-radius: 11px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  transition: 0.2s ease;
+}
+
+.pedido-form .form-campo textarea:focus {
+  border-color: var(--g2);
+  box-shadow: 0 0 0 3px rgba(224, 170, 43, 0.12);
+}
+
+.pedido-form .form-campo textarea::placeholder { color: var(--mu); }
+
+.pedido-form .form-campo small { color: var(--mu); font-size: 11px; }
+
+.pedido-form .pedido-pago-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pedido-detalle-item.pedido-pago-consulta {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 850px) {
+  .pedido-form .pedido-detalle-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pedido-detalle-form .pd-producto,
+  .pedido-detalle-form .pd-insumo,
+  .pedido-detalle-form .pd-cantidad,
+  .pedido-detalle-form .pd-precio,
+  .pedido-detalle-form .pd-total { grid-column: span 1; }
+  .pedido-form .pedido-pago-form,
+  .pedido-detalle-item.pedido-pago-consulta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 650px) {
+  .pedido-form .pedido-detalle-form,
+  .pedido-form .pedido-pago-form,
+  .pedido-detalle-item.pedido-pago-consulta { grid-template-columns: 1fr; }
+}
+
+/* Botón de comprobante: centrado y en verde cuando ya hay archivo */
+.pedido-form .form-campo .btn-adjuntar-comprobante {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 14px;
+  text-align: center;
+  color: #2a1d05;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.pedido-form .btn-adjuntar-comprobante span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pedido-form .form-campo .btn-adjuntar-comprobante.adjunto {
+  background: #1f9d55;
+  border-color: #1f9d55;
+  color: #fff;
+}
+
+.pedido-comprobante-campo { align-self: end; }
+
+/* Venta: notas bajo los campos */
+.venta-form .form-campo small {
+  color: var(--mu);
+  font-size: 11px;
+}
+
+
+/* =========================================
+   PRODUCCIÓN: resumen ampliado, estados e historial
+========================================= */
+.produccion-header-acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Botones secundarios de las tarjetas (Historial, Documentos): mismo estilo que "Consultar" */
+.btn-historial-produccion,
+.btn-revincular-empleado {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--tx);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-historial-produccion:hover,
+.btn-revincular-empleado:hover {
+  background: #e6b53a12;
+  border-color: var(--g2);
+}
+
+/* Revincular: acción positiva, resaltada con el dorado de la marca */
+.btn-revincular-empleado {
+  border-color: var(--g2);
+  font-weight: 700;
+}
+
+.estado-produccion-pendiente,
+.estado-produccion-en_proceso,
+.estado-produccion-finalizada {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.estado-produccion-pendiente { background: #e0aa2b22; color: #b07d0c; }
+.estado-produccion-en_proceso { background: #2b7fe022; color: #2b6fc0; }
+.estado-produccion-finalizada { background: #2bb55a22; color: #1f8f45; }
+
+.modal-historial { max-width: 460px; width: 100%; }
+
+.historial-lista {
+  list-style: none;
+  margin: 14px 0 4px;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.historial-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ln);
+}
+
+.historial-item:last-child { border-bottom: none; }
+
+.historial-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.historial-item small { color: var(--tx2, #8a8a8a); }
+.historial-item em { font-size: 12px; color: var(--tx2, #8a8a8a); }
+
+.historial-punto {
+  flex: 0 0 12px;
+  height: 12px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--g2);
+}
+
+.historial-en_proceso { background: #2b7fe0; }
+.historial-finalizada { background: #2bb55a; }
+.historial-anulada { background: #d64545; }
+
+.nota-insumo-automatico {
+  margin: 8px 0 14px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--g2);
+  border-radius: 8px;
+  background: #e0aa2b14;
+  font-size: 13px;
+}
+
+.historial-despachada { background: #2b7fe0; }
+.historial-entregada { background: #2bb55a; }
+
+/* Ventana "Documentos cargados" */
+.documentos-cargados-lista{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow:auto}
+.documentos-cargados-lista .documento-unificado{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* Ventana "Cambiar estado" */
+.modal-eliminar select{width:100%;margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(74,47,27,.35);background:transparent;color:inherit;font:inherit}
+
+/* Total de dinero en ventas: cabe en una sola línea */
+.resumen-venta-item strong.resumen-dinero{font-size:20px;white-space:nowrap}
+.documentos-cargados-lista{margin-bottom:18px}
+.btn-guardar-pedido:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ============================================================
+   ROLES: PERMISOS Y PRIVILEGIOS
+   ============================================================ */
+
+.permisos-tabla-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.permisos-tabla {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.permisos-tabla th {
+  padding: 10px 12px;
+  color: var(--mu);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  border-bottom: 1px solid var(--ln);
+  white-space: nowrap;
+}
+
+.permisos-tabla th:first-child,
+.permisos-tabla td.permisos-modulo {
+  text-align: left;
+}
+
+.permisos-tabla td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--ln);
+}
+
+.permisos-tabla td.permisos-modulo {
+  color: var(--tx);
+  font-weight: 600;
+}
+
+.permisos-tabla tr.permisos-grupo td {
+  padding: 8px 12px;
+  background: var(--bg);
+  color: var(--mu);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.permisos-tabla input[type="checkbox"],
+.permiso-dato input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--g2);
+  cursor: pointer;
+}
+
+.permisos-tabla input[type="checkbox"]:disabled,
+.permiso-dato input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.permisos-datos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.permiso-dato {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg);
+  border: 1px solid var(--ln);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.permiso-dato.on {
+  border-color: var(--g2);
+  box-shadow: 0 0 0 3px rgba(224, 170, 43, 0.12);
+}
+
+.permiso-dato span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.permiso-dato strong {
+  color: var(--tx);
+  font-size: 13px;
+}
+
+.permiso-dato small {
+  color: var(--mu);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mensaje-info-rol {
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: var(--bg);
+  color: var(--tx);
+  border: 1px solid var(--ln);
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dato-rol-ancho {
+  grid-column: 1 / -1;
+}
+
+.dash-restringido {
+  padding: 28px;
+  background: var(--card);
+  border: 1px solid var(--ln);
+  border-radius: 18px;
+}
+
+.dash-restringido h2 {
+  margin: 0 0 8px;
+  color: var(--tx);
+  font-size: 20px;
+}
+
+.dash-restringido p {
+  margin: 0;
+  max-width: 640px;
+  color: var(--mu);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .permisos-datos {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   AJUSTES DE LAYOUT: MENÚ FIJO Y MENOS SCROLL
+   - El menú lateral queda fijo en todos los módulos y cabe
+     completo en pantalla (sin scroll propio).
+   - Solo se desplaza el contenido de la derecha, y solo
+     cuando de verdad no cabe.
+========================================================= */
+
+.web {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+
+  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+
+  overflow: hidden;
+}
+
+/* ---------- MENÚ LATERAL ---------- */
+
+.side {
+  position: relative;
+  top: auto;
+
+  height: 100%;
+  min-height: 0;
+
+  padding: clamp(10px, 2vh, 20px) 14px;
+  gap: 2px;
+
+  overflow-x: hidden;
+  overflow-y: auto;          /* solo por seguridad en pantallas muy bajas */
+  scrollbar-width: none;
+}
+
+.side::-webkit-scrollbar {
+  display: none;
+}
+
+.side img {
+  flex-shrink: 0;
+  width: clamp(88px, 15vh, 132px);
+  margin: 0 auto clamp(2px, 1vh, 10px);
+}
+
+.side small {
+  flex-shrink: 0;
+  margin: clamp(4px, 1.1vh, 12px) 10px 1px;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.nv {
+  flex-shrink: 0;
+  padding: clamp(5px, 0.95vh, 9px) 12px;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.nv.on {
+  box-shadow: 0 4px 12px #0005;
+}
+
+/* ---------- CONTENIDO (lo único que se desplaza) ---------- */
+
+.main {
+  height: 100%;
+  min-height: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  scrollbar-width: thin;
+  scrollbar-color: #e6b53a88 transparent;
+}
+
+.main > div[class*="page"] {
+  min-height: 0;
+  padding: 22px 28px;
+}
+
+/* ---------- DASHBOARD: TODO EN UNA SOLA VISTA ---------- */
+
+.dash {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.dash .hero {
+  flex: none;
+  padding: 12px 28px 40px;
+}
+
+.dash .hero h1 {
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.dash .hero p {
+  margin: 2px 0 0;
+  font-size: 13px;
+}
+
+.dash .bar {
+  margin-bottom: 0;
+}
+
+.dash .body {
+  flex: 1;
+  min-height: 0;
+
+  margin-top: -32px;
+  padding: 0 28px 16px;
+}
+
+.dash-body {
+  display: grid;
+  gap: 12px;
+  grid-template-rows: auto auto minmax(175px, 1.15fr) minmax(206px, 1fr);
+}
+
+.dash-body .gr {
+  margin-top: 0;
+  min-height: 0;
+}
+
+.dash-body .r1 {
+  grid-template-columns: 1.7fr 1fr;
+}
+
+.dash-body .r2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.dash-body .c {
+  padding: 14px 16px;
+  min-height: 0;
+}
+
+.dash-body .c h3 {
+  font-size: 14px;
+}
+
+.dash-body .hd {
+  margin-bottom: 6px;
+}
+
+/* 1. Precios del día (lo primero que se ve) */
+
+.px-top {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.7fr) 3fr;
+  align-items: center;
+  gap: 16px;
+
+  padding: 12px 18px;
+  box-shadow: 0 10px 24px #0004;
+}
+
+.px-top .v {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0;
+}
+
+.px-top .v div {
+  padding: 8px 14px;
+}
+
+.px-top .v b {
+  display: block;
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.px-top .wn {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+/* 2. Indicadores */
+
+.dash .kg {
+  gap: 12px;
+}
+
+.dash .kc {
+  padding: 11px 16px;
+  border-radius: 16px;
+}
+
+.dash .kc small {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+}
+
+.dash .kc b {
+  display: inline-block;
+  margin: 2px 10px 0 0;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+/* 3. Gráficas */
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-area {
+  position: relative;
+  flex: 1;
+  min-height: 90px;
+  margin-top: 4px;
+}
+
+.chart-area svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.dist-card .seg {
+  margin: 0;
+  min-width: 150px;
+}
+
+.dist-card .seg div {
+  padding: 3px 8px;
+}
+
+.dist-card .don li {
+  padding: 3px 0;
+}
+
+/* 4. Pedidos y producción */
+
+.dash-body .ord {
+  padding: 5px 12px;
+  margin-top: 5px;
+}
+
+.dash-body .ord b {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.dash-body .ord small {
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.dash-body .pr {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 5px 0;
+}
+
+.dash-body .pr .t {
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+/* ---------- PANTALLAS MÁS PEQUEÑAS ---------- */
+
+@media (max-width: 1100px) {
+  .dash .kg {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .px-top {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dash-body {
+    grid-template-rows: none;
+  }
+
+  .dash-body .r1,
+  .dash-body .r2 {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-area {
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 650px) {
+  .main > div[class*="page"] {
+    padding: 16px;
+  }
+
+  .dash .hero,
+  .dash .body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .px-top .v {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   CORRECCIONES DEL DASHBOARD
+   - La tarjeta de precios queda por encima del encabezado
+     (antes el encabezado le tapaba la parte de arriba).
+   - Los menús de notificaciones y usuario siguen por encima.
+   - En pantallas bajas (portátiles) todo se acomoda en una
+     sola fila para no tener que hacer scroll.
+========================================================= */
+
+.dash-body > * {
+  position: relative;
+}
+
+.dash .notification-dropdown,
+.dash .user-dropdown {
+  z-index: 60;
+}
+
+.dash .hero {
+  padding-bottom: 36px;
+}
+
+.dash .body {
+  margin-top: -26px;
+}
+
+/* Pedidos: tarjetas de lista compactas */
+.dash-body .r2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.dash-body .ord {
+  gap: 10px;
+}
+
+@media (max-height: 820px) and (min-width: 1100px) {
+  .dash-body {
+    grid-template-columns: 2.1fr 1.1fr 1.25fr 1.25fr;
+    grid-template-rows: auto auto minmax(250px, 1fr);
+  }
+
+  .dash-body .px-top,
+  .dash-body .kg {
+    grid-column: 1 / -1;
+  }
+
+  .dash-body .gr {
+    display: contents;
+  }
+
+  .dash-body .r1,
+  .dash-body .r2 {
+    margin-top: 0;
+  }
+
+  /* gráfica de dona: la leyenda va debajo para que quepa en la tarjeta angosta */
+  .dist-card .hd {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .dist-card .seg {
+    width: 100%;
+  }
+
+  .dist-card .don {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .dist-card .don svg {
+    align-self: center;
+  }
+
+  .dash-body .ord .m b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dash-body .hd h3 {
+    line-height: 1.25;
+  }
+}
+
+
+/* =========================================================
+   MÓDULOS MÁS COMPACTOS
+   Menos espacio en blanco en listados, formularios de
+   registrar/editar y pantallas de consulta, para que se
+   haga menos scroll. No cambia colores ni funcionalidad.
+========================================================= */
+
+/* ---------- Página y encabezado ---------- */
+
+.main > [class$="-page"] {
+  padding: 16px 24px 20px;
+}
+
+.main > [class$="-page"] > [class$="-header"] {
+  margin-bottom: 12px;
+  gap: 14px;
+}
+
+.main > [class$="-page"] > [class$="-header"] h1 {
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.main > [class$="-page"] > [class$="-header"] p {
+  margin-top: 2px;
+  font-size: 12.5px;
+}
+
+/* ---------- Filtros y resumen de los listados ---------- */
+
+.main [class$="-filtros"] {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.main [class$="-resumen"] {
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.main [class$="-resumen"] > div {
+  padding: 9px 16px;
+  border-radius: 14px;
+}
+
+.main [class$="-resumen"] > div strong {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.main .barra-listado {
+  margin: 0 0 2px;
+}
+
+/* ---------- Tarjetas de los listados ---------- */
+
+.main [class$="-lista"],
+.main .producciones-lista {
+  gap: 10px;
+}
+
+.main [class$="-lista"] > [class$="-card"] {
+  padding: 13px 18px;
+  border-radius: 16px;
+}
+
+.main [class$="-lista"] > [class$="-card"] [class$="-card-header"] {
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.main [class$="-lista"] > [class$="-card"] [class$="-card-body"] {
+  gap: 10px 16px;
+}
+
+.main [class$="-lista"] > [class$="-card"] [class$="-card-actions"] {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.main .paginador {
+  margin: 10px 0 4px;
+}
+
+/* ---------- Formularios (registrar / editar) ---------- */
+
+.main .compra-form,
+.main .proveedor-form,
+.main .produccion-form,
+.main .empleado-form,
+.main .venta-form,
+.main .cliente-form,
+.main .pedido-form,
+.main .insumo-oro-form,
+.main .insumo-polimetalico-form,
+.main .rol-form,
+.main .usuario-form {
+  gap: 12px;
+}
+
+.main .form-seccion {
+  padding: 14px 18px;
+  border-radius: 16px;
+}
+
+.main .form-seccion-titulo {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+}
+
+.main .form-seccion-titulo h2 {
+  margin-bottom: 1px;
+  font-size: 16px;
+}
+
+.main .form-seccion-titulo p {
+  font-size: 12px;
+}
+
+.main .form-grid {
+  gap: 10px 16px;
+}
+
+.main .form-campo {
+  gap: 4px;
+}
+
+.main .form-campo label {
+  font-size: 12px;
+}
+
+.main .form-campo input,
+.main .form-campo select {
+  min-height: 38px;
+  padding: 7px 12px;
+}
+
+.main .form-campo textarea {
+  min-height: 64px;
+  padding: 8px 12px;
+}
+
+.main .form-acciones,
+.main [class^="form-acciones-"] {
+  padding: 0 0 4px;
+  gap: 10px;
+}
+
+.main .form-acciones button,
+.main [class^="form-acciones-"] button {
+  min-height: 38px;
+  padding: 7px 18px;
+}
+
+/* En pantallas anchas los campos van de a tres por fila */
+@media (min-width: 1180px) {
+  .main .form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Consultar ---------- */
+
+.main .consulta-compra-card {
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+.main .consulta-titulo {
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.main .consulta-titulo h2 {
+  font-size: 19px;
+}
+
+.main .consulta-grid {
+  gap: 10px 14px;
+}
+
+.main .consulta-dato {
+  min-height: 0;
+  padding: 9px 14px;
+  gap: 2px;
+}
+
+.main .consulta-seccion-titulo {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+
+/* ---------- Pantallas vacías ---------- */
+
+.main [class^="sin-"] {
+  padding: 28px 20px;
+}
+
+@media (max-width: 650px) {
+  .main > [class$="-page"] {
+    padding: 14px 14px 18px;
+  }
+}
+
+
+/* =========================================================
+   DISTRIBUCIÓN FINAL DEL DASHBOARD
+   Solo reorganiza tamaños, espacios y distribución.
+   No modifica colores, botones ni funcionalidad.
+========================================================= */
+
+.dash .hero {
+  padding-bottom: 28px;
+}
+
+.dash .body {
+  margin-top: 0;
+  padding: 24px 30px 30px;
+}
+
+.dash-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dash-body .px-top {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.dash-body .kg {
+  width: 100%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+
+.dash-body .kc {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.dash-body .gr {
+  width: 100%;
+  margin: 0;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.dash-body .r1 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+}
+
+.dash-body .r2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dash-body .gr > .c {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.dash-body .chart-card,
+.dash-body .dist-card {
+  min-height: 330px;
+}
+
+.dash-body .chart-area {
+  min-height: 180px;
+}
+
+.dash-body .ord {
+  box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+  .dash-body .r1 {
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 1fr);
+  }
+}
+
+@media (max-width: 1050px) {
+  .dash-body .kg {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-body .r1,
+  .dash-body .r2 {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-body .chart-card,
+  .dash-body .dist-card {
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 650px) {
+  .dash .body {
+    padding: 16px;
+  }
+
+  .dash-body {
+    gap: 12px;
+  }
+
+  .dash-body .kg {
+    gap: 12px;
+  }
+
+  .dash-body .px-top .v {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-body .r1,
+  .dash-body .r2 {
+    gap: 12px;
+  }
+}
+
+/* =========================================================
+   AJUSTE FINAL DASHBOARD - ESPACIADO MÁS COMPACTO
+   Solo reorganiza el espacio visual del dashboard.
+   No cambia colores, botones ni funcionalidad.
+========================================================= */
+
+.dash .hero {
+  padding: 14px 28px 22px;
+}
+
+.dash .hero h1 {
+  font-size: 26px;
+  line-height: 1.18;
+}
+
+.dash .hero p {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.dash .bar {
+  margin-bottom: 10px;
+}
+
+.dash .body {
+  padding: 10px 30px 24px;
+}
+
+.dash-body {
+  gap: 10px;
+}
+
+.dash-body .kg {
+  gap: 12px;
+}
+
+.dash-body .gr {
+  gap: 12px;
+}
+
+@media (max-width: 650px) {
+  .dash .hero {
+    padding: 12px 16px 18px;
+  }
+
+  .dash .hero h1 {
+    font-size: 23px;
+  }
+
+  .dash .body {
+    padding: 8px 16px 18px;
+  }
+}
+
+/* =========================================================
+   DASHBOARD - ACABADO MÁS ANCHO, GRUESO Y COMPACTO
+   Solo ajusta distribución y espaciado visual.
+   No cambia colores, botones ni funcionalidad.
+========================================================= */
+
+.dash .hero {
+  padding: 16px 22px 18px;
+}
+
+.dash .hero h1 {
+  font-size: 30px;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.dash .hero p {
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.dash .bar {
+  margin-bottom: 6px;
+}
+
+.dash .body {
+  padding: 8px 22px 22px;
+}
+
+.dash-body {
+  gap: 10px;
+}
+
+/* Precios: más ancho y con más cuerpo */
+.dash-body .px-top {
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 22px;
+  min-height: 116px;
+  border-radius: 22px;
+}
+
+.dash-body .px-top .v {
+  gap: 10px;
+}
+
+.dash-body .px-top .v div {
+  padding: 10px 18px;
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dash-body .px-top .v b {
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+/* Indicadores: más gruesos y menos separados */
+.dash-body .kg {
+  gap: 10px;
+}
+
+.dash-body .kc {
+  padding: 14px 20px;
+  min-height: 84px;
+  border-radius: 18px;
+}
+
+.dash-body .kc small {
+  font-size: 11px;
+}
+
+.dash-body .kc b {
+  margin-top: 4px;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+/* Mantener las gráficas tal como quedaron, solo pegarlas un poco */
+.dash-body .gr {
+  gap: 10px;
+}
+
+@media (max-width: 1050px) {
+  .dash-body .px-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .dash .hero {
+    padding: 14px 16px 16px;
+  }
+
+  .dash .hero h1 {
+    font-size: 25px;
+  }
+
+  .dash .hero p {
+    font-size: 13px;
+  }
+
+  .dash .body {
+    padding: 6px 14px 18px;
+  }
+
+  .dash-body .px-top {
+    padding: 12px 14px;
+    min-height: 0;
+  }
+
+  .dash-body .kc {
+    padding: 12px 16px;
+  }
+
+  .dash-body .kc b {
+    font-size: 24px;
+  }
+}
+
+
+/* =========================================================
+   AJUSTE DE TARJETAS SUPERIORES - DASHBOARD
+   Solo reorganiza las tarjetas de precios e indicadores.
+   No modifica colores, botones, textos, gráficas ni funcionalidad.
+========================================================= */
+
+/* Las tarjetas superiores se acercan visualmente al encabezado,
+   como en la distribución original del dashboard. */
+.dash-body .px-top {
+  margin-top: -34px;
+  position: relative;
+  z-index: 2;
+  min-height: 108px;
+}
+
+.dash-body .kg {
+  position: relative;
+  z-index: 1;
+  gap: 10px;
+  margin-top: 0;
+}
+
+.dash-body .kc {
+  min-height: 92px;
+  padding: 14px 18px;
+}
+
+@media (max-width: 1050px) {
+  .dash-body .px-top {
+    margin-top: -20px;
+  }
+}
+
+@media (max-width: 650px) {
+  .dash-body .px-top {
+    margin-top: 0;
+  }
+
+  .dash-body .kg {
+    gap: 10px;
+  }
+}
+
+/* =========================================================
+   AJUSTE FINAL - ENCABEZADO Y TARJETA DE PRECIOS
+   Solo baja y da más cuerpo al bloque superior.
+   No modifica colores, botones, gráficas ni funcionalidad.
+========================================================= */
+.dash .hero {
+  padding-bottom: 86px;
+}
+
+.dash-body .px-top {
+  margin-top: -30px;
+}
+
+@media (max-width: 650px) {
+  .dash .hero {
+    padding-bottom: 64px;
+  }
+
+  .dash-body .px-top {
+    margin-top: -18px;
+  }
+}
+
+/* Ajuste puntual del encabezado del dashboard: baja todo el contenido superior en conjunto */
+.hero .bar {
+  transform: translateY(30px);
+}
+
+@media (max-width: 650px) {
+  .hero .bar {
+    transform: translateY(18px);
+  }
 }

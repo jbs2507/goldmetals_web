@@ -6,17 +6,27 @@ const clientes = [
   {
     id_cliente: 1,
     tipo_cliente: "JURIDICA",
+    tipo_documento: "NIT",
     nombre: "M&M Trading S.A.S.",
     identificacion_tributaria: "900123456-1",
     pais: "Colombia",
+    telefono: "3001112233",
+    correo: "contacto@mmtrading.com",
+    camaraComercio: "camara_comercio.pdf",
+    contrato: "contrato.pdf",
     estado: "ACTIVO",
   },
   {
     id_cliente: 2,
     tipo_cliente: "JURIDICA",
+    tipo_documento: "NIT",
     nombre: "Global Metals International",
     identificacion_tributaria: "901234567-8",
     pais: "Estados Unidos",
+    telefono: "3104445566",
+    correo: "ventas@globalmetals.com",
+    camaraComercio: "camara_comercio.pdf",
+    contrato: "contrato.pdf",
     estado: "ACTIVO",
   },
 ];
@@ -52,12 +62,12 @@ export default function EditarCliente() {
   }
 
   const handleGuardar = (datos) => {
-    console.log("Cliente actualizado:", {
+    console.log("Estado del cliente actualizado:", {
       id_cliente: cliente.id_cliente,
       ...datos,
     });
 
-    alert("Cliente actualizado correctamente");
+    alert("Estado del cliente actualizado correctamente");
 
     navigate("/clientes");
   };
@@ -73,7 +83,7 @@ export default function EditarCliente() {
           </h1>
 
           <p>
-            Actualice la información del cliente
+            Solo se puede cambiar el estado del cliente
           </p>
         </div>
 
@@ -89,6 +99,7 @@ export default function EditarCliente() {
 
       <ClienteForm
         cliente={cliente}
+        soloEstado
         onGuardar={handleGuardar}
         onCancelar={() => navigate("/clientes")}
       />

@@ -1,19 +1,26 @@
 import { useEffect, useState } from "react";
 import { filtrarSoloDigitos, filtrarSoloLetras, validarFormulario } from "../../utils/validaciones.js";
+import { TIPOS_DOCUMENTO, tipoDocumentoSoloDigitos } from "../clientes/tiposDocumento.js";
 
 const DATOS_EMPLEADO_VACIOS = {
   nombre_completo: "",
-  cargo: "",
+  tipo_documento: "CC",
   numero_documento: "",
   telefono: "",
+  cargo: "",
+  direccion: "",
+  correo: "",
   estado: "ACTIVO",
 };
 
 const REGLAS_EMPLEADO = {
   nombre_completo: { requerido: true, soloLetras: true },
-  cargo: { requerido: true, soloLetras: true },
-  numero_documento: { requerido: true, soloDigitos: true },
+  tipo_documento: { requerido: true },
+  numero_documento: { requerido: true },
+  fecha_ingreso: { requerido: true },
   telefono: { soloDigitos: true },
+  cargo: { requerido: true },
+  correo: { tipo: "email" },
 };
 
 export default function EmpleadoForm({
@@ -24,9 +31,14 @@ export default function EmpleadoForm({
 }) {
   const [formulario, setFormulario] = useState(() => ({
     nombre_completo: datosIniciales?.nombre_completo || "",
-    cargo: datosIniciales?.cargo || "",
+    tipo_documento: datosIniciales?.tipo_documento || "CC",
     numero_documento: datosIniciales?.numero_documento || "",
     telefono: datosIniciales?.telefono || "",
+    cargo: datosIniciales?.cargo || "",
+    direccion: datosIniciales?.direccion || "",
+    correo: datosIniciales?.correo || "",
+    fecha_ingreso: datosIniciales?.fecha_ingreso || "",
+    fecha_finalizacion: datosIniciales?.fecha_finalizacion || "",
     estado: datosIniciales?.estado || "ACTIVO",
   }));
 
@@ -37,9 +49,14 @@ export default function EmpleadoForm({
     if (!datosIniciales) return;
     setFormulario({
       nombre_completo: datosIniciales.nombre_completo || "",
-      cargo: datosIniciales.cargo || "",
+      tipo_documento: datosIniciales.tipo_documento || "CC",
       numero_documento: datosIniciales.numero_documento || "",
       telefono: datosIniciales.telefono || "",
+      cargo: datosIniciales.cargo || "",
+      direccion: datosIniciales.direccion || "",
+      correo: datosIniciales.correo || "",
+      fecha_ingreso: datosIniciales.fecha_ingreso || "",
+      fecha_finalizacion: datosIniciales.fecha_finalizacion || "",
       estado: datosIniciales.estado || "ACTIVO",
     });
   }, [datosIniciales]);
@@ -51,10 +68,10 @@ export default function EmpleadoForm({
     const limpio =
       name === "nombre_completo"
         ? filtrarSoloLetras(value)
-        : name === "cargo"
-        ? filtrarSoloLetras(value)
-        : name === "numero_documento" || name === "telefono"
+        : name === "telefono"
         ? filtrarSoloDigitos(value)
+        : name === "numero_documento"
+        ? (tipoDocumentoSoloDigitos(formulario.tipo_documento) ? filtrarSoloDigitos(value) : value)
         : value;
 
     setFormulario((prev) => ({
@@ -67,6 +84,15 @@ export default function EmpleadoForm({
     e.preventDefault();
 
     const nuevosErrores = validarFormulario(formulario, REGLAS_EMPLEADO);
+
+    if (
+      formulario.fecha_finalizacion &&
+      formulario.fecha_ingreso &&
+      formulario.fecha_finalizacion < formulario.fecha_ingreso
+    ) {
+      nuevosErrores.fecha_finalizacion =
+        "La fecha de finalización no puede ser anterior a la de ingreso";
+    }
     setErrores(nuevosErrores);
     if (Object.keys(nuevosErrores).length > 0) return;
 
@@ -117,23 +143,35 @@ export default function EmpleadoForm({
 
           </div>
 
-          {/* CARGO */}
+          {/* TIPO DE DOCUMENTO */}
           <div className="form-campo">
 
-            <label htmlFor="cargo">
-              Cargo
+            <label htmlFor="tipo_documento">
+              Tipo de documento
             </label>
 
-            <input
-              id="cargo"
-              name="cargo"
-              type="text"
-              value={formulario.cargo}
-              onChange={manejarCambio}
-              placeholder="Ingrese el cargo"
-              required
-            />
-            {errores.cargo && <span className="err">{errores.cargo}</span>}
+            <select
+              id="tipo_documento"
+              name="tipo_documento"
+              value={formulario.tipo_documento}
+              onChange={(e) => {
+                const tipo = e.target.value;
+                setFormulario((prev) => ({
+                  ...prev,
+                  tipo_documento: tipo,
+                  numero_documento: tipoDocumentoSoloDigitos(tipo)
+                    ? filtrarSoloDigitos(prev.numero_documento)
+                    : prev.numero_documento,
+                }));
+              }}
+            >
+              {TIPOS_DOCUMENTO.map((t) => (
+                <option key={t.valor} value={t.valor}>
+                  {t.etiqueta}
+                </option>
+              ))}
+            </select>
+            {errores.tipo_documento && <span className="err">{errores.tipo_documento}</span>}
 
           </div>
 
@@ -172,6 +210,101 @@ export default function EmpleadoForm({
               placeholder="Ingrese el teléfono"
             />
             {errores.telefono && <span className="err">{errores.telefono}</span>}
+
+          </div>
+
+          {/* CARGO */}
+          <div className="form-campo">
+
+            <label htmlFor="cargo">
+              Cargo
+            </label>
+
+            <input
+              id="cargo"
+              name="cargo"
+              type="text"
+              value={formulario.cargo}
+              onChange={manejarCambio}
+              placeholder="Ingrese el cargo"
+              required
+            />
+            {errores.cargo && <span className="err">{errores.cargo}</span>}
+
+          </div>
+
+          {/* CORREO */}
+          <div className="form-campo">
+
+            <label htmlFor="correo">
+              Correo electrónico
+            </label>
+
+            <input
+              id="correo"
+              name="correo"
+              type="email"
+              value={formulario.correo}
+              onChange={manejarCambio}
+              placeholder="Ingrese el correo electrónico"
+            />
+            {errores.correo && <span className="err">{errores.correo}</span>}
+
+          </div>
+
+          {/* DIRECCIÓN */}
+          <div className="form-campo">
+
+            <label htmlFor="direccion">
+              Dirección
+            </label>
+
+            <input
+              id="direccion"
+              name="direccion"
+              type="text"
+              value={formulario.direccion}
+              onChange={manejarCambio}
+              placeholder="Ingrese la dirección"
+            />
+
+          </div>
+
+          {/* FECHA DE INGRESO */}
+          <div className="form-campo">
+
+            <label htmlFor="fecha_ingreso">
+              Fecha de ingreso
+            </label>
+
+            <input
+              id="fecha_ingreso"
+              name="fecha_ingreso"
+              type="date"
+              value={formulario.fecha_ingreso}
+              onChange={manejarCambio}
+              required
+            />
+            {errores.fecha_ingreso && <span className="err">{errores.fecha_ingreso}</span>}
+
+          </div>
+
+          {/* FECHA DE FINALIZACIÓN */}
+          <div className="form-campo">
+
+            <label htmlFor="fecha_finalizacion">
+              Fecha de finalización (si ya no trabaja aquí)
+            </label>
+
+            <input
+              id="fecha_finalizacion"
+              name="fecha_finalizacion"
+              type="date"
+              min={formulario.fecha_ingreso || undefined}
+              value={formulario.fecha_finalizacion}
+              onChange={manejarCambio}
+            />
+            {errores.fecha_finalizacion && <span className="err">{errores.fecha_finalizacion}</span>}
 
           </div>
 

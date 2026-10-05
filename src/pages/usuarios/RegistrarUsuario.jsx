@@ -7,7 +7,6 @@ export default function RegistrarUsuario() {
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [correo, setCorreo] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [contrasena, setContrasena] = useState("");
   const [rol, setRol] = useState("");
 
   const manejarSubmit = (e) => {
@@ -16,7 +15,6 @@ export default function RegistrarUsuario() {
     if (
       !nombreCompleto.trim() ||
       !correo.trim() ||
-      !contrasena.trim() ||
       !rol.trim()
     ) {
       return;
@@ -27,7 +25,6 @@ export default function RegistrarUsuario() {
       correo: correo.trim(),
       telefono: telefono.trim(),
       rol,
-      contrasena,
       estado: "ACTIVO",
     };
 
@@ -127,28 +124,9 @@ export default function RegistrarUsuario() {
               <select id="rol-usuario" value={rol} onChange={(e) => setRol(e.target.value)} required>
                 <option value="">Seleccionar rol</option>
                 <option value="Administrador">Administrador</option>
-                <option value="Compras">Compras</option>
-                <option value="Producción">Producción</option>
-                <option value="Ventas">Ventas</option>
-                <option value="Logística">Logística</option>
+                <option value="Contador">Contador</option>
+                <option value="Abogado">Abogado</option>
               </select>
-            </div>
-
-            <div className="form-campo">
-              <label htmlFor="contrasena-usuario">
-                Contraseña
-              </label>
-
-              <input
-                id="contrasena-usuario"
-                type="password"
-                placeholder="Ingresa la contraseña"
-                value={contrasena}
-                onChange={(e) =>
-                  setContrasena(e.target.value)
-                }
-                required
-              />
             </div>
 
           </div>

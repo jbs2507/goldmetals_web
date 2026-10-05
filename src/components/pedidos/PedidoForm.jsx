@@ -1,5 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { validarCampo } from "../../utils/validaciones.js";
+import { usePreciosDia, precioOroPorGramo } from "../../utils/precios.js";
+
+// El pago inicial siempre es del 90 % del valor del pedido.
+const PORCENTAJE_PAGO_INICIAL = 0.9;
+const ID_INSUMO_ORO = 1;
+
+const esOro = (detalle) => Number(detalle.id_insumo) === ID_INSUMO_ORO;
+
+const calcularTotalDetalle = (cantidad, precio) => {
+  const c = Number(cantidad);
+  const p = Number(precio);
+  return precio !== "" && c > 0 && p >= 0 ? c * p : "";
+};
 
 const calcularFechaEntrega = (fechaInicio) => {
   if (!fechaInicio) return "";
@@ -78,24 +91,11 @@ export default function PedidoForm({
     datosIniciales.tasa_cambio || ""
   );
 
-  const [valorTotal, setValorTotal] = useState(
-    datosIniciales.valor_total || ""
-  );
-
-  const [valorPagado, setValorPagado] = useState(
-    datosIniciales.valor_pagado || ""
-  );
-
-  const [porcentajePagoInicial, setPorcentajePagoInicial] =
-    useState(
-      datosIniciales.porcentaje_pago_inicial !== undefined
-        ? datosIniciales.porcentaje_pago_inicial
-        : 0.9
-    );
-
   const [detalles, setDetalles] = useState(
     datosIniciales.detalles || [
       {
+        producto: "",
+        detalle_producto: "",
         id_insumo: "",
         cantidad: "",
         precio_unitario: "",
@@ -108,12 +108,76 @@ export default function PedidoForm({
     datosIniciales.pagos || [
       {
         fecha_pago: "",
-        valor: "",
         cuenta_bancaria: "",
         comprobante: null,
       },
     ]
   );
+
+  // Valores del pedido: todo se calcula a partir del detalle.
+  // Pago inicial = 90 % del total; el 10 % restante se paga al entregar y se registra como venta.
+  const redondear = (n) =>
+    moneda === "USD" ? Math.round(n * 100) / 100 : Math.round(n);
+  // El valor total se puede digitar; si no se digita, se sugiere la suma del detalle.
+  const [valorTotalManual, setValorTotalManual] = useState(
+    datosIniciales.valor_total ?? ""
+  );
+  const sumaDetalles = redondear(
+    detalles.reduce((acc, d) => acc + (Number(d.valor_total) || 0), 0)
+  );
+  const valorTotal =
+    valorTotalManual !== "" ? Number(valorTotalManual) || 0 : sumaDetalles;
+
+  // Cada vez que cambia el detalle (ej. gramos de oro × precio del gramo), el valor total
+  // del pedido se actualiza solo. Sigue siendo editable si hace falta ajustarlo.
+  useEffect(() => {
+    if (sumaDetalles > 0) setValorTotalManual(String(sumaDetalles));
+  }, [sumaDetalles]);
+  const valorPagado = redondear(valorTotal * PORCENTAJE_PAGO_INICIAL);
+  const saldoPendiente = redondear(valorTotal - valorPagado);
+  const formatoValor = (n) =>
+    `${moneda} ${n.toLocaleString(moneda === "USD" ? "en-US" : "es-CO", {
+      minimumFractionDigits: moneda === "USD" ? 2 : 0,
+      maximumFractionDigits: moneda === "USD" ? 2 : 0,
+    })}`;
+
+  const { precios, error: errorPrecios } = usePreciosDia();
+
+  // Cuando llega el precio del día, completa el precio de las filas de oro que estén vacías.
+  useEffect(() => {
+    if (!precios) return;
+    const precioOro = precioOroPorGramo(precios, moneda);
+    setDetalles((actuales) =>
+      actuales.map((d) =>
+        esOro(d) && d.precio_unitario === ""
+          ? {
+              ...d,
+              precio_unitario: precioOro,
+              valor_total: calcularTotalDetalle(d.cantidad, precioOro),
+            }
+          : d
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [precios]);
+
+  // Al cambiar la moneda se recalcula el precio de las filas de oro.
+  const cambiarMoneda = (nuevaMoneda) => {
+    setMoneda(nuevaMoneda);
+    if (!precios) return;
+    const precioOro = precioOroPorGramo(precios, nuevaMoneda);
+    setDetalles((actuales) =>
+      actuales.map((d) =>
+        esOro(d)
+          ? {
+              ...d,
+              precio_unitario: precioOro,
+              valor_total: calcularTotalDetalle(d.cantidad, precioOro),
+            }
+          : d
+      )
+    );
+  };
 
   const actualizarDetalle = (index, campo, valor) => {
     setDetalles((actuales) =>
@@ -127,26 +191,20 @@ export default function PedidoForm({
           [campo]: valor,
         };
 
+        // Si el insumo es oro, el precio unitario sale del precio del día.
+        if (campo === "id_insumo" && Number(valor) === ID_INSUMO_ORO) {
+          actualizado.precio_unitario = precioOroPorGramo(precios, moneda);
+        }
+
         if (
           campo === "cantidad" ||
-          campo === "precio_unitario"
+          campo === "precio_unitario" ||
+          campo === "id_insumo"
         ) {
-          const cantidad = Number(
-            campo === "cantidad"
-              ? valor
-              : actualizado.cantidad
+          actualizado.valor_total = calcularTotalDetalle(
+            actualizado.cantidad,
+            actualizado.precio_unitario
           );
-
-          const precio = Number(
-            campo === "precio_unitario"
-              ? valor
-              : actualizado.precio_unitario
-          );
-
-          actualizado.valor_total =
-            cantidad > 0 && precio >= 0
-              ? cantidad * precio
-              : "";
         }
 
         return actualizado;
@@ -158,6 +216,8 @@ export default function PedidoForm({
     setDetalles((actuales) => [
       ...actuales,
       {
+        producto: "",
+        detalle_producto: "",
         id_insumo: "",
         cantidad: "",
         precio_unitario: "",
@@ -211,12 +271,16 @@ export default function PedidoForm({
         tasaCambio === ""
           ? null
           : Number(tasaCambio),
-      valor_total: Number(valorTotal),
-      valor_pagado: Number(valorPagado),
-      porcentaje_pago_inicial:
-        Number(porcentajePagoInicial),
+      valor_total: valorTotal,
+      valor_pagado: valorPagado,
+      saldo_pendiente: saldoPendiente,
+      // Al entregar, el 10 % restante se cobra y el pedido pasa a ser una venta.
+      generar_venta: estado === "ENTREGADO",
+      porcentaje_pago_inicial: PORCENTAJE_PAGO_INICIAL,
 
       detalles_pedido: detalles.map((detalle) => ({
+        producto: detalle.producto.trim(),
+        detalle_producto: detalle.detalle_producto.trim(),
         id_insumo: Number(detalle.id_insumo),
         cantidad: Number(detalle.cantidad),
         precio_unitario: Number(
@@ -227,11 +291,12 @@ export default function PedidoForm({
         ),
       })),
 
+      // El pago inicial es el 90 % del valor total (calculado arriba).
       pagos_pedido: pagos
-        .filter((pago) => pago.valor !== "")
+        .filter((pago) => Number(valorPagado) > 0)
         .map((pago) => ({
           fecha_pago: pago.fecha_pago,
-          valor: Number(pago.valor),
+          valor: Number(valorPagado),
           cuenta_bancaria: pago.cuenta_bancaria || null,
           comprobante: pago.comprobante || null,
         })),
@@ -341,7 +406,7 @@ export default function PedidoForm({
                 <option value="EN_PRODUCCION">EN PRODUCCIÓN</option>
                 <option value="LISTO">LISTO</option>
                 <option value="ENTREGADO">ENTREGADO</option>
-                <option value="CANCELADO">CANCELADO</option>
+                <option value="ANULADO">ANULADO</option>
               </select>
             </div>
           )}
@@ -352,7 +417,7 @@ export default function PedidoForm({
             <select
               value={moneda}
               onChange={(e) =>
-                setMoneda(e.target.value)
+                cambiarMoneda(e.target.value)
               }
               required
             >
@@ -377,55 +442,33 @@ export default function PedidoForm({
           </div>
 
           <div className="form-campo">
-            <label>Valor total</label>
-
+            <label>Valor total ({moneda})</label>
             <input
               type="number"
               step="0.01"
               min="0"
-              value={valorTotal}
-              onChange={(e) =>
-                setValorTotal(e.target.value)
-              }
-              required
+              value={valorTotalManual !== "" ? valorTotalManual : sumaDetalles || ""}
+              onChange={(e) => setValorTotalManual(e.target.value)}
               placeholder="Ingrese el valor total"
+              required
             />
+            <small>Ingresa el valor del pedido; el 90 % y el 10 % se calculan solos.</small>
           </div>
 
           <div className="form-campo">
-            <label>Valor pagado</label>
-
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={valorPagado}
-              onChange={(e) =>
-                setValorPagado(e.target.value)
-              }
-              required
-              placeholder="Ingrese el valor pagado"
-            />
+            <label>Valor pagado (pago inicial 90 %)</label>
+            <input type="text" value={formatoValor(valorPagado)} readOnly />
+            <small>Se calcula automáticamente.</small>
           </div>
 
           <div className="form-campo">
-            <label>
-              Porcentaje de pago inicial
-            </label>
-
-            <input
-              type="number"
-              step="0.0001"
-              min="0"
-              max="1"
-              value={porcentajePagoInicial}
-              onChange={(e) =>
-                setPorcentajePagoInicial(
-                  e.target.value
-                )
-              }
-              required
-            />
+            <label>Saldo pendiente (10 %)</label>
+            <input type="text" value={formatoValor(saldoPendiente)} readOnly />
+            <small>
+              {estado === "ENTREGADO"
+                ? "Al guardar como entregado, este saldo se registra como venta."
+                : "Se paga al entregar el pedido y ahí pasa a ser una venta."}
+            </small>
           </div>
 
         </div>
@@ -439,109 +482,140 @@ export default function PedidoForm({
         <div className="form-seccion-titulo">
           <h2>Detalle del pedido</h2>
           <p>
-            Registra los insumos incluidos en el pedido
+            Registra los productos del pedido (puede ser más de uno) y el insumo con el que se elaboran
           </p>
         </div>
 
         <div className="pedido-form-lista">
 
-          {detalles.map((detalle, index) => (
-            <div
-              className="pedido-form-item"
-              key={index}
-            >
+          {detalles.map((detalle, index) => {
+            const oro = esOro(detalle);
 
-              <div className="form-campo">
-                <label>Insumo</label>
+            return (
+              <div
+                className="pedido-form-item pedido-detalle-form"
+                key={index}
+              >
 
-                <select
-                  value={detalle.id_insumo}
-                  onChange={(e) =>
-                    actualizarDetalle(
-                      index,
-                      "id_insumo",
-                      e.target.value
-                    )
-                  }
-                  required
-                >
-                  <option value="">
-                    Seleccionar insumo
-                  </option>
+                <div className="pedido-detalle-titulo">
+                  <strong>Producto {index + 1}</strong>
 
-                  {insumos.map((item) => (
-                    <option
-                      key={item.id_insumo}
-                      value={item.id_insumo}
+                  {detalles.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn-eliminar-pedido-item"
+                      onClick={() => eliminarDetalle(index)}
                     >
-                      {item.nombre}
-                    </option>
-                  ))}
-                </select>
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+
+                <div className="form-campo pd-insumo">
+                  <label>Insumo / material</label>
+
+                  <select
+                    value={detalle.id_insumo}
+                    onChange={(e) =>
+                      actualizarDetalle(index, "id_insumo", e.target.value)
+                    }
+                    required
+                  >
+                    <option value="">Seleccionar insumo</option>
+
+                    {insumos.map((item) => (
+                      <option key={item.id_insumo} value={item.id_insumo}>
+                        {item.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {detalle.id_insumo !== "" && (
+                  <>
+                    <div className="form-campo pd-producto">
+                      <label>Producto</label>
+
+                      <input
+                        type="text"
+                        value={detalle.producto}
+                        onChange={(e) => actualizarDetalle(index, "producto", e.target.value)}
+                        placeholder="Ej. Metalpolietileno, Oro en lingote"
+                        required
+                      />
+                    </div>
+
+                    <div className="form-campo pd-descripcion">
+                      <label>Descripción del producto</label>
+
+                      <textarea
+                        rows="3"
+                        value={detalle.detalle_producto}
+                        onChange={(e) => actualizarDetalle(index, "detalle_producto", e.target.value)}
+                        placeholder="Especificaciones, pureza, presentación, observaciones..."
+                        required
+                      />
+                    </div>
+
+                    <div className="form-campo pd-cantidad">
+                      <label>Cantidad</label>
+
+                      <input
+                        type="number"
+                        step="0.000001"
+                        min="0.000001"
+                        value={detalle.cantidad}
+                        onChange={(e) =>
+                          actualizarDetalle(index, "cantidad", e.target.value)
+                        }
+                        required
+                      />
+                    </div>
+
+                    <div className="form-campo pd-precio">
+                      <label>
+                        {oro ? `Precio unitario por gramo (${moneda})` : `Precio unitario (${moneda})`}
+                      </label>
+
+                      <input
+                        type="number"
+                        step="0.000001"
+                        min="0"
+                        value={detalle.precio_unitario}
+                        readOnly={oro && !!precios}
+                        onChange={(e) =>
+                          actualizarDetalle(index, "precio_unitario", e.target.value)
+                        }
+                        placeholder={oro && !precios && !errorPrecios ? "Cargando precio del oro..." : ""}
+                        required
+                      />
+                      {oro && errorPrecios && !precios && (
+                        <small>No se pudo obtener el precio del oro; ingrésalo manualmente.</small>
+                      )}
+                    </div>
+
+                    <div className="form-campo pd-total">
+                      <label>Valor total</label>
+
+                      <input
+                        type="number"
+                        value={detalle.valor_total}
+                        readOnly
+                        required
+                      />
+                      {detalle.valor_total !== "" && (
+                        <small>
+                          {Number(detalle.cantidad).toLocaleString("es-CO")}
+                          {oro ? " g" : ""} × {formatoValor(Number(detalle.precio_unitario))}
+                        </small>
+                      )}
+                    </div>
+                  </>
+                )}
+
               </div>
-
-              <div className="form-campo">
-                <label>Cantidad</label>
-
-                <input
-                  type="number"
-                  step="0.000001"
-                  min="0.000001"
-                  value={detalle.cantidad}
-                  onChange={(e) =>
-                    actualizarDetalle(
-                      index,
-                      "cantidad",
-                      e.target.value
-                    )
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-campo">
-                <label>Precio unitario</label>
-
-                <input
-                  type="number"
-                  step="0.000001"
-                  min="0"
-                  value={detalle.precio_unitario}
-                  onChange={(e) =>
-                    actualizarDetalle(
-                      index,
-                      "precio_unitario",
-                      e.target.value
-                    )
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-campo">
-                <label>Valor total</label>
-
-                <input
-                  type="number"
-                  value={detalle.valor_total}
-                  readOnly
-                />
-              </div>
-
-              {detalles.length > 1 && (
-                <button
-                  type="button"
-                  className="btn-eliminar-pedido-item"
-                  onClick={() =>
-                    eliminarDetalle(index)
-                  }
-                >
-                  Eliminar
-                </button>
-              )}
-
-            </div>
-          ))}
+            );
+          })}
 
         </div>
 
@@ -550,7 +624,7 @@ export default function PedidoForm({
           className="btn-agregar-pedido-item"
           onClick={agregarDetalle}
         >
-          + Agregar insumo
+          + Agregar producto
         </button>
 
       </section>
@@ -562,14 +636,14 @@ export default function PedidoForm({
         <div className="form-seccion-titulo">
           <h2>Pagos del pedido</h2>
           <p>
-            Registra los pagos realizados para el pedido
+            Registra el pago realizado (pago inicial del 90 % del valor total)
           </p>
         </div>
 
         <div className="pedido-form-lista">
 
           {pagos.map((pago, index) => (
-            <div className="pedido-form-item" key={index}>
+            <div className="pedido-form-item pedido-pago-form" key={index}>
 
               <div className="form-campo">
                 <label>Fecha de pago</label>
@@ -578,19 +652,6 @@ export default function PedidoForm({
                   value={pago.fecha_pago}
                   onChange={(e) =>
                     actualizarPago(index, "fecha_pago", e.target.value)
-                  }
-                />
-              </div>
-
-              <div className="form-campo">
-                <label>Valor</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={pago.valor}
-                  onChange={(e) =>
-                    actualizarPago(index, "valor", e.target.value)
                   }
                 />
               </div>
@@ -611,8 +672,15 @@ export default function PedidoForm({
 
               <div className="form-campo pedido-comprobante-campo">
                 <label>Comprobante de pago</label>
-                <label className="btn-adjuntar-comprobante">
-                  Adjuntar imagen del comprobante
+                <label
+                  className={`btn-adjuntar-comprobante${pago.comprobante ? " adjunto" : ""}`}
+                  title={pago.comprobante?.name || ""}
+                >
+                  <span>
+                    {pago.comprobante
+                      ? `✓ ${pago.comprobante.name}`
+                      : "Adjuntar imagen del comprobante"}
+                  </span>
                   <input
                     type="file"
                     accept="image/*,.pdf"
@@ -625,9 +693,6 @@ export default function PedidoForm({
                     }
                   />
                 </label>
-                <small>
-                  {pago.comprobante?.name || "No se ha adjuntado comprobante"}
-                </small>
               </div>
 
             </div>

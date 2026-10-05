@@ -7,7 +7,9 @@ const insumosPolimetalicos = [
     tipo_insumo: "POLIMETALICO",
     nombre: "Arena polimetálica",
     unidad_medida: "kg",
-    estado: "ACTIVO",
+    fecha_ingreso: "2026-09-22",
+    compra_asociada: "002",
+    venta_asociada: null,
     mina: "Mina Chocó",
   },
   {
@@ -15,7 +17,9 @@ const insumosPolimetalicos = [
     tipo_insumo: "POLIMETALICO",
     nombre: "Arena polimetálica fina",
     unidad_medida: "kg",
-    estado: "ACTIVO",
+    fecha_ingreso: "2026-09-23",
+    compra_asociada: "001",
+    venta_asociada: null,
     mina: "Mina Bolívar",
   },
   {
@@ -23,7 +27,9 @@ const insumosPolimetalicos = [
     tipo_insumo: "POLIMETALICO",
     nombre: "Material polimetálico de acopio",
     unidad_medida: "kg",
-    estado: "INACTIVO",
+    fecha_ingreso: "2026-09-20",
+    compra_asociada: "001",
+    venta_asociada: 2,
     mina: "Acopio",
   },
 ];

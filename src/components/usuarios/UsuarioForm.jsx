@@ -19,8 +19,6 @@ export default function UsuarioForm({
     datosIniciales.telefono || ""
   );
 
-  const [contrasena, setContrasena] = useState("");
-
   const [estado, setEstado] = useState(
     datosIniciales.estado || "ACTIVO"
   );
@@ -49,24 +47,12 @@ export default function UsuarioForm({
       return;
     }
 
-    if (
-      modo === "registrar" &&
-      !contrasena.trim()
-    ) {
-      setError("La contraseña es obligatoria.");
-      return;
-    }
-
     const datos = {
       nombre_completo: nombreCompleto.trim(),
       correo: correo.trim(),
       telefono: telefono.trim(),
       estado,
     };
-
-    if (contrasena.trim()) {
-      datos.contrasena = contrasena;
-    }
 
     onGuardar(datos);
   };
@@ -148,29 +134,6 @@ export default function UsuarioForm({
               </select>
             </div>
           )}
-
-          <div className="form-campo">
-            <label htmlFor="contrasena-usuario">
-              {modo === "editar"
-                ? "Nueva contraseña"
-                : "Contraseña"}
-            </label>
-
-            <input
-              id="contrasena-usuario"
-              type="password"
-              placeholder={
-                modo === "editar"
-                  ? "Dejar vacío para conservarla"
-                  : "Ingresa la contraseña"
-              }
-              value={contrasena}
-              onChange={(e) =>
-                setContrasena(e.target.value)
-              }
-              required={modo === "registrar"}
-            />
-          </div>
 
         </div>
 

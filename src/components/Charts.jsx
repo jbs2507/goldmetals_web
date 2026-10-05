@@ -1,9 +1,34 @@
+import { useEffect, useRef, useState } from 'react'
 import { months, ventas, compras, distribucion } from '../data.js'
+
+// Mide el espacio disponible para que la gráfica ocupe exactamente su tarjeta
+// (así no hace falta hacer scroll para verla completa).
+export function useTamano(inicial = { w: 620, h: 200 }) {
+  const ref = useRef(null)
+  const [tam, setTam] = useState(inicial)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const medir = () => {
+      const w = Math.round(el.clientWidth)
+      const h = Math.round(el.clientHeight)
+      if (w > 0 && h > 0) setTam((t) => (t.w === w && t.h === h ? t : { w, h }))
+    }
+    medir()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(medir)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  return [ref, tam]
+}
 
 export function BarChart({ w = 620, h = 240 }) {
   const bw = (w - 40) / 6
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" style={{ display: 'block' }}>
+    <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} style={{ display: 'block' }}>
       <defs>
         <linearGradient id="gg" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#f7e08a" />

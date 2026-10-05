@@ -6,6 +6,9 @@ export default function RegistrarPedido() {
 
   const guardarPedido = (datos) => {
     console.log("Pedido registrado:", datos);
+    // La producción se crea automáticamente al generarse el pedido.
+    console.log("Producción creada automáticamente para el pedido (estado PENDIENTE).");
+    alert("Pedido registrado. La producción se creó automáticamente.");
     navigate("/pedidos");
   };
 

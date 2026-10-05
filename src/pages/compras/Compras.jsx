@@ -1,7 +1,11 @@
+import BotonAnular from "../../components/BotonAnular.jsx";
+import { conEstado } from "../../utils/listados.js";
+import { usePaginacion, BarraListado, Paginador } from "../../components/Listado.jsx";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CompraCard from "../../components/compras/CompraCard";
 import CompraFiltros from "../../components/compras/CompraFiltros";
+import Permiso from "../../components/Permiso.jsx";
 
 const Compras = () => {
   const navigate = useNavigate();
@@ -16,7 +20,7 @@ const Compras = () => {
    * Más adelante serán reemplazados por la
    * información proveniente de la base de datos.
    */
-  const compras = [
+  const [compras, setCompras] = useState([
     {
       id: "001",
       proveedor: "Proveedor asociado 1",
@@ -25,6 +29,9 @@ const Compras = () => {
       moneda: "COP",
       valorTotal: "$5.000.000",
       estado: "REGISTRADA",
+      certificadoOrigen: "certificado_origen.pdf",
+      resultadoLaboratorio: "resultado_laboratorio.pdf",
+      factura: "factura.pdf",
     },
     {
       id: "002",
@@ -34,6 +41,9 @@ const Compras = () => {
       moneda: "COP",
       valorTotal: "$8.500.000",
       estado: "APROBADA",
+      certificadoOrigen: "certificado_origen.pdf",
+      resultadoLaboratorio: "resultado_laboratorio.pdf",
+      factura: "factura.pdf",
     },
     {
       id: "003",
@@ -42,9 +52,12 @@ const Compras = () => {
       fecha: "20/09/2026",
       moneda: "USD",
       valorTotal: "$3.200",
-      estado: "CANCELADA",
+      estado: "ANULADA",
+      certificadoOrigen: "certificado_origen.pdf",
+      resultadoLaboratorio: "resultado_laboratorio.pdf",
+      factura: "factura.pdf",
     },
-  ];
+  ]);
 
   /*
    * FILTRAR COMPRAS
@@ -78,6 +91,11 @@ const Compras = () => {
     navigate(`/compras/editar/${compra.id}`);
   };
 
+  const anularCompra = (compra, motivo) =>
+    setCompras((a) => a.map((x) => (x.id === compra.id ? conEstado(x, "ANULADA", motivo) : x)));
+
+  const pag = usePaginacion(comprasFiltradas);
+
   return (
     <div className="compras-page">
 
@@ -91,13 +109,13 @@ const Compras = () => {
           </p>
         </div>
 
-        <button
+        <Permiso accion="crear"><button
           type="button"
           className="btn-registrar-compra"
           onClick={() => navigate("/compras/registrar")}
         >
           + Registrar compra
-        </button>
+        </button></Permiso>
       </div>
 
       {/* FILTROS */}
@@ -109,7 +127,7 @@ const Compras = () => {
       />
 
       {/* RESUMEN */}
-      <div className="compras-resumen">
+      <Permiso dato="estadisticas"><div className="compras-resumen">
 
         <div className="resumen-item">
           <span>Total de compras</span>
@@ -145,18 +163,20 @@ const Compras = () => {
           </strong>
         </div>
 
-      </div>
+      </div></Permiso>
 
       {/* LISTADO DE COMPRAS */}
       <div className="compras-lista">
 
+        <BarraListado pag={pag} archivo="compras" />
+
         {comprasFiltradas.length > 0 ? (
-          comprasFiltradas.map((compra) => (
+          pag.items.map((compra) => (
             <CompraCard
               key={compra.id}
               compra={compra}
               onConsultar={consultarCompra}
-              onEditar={editarCompra}
+              onAnular={anularCompra}
             />
           ))
         ) : (
@@ -172,6 +192,8 @@ const Compras = () => {
         )}
 
       </div>
+
+      <Paginador pag={pag} />
     </div>
   );
 };

@@ -1,5 +1,8 @@
+import { etiquetaTipoDocumento } from "../clientes/tiposDocumento.js";
 import React from "react";
 import BotonEliminar from "../BotonEliminar";
+import DocumentosCargados from "../DocumentosCargados.jsx";
+import Permiso from "../Permiso.jsx";
 
 const ProveedorCard = ({
   proveedor,
@@ -47,7 +50,17 @@ const ProveedorCard = ({
 
         <div className="dato-proveedor">
           <span>
-            Número de documento
+            Tipo de documento
+          </span>
+
+          <strong>
+            {etiquetaTipoDocumento(proveedor.tipo_documento)}
+          </strong>
+        </div>
+
+        <div className="dato-proveedor">
+          <span>
+            {proveedor.tipo_documento === "NIT" ? "Número de NIT" : "Número de documento"}
           </span>
 
           <strong>
@@ -77,13 +90,22 @@ const ProveedorCard = ({
           Consultar
         </button>
 
-        <button
+        <DocumentosCargados
+          titulo={`Documentos de ${proveedor.razon_social}`}
+          documentos={[
+            { titulo: "Cámara de Comercio", valor: proveedor.camaraComercio },
+            { titulo: "RUT", valor: proveedor.rut },
+            { titulo: "RUCOM", valor: proveedor.certificadoRucom },
+          ]}
+        />
+
+        <Permiso accion="editar"><button
           type="button"
           className="btn-editar-proveedor"
           onClick={() => onEditar(proveedor)}
         >
           Editar
-        </button>
+        </button></Permiso>
 
         <BotonEliminar
           entidad="proveedor"

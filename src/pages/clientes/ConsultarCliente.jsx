@@ -1,20 +1,32 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { etiquetaTipoDocumento } from "../../components/clientes/tiposDocumento.js";
+import DocumentoAdjunto from "../../components/DocumentoAdjunto.jsx";
 
 const clientes = [
   {
     id_cliente: 1,
     tipo_cliente: "JURIDICA",
+    tipo_documento: "NIT",
     nombre: "M&M Trading S.A.S.",
     identificacion_tributaria: "900123456-1",
     pais: "Colombia",
+    telefono: "3001112233",
+    correo: "contacto@mmtrading.com",
+    camaraComercio: "camara_comercio.pdf",
+    contrato: "contrato.pdf",
     estado: "ACTIVO",
   },
   {
     id_cliente: 2,
     tipo_cliente: "JURIDICA",
+    tipo_documento: "NIT",
     nombre: "Global Metals International",
     identificacion_tributaria: "901234567-8",
     pais: "Estados Unidos",
+    telefono: "3104445566",
+    correo: "ventas@globalmetals.com",
+    camaraComercio: "camara_comercio.pdf",
+    contrato: "contrato.pdf",
     estado: "ACTIVO",
   },
 ];
@@ -116,7 +128,18 @@ export default function ConsultarCliente() {
 
             <div className="form-campo">
               <label>
-                Identificación tributaria
+                Tipo de documento
+              </label>
+
+              <input
+                value={etiquetaTipoDocumento(cliente.tipo_documento)}
+                readOnly
+              />
+            </div>
+
+            <div className="form-campo">
+              <label>
+                {cliente.tipo_documento === "NIT" ? "Número de NIT" : "Número de documento"}
               </label>
 
               <input
@@ -138,6 +161,28 @@ export default function ConsultarCliente() {
 
             <div className="form-campo">
               <label>
+                Número de teléfono
+              </label>
+
+              <input
+                value={cliente.telefono || "No registrado"}
+                readOnly
+              />
+            </div>
+
+            <div className="form-campo">
+              <label>
+                Correo electrónico
+              </label>
+
+              <input
+                value={cliente.correo || "No registrado"}
+                readOnly
+              />
+            </div>
+
+            <div className="form-campo">
+              <label>
                 Estado
               </label>
 
@@ -149,6 +194,32 @@ export default function ConsultarCliente() {
 
           </div>
 
+        </section>
+
+        {/* =========================================
+            DOCUMENTOS LEGALES
+        ========================================= */}
+
+        <section className="form-seccion">
+          <div className="form-seccion-titulo">
+            <h2>Documentos legales del cliente</h2>
+            <p>Documentos cargados. Puedes verlos o descargarlos.</p>
+          </div>
+
+          <div className="documentos-unificados-grid">
+            <DocumentoAdjunto
+              titulo="Cámara de Comercio"
+              name="camaraComercio"
+              value={cliente.camaraComercio}
+              disabled
+            />
+            <DocumentoAdjunto
+              titulo="Contrato"
+              name="contrato"
+              value={cliente.contrato}
+              disabled
+            />
+          </div>
         </section>
 
         {/* =========================================

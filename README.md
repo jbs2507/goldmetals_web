@@ -24,3 +24,10 @@ El modo claro/oscuro se guarda en localStorage.
 - "Recordarme" mantiene la sesión al cerrar el navegador; sin marcarlo, se cierra con el navegador.
 - Usuario de prueba: `admin@mmmetalsgold.com` / `Admin12345`.
 - La lógica temporal (localStorage) está en `src/auth.js`; se reemplaza por el backend cuando esté listo.
+
+## Roles, permisos y privilegios
+
+- **Administrador**: ve y edita todo (rol de sistema, no se puede modificar ni eliminar).
+- **Contador** y **Abogado**: solo ven información general y descargan documentos; no ven precios, cantidades ni estadísticas, y no acceden a Roles ni Usuarios.
+- Los permisos se administran en el módulo **Roles** (matriz módulo × privilegio + información sensible). La lógica está en `src/permisos.js`.
+- Usuarios de prueba (solo prototipo): `admin@mmmetalsgold.com / Admin12345`, `contador@mmmetalsgold.com / Contador12345`, `abogado@mmmetalsgold.com / Abogado12345`.

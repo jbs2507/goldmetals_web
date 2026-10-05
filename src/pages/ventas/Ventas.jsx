@@ -1,65 +1,26 @@
+import BotonAnular from "../../components/BotonAnular.jsx";
+import { conEstado } from "../../utils/listados.js";
+import { usePaginacion, BarraListado, Paginador } from "../../components/Listado.jsx";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import VentaFiltros from "../../components/ventas/VentaFiltros.jsx";
 
-const ventasIniciales = [
-  {
-    id_venta: 1,
-    cliente: "M&M Trading S.A.S.",
-    pedido: "PED-001",
-    tipo_material: "Oro en lingote",
-    cantidad: "500 g",
-    precio: "120000000",
-    moneda: "COP",
-    fecha: "2026-09-20",
-    pais_destino: "India",
-    encargado_transporte: "Carlos Gómez",
-    placa_vehiculo: "ABC123",
-    estado: "REGISTRADA",
-    documentos: true,
-    pago_completo: false,
-    produccion_lista: false,
-  },
-  {
-    id_venta: 2,
-    cliente: "Global Metals International",
-    pedido: "PED-002",
-    tipo_material: "Arena procesada",
-    cantidad: "1.000 kg",
-    precio: "85000000",
-    moneda: "COP",
-    fecha: "2026-09-18",
-    pais_destino: "China",
-    encargado_transporte: "Juan Rodríguez",
-    placa_vehiculo: "XYZ789",
-    estado: "DESPACHADA",
-    documentos: true,
-    pago_completo: false,
-    produccion_lista: false,
-  },
-  {
-    id_venta: 3,
-    cliente: "Global Metals International",
-    pedido: "PED-003",
-    tipo_material: "Oro en lingote",
-    cantidad: "250 g",
-    precio: "62000000",
-    moneda: "COP",
-    fecha: "2026-09-15",
-    pais_destino: "Estados Unidos",
-    encargado_transporte: "Laura Pérez",
-    placa_vehiculo: "DEF456",
-    estado: "CANCELADA",
-    documentos: false,
-    pago_completo: false,
-    produccion_lista: false,
-  },
-];
+import HistorialEstados from "../../components/HistorialEstados.jsx";
+import DocumentosCargados from "../../components/DocumentosCargados.jsx";
+import { formatearFecha } from "../../data/insumosVinculos.js";
+import {
+  ventasVisibles as ventasIniciales,
+  fechaUltimoEstado,
+  etiquetaEstadoVenta,
+  totalesPorMoneda,
+  formatoDinero,
+} from "../../data/ventasMock.js";
+import Permiso from "../../components/Permiso.jsx";
 
 export default function Ventas() {
   const navigate = useNavigate();
 
-  const [ventas] = useState(ventasIniciales);
+  const [ventas, setVentas] = useState(ventasIniciales);
 
   const [busqueda, setBusqueda] = useState("");
 
@@ -72,7 +33,11 @@ export default function Ventas() {
       venta.cliente.toLowerCase().includes(texto) ||
       venta.pedido.toLowerCase().includes(texto) ||
       venta.tipo_material.toLowerCase().includes(texto) ||
-      venta.pais_destino.toLowerCase().includes(texto);
+      venta.pais_destino.toLowerCase().includes(texto) ||
+      (venta.acopio || "").toLowerCase().includes(texto) ||
+      (venta.mina || "").toLowerCase().includes(texto) ||
+      (venta.direccion_puerto || "").toLowerCase().includes(texto) ||
+      (venta.contacto_entrega_nombre || "").toLowerCase().includes(texto);
 
     const coincideEstado =
       estado === "TODOS" ||
@@ -93,9 +58,16 @@ export default function Ventas() {
     (venta) => venta.estado === "ENTREGADA"
   ).length;
 
-  const canceladas = ventas.filter(
-    (venta) => venta.estado === "CANCELADA"
+  const anuladas = ventas.filter(
+    (venta) => venta.estado === "ANULADA"
   ).length;
+
+  // Dinero total de las ventas vigentes (las anuladas no suman).
+  const totales = totalesPorMoneda(ventas);
+  const textoTotalDinero =
+    Object.keys(totales).length > 0
+      ? Object.entries(totales).map(([m, v]) => formatoDinero(v, m)).join(" + ")
+      : formatoDinero(0);
 
   const obtenerClaseEstado = (estadoVenta) => {
     switch (estadoVenta) {
@@ -108,8 +80,8 @@ export default function Ventas() {
       case "ENTREGADA":
         return "estado-venta-entregada";
 
-      case "CANCELADA":
-        return "estado-venta-cancelada";
+      case "ANULADA":
+        return "estado-venta-anulada";
 
       default:
         return "";
@@ -125,6 +97,11 @@ export default function Ventas() {
 
     return new Intl.NumberFormat("es-CO").format(numero);
   };
+
+  const anularVenta = (id, motivo) =>
+    setVentas((a) => a.map((x) => (x.id_venta === id ? conEstado(x, "ANULADA", motivo) : x)));
+
+  const pag = usePaginacion(ventasFiltradas);
 
   return (
     <div className="ventas-page">
@@ -145,13 +122,13 @@ export default function Ventas() {
           </p>
         </div>
 
-        <button
+        <Permiso accion="crear"><button
           type="button"
           className="btn-registrar-venta"
           onClick={() => navigate("/ventas/registrar")}
         >
           + Registrar venta
-        </button>
+        </button></Permiso>
 
       </div>
 
@@ -170,7 +147,7 @@ export default function Ventas() {
           RESUMEN
       ========================================= */}
 
-      <div className="ventas-resumen">
+      <Permiso dato="estadisticas"><div className="ventas-resumen">
 
         <div className="resumen-venta-item">
           <span>
@@ -179,6 +156,16 @@ export default function Ventas() {
 
           <strong>
             {ventas.length}
+          </strong>
+        </div>
+
+        <div className="resumen-venta-item">
+          <span>
+            Total dinero en ventas
+          </span>
+
+          <strong className="resumen-dinero">
+            {textoTotalDinero}
           </strong>
         </div>
 
@@ -214,15 +201,15 @@ export default function Ventas() {
 
         <div className="resumen-venta-item">
           <span>
-            Ventas canceladas
+            Ventas anuladas
           </span>
 
           <strong>
-            {canceladas}
+            {anuladas}
           </strong>
         </div>
 
-      </div>
+      </div></Permiso>
 
       {/* =========================================
           LISTA
@@ -230,9 +217,11 @@ export default function Ventas() {
 
       <div className="ventas-lista">
 
+        <BarraListado pag={pag} archivo="ventas" />
+
         {ventasFiltradas.length > 0 ? (
 
-          ventasFiltradas.map((venta) => (
+          pag.items.map((venta) => (
 
             <div
               className="venta-card"
@@ -293,7 +282,7 @@ export default function Ventas() {
                   </strong>
                 </div>
 
-                <div className="dato-venta">
+                <Permiso dato="cantidades"><div className="dato-venta">
                   <span>
                     Cantidad
                   </span>
@@ -301,9 +290,9 @@ export default function Ventas() {
                   <strong>
                     {venta.cantidad}
                   </strong>
-                </div>
+                </div></Permiso>
 
-                <div className="dato-venta">
+                <Permiso dato="precios"><div className="dato-venta">
                   <span>
                     Precio
                   </span>
@@ -312,7 +301,7 @@ export default function Ventas() {
                     {formatearPrecio(venta.precio)}{" "}
                     {venta.moneda}
                   </strong>
-                </div>
+                </div></Permiso>
 
                 <div className="dato-venta">
                   <span>
@@ -340,9 +329,7 @@ export default function Ventas() {
                   </span>
 
                   <strong>
-                    {venta.pago_completo && venta.produccion_lista
-                      ? (venta.encargado_transporte || "Pendiente de registrar")
-                      : "Pendiente: completar pago y producción"}
+                    {venta.encargado_transporte || "Pendiente de registrar"}
                   </strong>
                 </div>
 
@@ -352,9 +339,67 @@ export default function Ventas() {
                   </span>
 
                   <strong>
-                    {venta.pago_completo && venta.produccion_lista
-                      ? (venta.placa_vehiculo || "Pendiente de registrar")
-                      : "Pendiente: completar pago y producción"}
+                    {venta.placa_vehiculo || "Pendiente de registrar"}
+                  </strong>
+                </div>
+
+                <div className="dato-venta">
+                  <span>
+                    Dirección del puerto
+                  </span>
+
+                  <strong>
+                    {venta.direccion_puerto || "No registrada"}
+                  </strong>
+                </div>
+
+                <div className="dato-venta">
+                  <span>
+                    Cliente que recibe
+                  </span>
+
+                  <strong>
+                    {venta.contacto_entrega_nombre || "No registrado"}
+                  </strong>
+                </div>
+
+                <div className="dato-venta">
+                  <span>
+                    Teléfono de entrega
+                  </span>
+
+                  <strong>
+                    {venta.contacto_entrega_telefono || "No registrado"}
+                  </strong>
+                </div>
+
+                <div className="dato-venta">
+                  <span>
+                    Acopio de origen
+                  </span>
+
+                  <strong>
+                    {venta.acopio || "No registrado"}
+                  </strong>
+                </div>
+
+                <div className="dato-venta">
+                  <span>
+                    Mina de origen
+                  </span>
+
+                  <strong>
+                    {venta.mina || "No registrada"}
+                  </strong>
+                </div>
+
+                <div className="dato-venta">
+                  <span>
+                    Fecha del último estado
+                  </span>
+
+                  <strong>
+                    {formatearFecha(fechaUltimoEstado(venta))}
                   </strong>
                 </div>
 
@@ -402,17 +447,21 @@ export default function Ventas() {
                   Consultar
                 </button>
 
-                <button
-                  type="button"
-                  className="btn-editar-venta"
-                  onClick={() =>
-                    navigate(
-                      `/ventas/editar/${venta.id_venta}`
-                    )
-                  }
-                >
-                  Editar
-                </button>
+                <DocumentosCargados
+                  titulo={`Documentos de la venta #${venta.id_venta}`}
+                  documentos={[
+                    { titulo: "Factura", valor: venta.factura },
+                    { titulo: "Resultado de laboratorio", valor: venta.resultado_laboratorio },
+                  ]}
+                />
+
+                <HistorialEstados
+                  titulo={`Historial de la venta #${venta.id_venta}`}
+                  historial={venta.historial || []}
+                  etiqueta={etiquetaEstadoVenta}
+                />
+
+                <BotonAnular entidad="venta" nombre={`la venta ${venta.pedido} de ${venta.cliente}`} deshabilitado={venta.estado === "ANULADA"} onConfirmar={(m) => anularVenta(venta.id_venta, m)} />
 
               </div>
 
@@ -438,6 +487,8 @@ export default function Ventas() {
 
       </div>
 
+
+      <Paginador pag={pag} />
     </div>
   );
 }

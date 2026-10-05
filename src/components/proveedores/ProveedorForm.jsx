@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import { filtrarSoloDigitos, filtrarSoloLetras, validarFormulario } from "../../utils/validaciones.js";
 import DocumentoAdjunto from "../DocumentoAdjunto.jsx";
+import { TIPOS_DOCUMENTO, tipoDocumentoSoloDigitos } from "../clientes/tiposDocumento.js";
 
-const REGLAS_PROVEEDOR = {
+const reglasProveedor = (tipoDocumento) => ({
   razon_social: { requerido: true, soloLetras: true },
-  numero_documento: { requerido: true, soloDigitos: true },
-};
+  tipo_documento: { requerido: true },
+  numero_documento: { requerido: true, soloDigitos: tipoDocumentoSoloDigitos(tipoDocumento) },
+});
+
+// Letras, números y guion (pasaportes y documentos extranjeros).
+const filtrarAlfanumerico = (valor) => valor.replace(/[^A-Za-z0-9-]/g, "");
 
 const ProveedorForm = ({
   modo = "registrar",
@@ -15,6 +20,9 @@ const ProveedorForm = ({
 }) => {
   const esConsulta = modo === "consultar";
   const [razonSocial, setRazonSocial] = useState(proveedor.razon_social || "");
+  const [tipoDocumento, setTipoDocumento] = useState(
+    proveedor.tipo_documento || (proveedor.tipo_persona === "NATURAL" ? "CC" : "NIT")
+  );
   const [numeroDocumento, setNumeroDocumento] = useState(proveedor.numero_documento || "");
   const [documentos, setDocumentos] = useState({
     camaraComercio: proveedor.camaraComercio || null,
@@ -32,8 +40,8 @@ const ProveedorForm = ({
     e.preventDefault();
 
     const nuevosErrores = validarFormulario(
-      { razon_social: razonSocial, numero_documento: numeroDocumento },
-      REGLAS_PROVEEDOR
+      { razon_social: razonSocial, tipo_documento: tipoDocumento, numero_documento: numeroDocumento },
+      reglasProveedor(tipoDocumento)
     );
 
     if (!esConsulta && modo !== "editar") {
@@ -81,12 +89,37 @@ const ProveedorForm = ({
           </div>
 
           <div className="form-campo">
-            <label>Número de documento</label>
+            <label>Tipo de documento</label>
+            <select
+              name="tipo_documento"
+              value={tipoDocumento}
+              onChange={(e) => {
+                setTipoDocumento(e.target.value);
+                setNumeroDocumento("");
+              }}
+              disabled={esConsulta}
+              required
+            >
+              {TIPOS_DOCUMENTO.map((t) => (
+                <option key={t.valor} value={t.valor}>{t.etiqueta}</option>
+              ))}
+            </select>
+            {errores.tipo_documento && <span className="err">{errores.tipo_documento}</span>}
+          </div>
+
+          <div className="form-campo">
+            <label>{tipoDocumento === "NIT" ? "Número de NIT" : "Número de documento"}</label>
             <input
               type="text"
               name="numero_documento"
               value={numeroDocumento}
-              onChange={(e) => setNumeroDocumento(filtrarSoloDigitos(e.target.value))}
+              onChange={(e) =>
+                setNumeroDocumento(
+                  tipoDocumentoSoloDigitos(tipoDocumento)
+                    ? filtrarSoloDigitos(e.target.value)
+                    : filtrarAlfanumerico(e.target.value)
+                )
+              }
               placeholder="Ingrese el número de documento"
               disabled={esConsulta}
               required

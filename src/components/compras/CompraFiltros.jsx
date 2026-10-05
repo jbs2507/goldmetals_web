@@ -36,8 +36,8 @@ const CompraFiltros = ({
           Aprobada
         </option>
 
-        <option value="CANCELADA">
-          Cancelada
+        <option value="ANULADA">
+          Anulada
         </option>
       </select>
 

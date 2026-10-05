@@ -1,6 +1,10 @@
+import { usePaginacion, BarraListado, Paginador } from "../../components/Listado.jsx";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BotonEliminar from "../../components/BotonEliminar";
+import BotonAnular from "../../components/BotonAnular.jsx";
+import { formatearFecha, textoCompra, textoVenta } from "../../data/insumosVinculos.js";
+import { conEstado } from "../../utils/listados.js";
+import Permiso from "../../components/Permiso.jsx";
 
 const insumosOroIniciales = [
   {
@@ -9,7 +13,9 @@ const insumosOroIniciales = [
     nombre: "Oro",
     cantidad: 500,
     unidad_medida: "g",
-    estado: "ACTIVO",
+    fecha_ingreso: "2026-09-23",
+    compra_asociada: "001",
+    venta_asociada: null,
   },
   {
     id_insumo: 2,
@@ -17,7 +23,9 @@ const insumosOroIniciales = [
     nombre: "Oro en polvo",
     cantidad: 250,
     unidad_medida: "g",
-    estado: "ACTIVO",
+    fecha_ingreso: "2026-09-22",
+    compra_asociada: "002",
+    venta_asociada: null,
   },
   {
     id_insumo: 3,
@@ -25,7 +33,9 @@ const insumosOroIniciales = [
     nombre: "Oro en lingote",
     cantidad: 2,
     unidad_medida: "kg",
-    estado: "INACTIVO",
+    fecha_ingreso: "2026-09-20",
+    compra_asociada: "001",
+    venta_asociada: 1,
   },
 ];
 
@@ -48,13 +58,9 @@ export default function InsumosOro() {
   );
 
   const [busqueda, setBusqueda] = useState("");
-  const [estado, setEstado] = useState("TODOS");
 
-  const eliminarInsumo = (id) => {
-    setInsumos((actuales) =>
-      actuales.filter((i) => i.id_insumo !== id)
-    );
-  };
+  const anularInsumo = (id, motivo) =>
+    setInsumos((a) => a.map((i) => (i.id_insumo === id ? conEstado(i, "ANULADO", motivo) : i)));
 
   const insumosFiltrados = insumos.filter((insumo) => {
     const texto = busqueda.toLowerCase();
@@ -62,22 +68,13 @@ export default function InsumosOro() {
     const coincideBusqueda =
       insumo.nombre.toLowerCase().includes(texto);
 
-    const coincideEstado =
-      estado === "TODOS" ||
-      insumo.estado === estado;
 
-    return coincideBusqueda && coincideEstado;
+    return coincideBusqueda;
   });
 
   const totalInsumos = insumos.length;
 
-  const insumosActivos = insumos.filter(
-    (insumo) => insumo.estado === "ACTIVO"
-  ).length;
-
-  const insumosInactivos = insumos.filter(
-    (insumo) => insumo.estado === "INACTIVO"
-  ).length;
+  const pag = usePaginacion(insumosFiltrados);
 
   return (
     <div className="insumos-oro-page">
@@ -90,16 +87,12 @@ export default function InsumosOro() {
           <p>
             Gestión de insumos de oro registrados
           </p>
+
+          <p className="nota-insumo-automatico">
+            El inventario de oro aumenta con las compras y disminuye con las ventas, por eso no se registra manualmente.
+          </p>
         </div>
 
-        <button
-          className="btn-registrar-insumo-oro"
-          onClick={() =>
-            navigate("/insumos-oro/registrar")
-          }
-        >
-          + Registrar insumo
-        </button>
       </div>
 
       {/* FILTROS */}
@@ -118,29 +111,11 @@ export default function InsumosOro() {
           />
         </div>
 
-        <select
-          value={estado}
-          onChange={(e) =>
-            setEstado(e.target.value)
-          }
-        >
-          <option value="TODOS">
-            Todos los estados
-          </option>
-
-          <option value="ACTIVO">
-            Activo
-          </option>
-
-          <option value="INACTIVO">
-            Inactivo
-          </option>
-        </select>
 
       </div>
 
       {/* RESUMEN */}
-      <div className="insumos-oro-resumen">
+      <Permiso dato="estadisticas"><div className="insumos-oro-resumen">
 
         <div className="resumen-insumo-oro-item">
           <span>Total insumos</span>
@@ -150,26 +125,12 @@ export default function InsumosOro() {
           </strong>
         </div>
 
-        <div className="resumen-insumo-oro-item">
-          <span>Activos</span>
-
-          <strong>
-            {insumosActivos}
-          </strong>
-        </div>
-
-        <div className="resumen-insumo-oro-item">
-          <span>Inactivos</span>
-
-          <strong>
-            {insumosInactivos}
-          </strong>
-        </div>
-
-      </div>
+      </div></Permiso>
 
       {/* LISTA */}
       <div className="insumos-oro-lista">
+
+        <BarraListado pag={pag} archivo="insumos_oro" />
 
         {insumosFiltrados.length === 0 ? (
 
@@ -187,7 +148,7 @@ export default function InsumosOro() {
 
         ) : (
 
-          insumosFiltrados.map((insumo) => (
+          pag.items.map((insumo) => (
 
             <div
               className="insumo-oro-card"
@@ -209,15 +170,11 @@ export default function InsumosOro() {
 
                 </div>
 
-                <span
-                  className={`estado-insumo-oro ${
-                    insumo.estado === "ACTIVO"
-                      ? "estado-insumo-oro-activo"
-                      : "estado-insumo-oro-inactivo"
-                  }`}
-                >
-                  {insumo.estado}
-                </span>
+                {insumo.estado === "ANULADO" && (
+                  <span className="estado-insumo-oro estado-insumo-oro-inactivo">
+                    ANULADO
+                  </span>
+                )}
 
               </div>
 
@@ -240,13 +197,13 @@ export default function InsumosOro() {
                   </strong>
                 </div>
 
-                <div className="dato-insumo-oro">
+                <Permiso dato="cantidades"><div className="dato-insumo-oro">
                   <span>Cantidad</span>
 
                   <strong>
                     {insumo.cantidad}
                   </strong>
-                </div>
+                </div></Permiso>
 
                 <div className="dato-insumo-oro">
                   <span>Unidad de medida</span>
@@ -256,6 +213,21 @@ export default function InsumosOro() {
                       insumo.unidad_medida
                     )}
                   </strong>
+                </div>
+
+                <div className="dato-insumo-oro">
+                  <span>Fecha de ingreso</span>
+                  <strong>{formatearFecha(insumo.fecha_ingreso)}</strong>
+                </div>
+
+                <div className="dato-insumo-oro">
+                  <span>Compra asociada</span>
+                  <strong>{textoCompra(insumo.compra_asociada)}</strong>
+                </div>
+
+                <div className="dato-insumo-oro">
+                  <span>Venta asociada</span>
+                  <strong>{textoVenta(insumo.venta_asociada)}</strong>
                 </div>
 
               </div>
@@ -274,22 +246,7 @@ export default function InsumosOro() {
                   Consultar
                 </button>
 
-                <button
-                  className="btn-editar-insumo-oro"
-                  onClick={() =>
-                    navigate(
-                      `/insumos-oro/editar/${insumo.id_insumo}`
-                    )
-                  }
-                >
-                  Editar
-                </button>
-
-                <BotonEliminar
-                  entidad="insumo de oro"
-                  nombre={insumo.nombre}
-                  onConfirmar={() => eliminarInsumo(insumo.id_insumo)}
-                />
+                <BotonAnular entidad="insumo de oro" nombre={insumo.nombre} deshabilitado={insumo.estado === "ANULADO"} onConfirmar={(m) => anularInsumo(insumo.id_insumo, m)} />
 
               </div>
 
@@ -301,6 +258,8 @@ export default function InsumosOro() {
 
       </div>
 
+
+      <Paginador pag={pag} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { BarChart, Donut } from './Charts.jsx'
-import { kpis, pedidos, produccion } from '../data.js'
+import { BarChart, Donut, useTamano } from './Charts.jsx'
+import { kpis, pedidos, pedidosOro } from '../data.js'
+import { cargarPrecios, precioOroPorGramo } from '../utils/precios.js'
 
 export const KpiRow = () => (
   <div className="kg">
@@ -14,8 +15,10 @@ export const KpiRow = () => (
   </div>
 )
 
-export const ChartCard = () => (
-  <div className="c">
+export const ChartCard = () => {
+  const [ref, tam] = useTamano()
+  return (
+  <div className="c chart-card">
     <div className="hd">
       <div>
         <h3>Compra y venta de insumos polimetálicos y oro</h3>
@@ -27,16 +30,23 @@ export const ChartCard = () => (
       <span><u style={{ background: '#e0aa2b' }} />Ventas</span>
       <span><u style={{ background: 'var(--b2)' }} />Compras</span>
     </div>
-    <BarChart />
+    <div className="chart-area" ref={ref}>
+      <BarChart w={tam.w} h={tam.h} />
+    </div>
   </div>
-)
+  )
+}
 
 export const DistCard = () => (
-  <div className="c">
-    <h3>Distribución actual de los productos</h3>
-    <div className="s">Valores del año 2026</div>
-    <div className="seg"><div>Día</div><div>Mes</div><div className="on">Año</div></div>
-    <Donut />
+  <div className="c dist-card">
+    <div className="hd">
+      <div>
+        <h3>Distribución actual de los productos</h3>
+        <div className="s">Valores del año 2026</div>
+      </div>
+      <div className="seg"><div>Día</div><div>Mes</div><div className="on">Año</div></div>
+    </div>
+    <Donut size={104} />
   </div>
 )
 
@@ -44,14 +54,13 @@ export const OrdersCard = () => (
   <div className="c">
     <div className="hd">
       <div>
-        <h3>Pedidos en polimetálicos</h3>
+        <h3>Pedidos de materiales polimetálicos</h3>
         <div className="s">Compromisos de entrega vigentes</div>
       </div>
       <span className="pill">{pedidos.length} activos</span>
     </div>
     {pedidos.map((p) => (
       <div className="ord" key={p.cliente}>
-        <span style={{ fontSize: 20 }}></span>
         <div className="m"><b>{p.cliente}</b><small>Entrega: {p.entrega}</small></div>
         <div className="r"><b>{p.kg} kg</b><small>Piden: {p.piden} kg</small></div>
       </div>
@@ -59,58 +68,28 @@ export const OrdersCard = () => (
   </div>
 )
 
-export const ProductionCard = () => (
+export const GoldOrdersCard = () => (
   <div className="c">
     <div className="hd">
       <div>
-        <h3>Producción</h3>
-        <div className="s">Avance de la orden en curso</div>
+        <h3>Pedidos de lingotes de oro</h3>
+        <div className="s">Compromisos de entrega vigentes</div>
       </div>
-      <span className="pill">45% completado</span>
+      <span className="pill">{pedidosOro.length} activos</span>
     </div>
-    {produccion.map((p) => (
-      <div className="pr" key={p.etapa}>
-        <div className="t"><span>{p.etapa}</span><span style={{ color: 'var(--g3)' }}>{p.pct}%</span></div>
-        <div className="bg"><i style={{ width: p.pct + '%' }} /></div>
+    {pedidosOro.map((p) => (
+      <div className="ord" key={p.cliente}>
+        <div className="m"><b>{p.cliente}</b><small>Entrega: {p.entrega}</small></div>
+        <div className="r"><b>{p.gr} gr</b><small>Piden: {p.piden} gr</small></div>
       </div>
     ))}
   </div>
 )
 
-// TODO: conectar con la API de precios y mostrar el último valor guardado si hay límite de solicitudes.
 // =========================================
 // PRECIOS DEL DÍA (oro y dólar en vivo)
-// Mismas fuentes que usa la app móvil:
-//  - Oro:   https://api.gold-api.com/price/XAU
-//  - Dólar: https://open.er-api.com/v6/latest/USD
-// Se cachea 1 hora en localStorage para no chocar
-// con el límite de solicitudes del servicio gratuito.
+// La lógica de consulta y caché está en utils/precios.js
 // =========================================
-
-const PRECIOS_CACHE_KEY = 'gm_precios_dia_v1'
-const PRECIOS_CACHE_MS = 60 * 60 * 1000 // 1 hora
-
-async function obtenerPreciosDelDia() {
-  const [oroRes, dolarRes] = await Promise.all([
-    fetch('https://api.gold-api.com/price/XAU'),
-    fetch('https://open.er-api.com/v6/latest/USD'),
-  ])
-
-  if (!oroRes.ok) throw new Error('oro')
-  if (!dolarRes.ok) throw new Error('dolar')
-
-  const oroJson = await oroRes.json()
-  const dolarJson = await dolarRes.json()
-
-  const oro = Number(oroJson?.price)
-  const cop = Number(dolarJson?.rates?.COP)
-
-  if (!Number.isFinite(oro) || !Number.isFinite(cop)) {
-    throw new Error('formato')
-  }
-
-  return { oro, cop, actualizado: Date.now() }
-}
 
 const formatoMoneda = (n) =>
   n.toLocaleString('es-CO', { maximumFractionDigits: 2 })
@@ -122,25 +101,9 @@ export const PricesCard = () => {
   useEffect(() => {
     let activo = true
 
-    async function cargar(forzar) {
+    async function cargar() {
       try {
-        if (!forzar) {
-          const cacheRaw = localStorage.getItem(PRECIOS_CACHE_KEY)
-          if (cacheRaw) {
-            const cache = JSON.parse(cacheRaw)
-            if (Date.now() - cache.actualizado < PRECIOS_CACHE_MS) {
-              if (activo) {
-                setPrecios(cache)
-                setError('')
-              }
-              return
-            }
-          }
-        }
-
-        const datos = await obtenerPreciosDelDia()
-        localStorage.setItem(PRECIOS_CACHE_KEY, JSON.stringify(datos))
-
+        const datos = await cargarPrecios()
         if (activo) {
           setPrecios(datos)
           setError('')
@@ -152,30 +115,38 @@ export const PricesCard = () => {
       }
     }
 
-    cargar(false)
+    cargar()
 
     return () => {
       activo = false
     }
   }, [])
 
+  const gramoCop = precios ? precioOroPorGramo(precios, 'COP') : null
+  const hora = precios
+    ? new Date(precios.actualizado).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+    : ''
+
   return (
-    <div className="c px">
-      <div className="hd">
-        <div>
-          <h3>Precios del día</h3>
-          <div className="s">Dólar y oro, en tiempo real</div>
+    <div className="c px px-top">
+      <div className="px-info">
+        <h3>Precios del día</h3>
+        <div className="s">
+          Oro y dólar en tiempo real{hora ? ` · actualizado ${hora}` : ''}
         </div>
-        <span className="pill">⟳</span>
       </div>
       <div className="v">
         <div>
-          <small>USD → COP</small>
-          <b>{precios ? `$${formatoMoneda(precios.cop)}` : '$— —'}</b>
-        </div>
-        <div>
           <small>Oro (USD/oz)</small>
           <b>{precios ? `$${formatoMoneda(precios.oro)}` : '$— —'}</b>
+        </div>
+        <div>
+          <small>Oro (COP/gramo)</small>
+          <b>{gramoCop ? `$${formatoMoneda(gramoCop)}` : '$— —'}</b>
+        </div>
+        <div>
+          <small>Dólar (USD → COP)</small>
+          <b>{precios ? `$${formatoMoneda(precios.cop)}` : '$— —'}</b>
         </div>
       </div>
       {error && <div className="wn">⚠ {error}</div>}

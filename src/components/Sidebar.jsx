@@ -3,6 +3,7 @@ import logoGold from "../assets/logo-gold.png";
 
 import { Link, useLocation } from "react-router-dom";
 import { menu } from "../data.js";
+import { moduloDeRuta, puede } from "../permisos.js";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -20,7 +21,17 @@ export default function Sidebar() {
       <img className="lgl" src={logoDark} alt="Gold Metals App" />
       <img className="lgd" src={logoGold} alt="Gold Metals App" />
 
-      {menu.map((g) => (
+      {menu
+        .map((g) => ({
+          ...g,
+          // Solo se muestran los módulos que el rol puede ver.
+          items: g.items.filter((i) => {
+            const { modulo } = moduloDeRuta(i.path || "/dashboard");
+            return !modulo || puede(modulo, "ver");
+          }),
+        }))
+        .filter((g) => g.items.length > 0)
+        .map((g) => (
         <div key={g.seccion} style={{ display: "contents" }}>
           <small>{g.seccion}</small>
           {g.items.map((i) => (

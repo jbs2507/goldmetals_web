@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { formatearFecha, textoCompra, textoVenta } from "../../data/insumosVinculos.js";
 
 const insumosPolimetalicos = [
   {
@@ -6,7 +7,9 @@ const insumosPolimetalicos = [
     tipo_insumo: "POLIMETALICO",
     nombre: "Arena polimetálica",
     unidad_medida: "kg",
-    estado: "ACTIVO",
+    fecha_ingreso: "2026-09-22",
+    compra_asociada: "002",
+    venta_asociada: null,
     mina: "Mina Chocó",
   },
   {
@@ -14,7 +17,9 @@ const insumosPolimetalicos = [
     tipo_insumo: "POLIMETALICO",
     nombre: "Arena polimetálica fina",
     unidad_medida: "kg",
-    estado: "ACTIVO",
+    fecha_ingreso: "2026-09-23",
+    compra_asociada: "001",
+    venta_asociada: null,
     mina: "Mina Bolívar",
   },
   {
@@ -22,7 +27,9 @@ const insumosPolimetalicos = [
     tipo_insumo: "POLIMETALICO",
     nombre: "Material polimetálico de acopio",
     unidad_medida: "kg",
-    estado: "INACTIVO",
+    fecha_ingreso: "2026-09-20",
+    compra_asociada: "001",
+    venta_asociada: 2,
     mina: "Acopio",
   },
 ];
@@ -140,10 +147,18 @@ export default function ConsultarInsumoPolimetalico() {
             </div>
 
             <div className="dato-insumo-polimetalico">
-              <span>Estado</span>
-              <strong>
-                {insumo.estado}
-              </strong>
+              <span>Fecha de ingreso</span>
+              <strong>{formatearFecha(insumo.fecha_ingreso)}</strong>
+            </div>
+
+            <div className="dato-insumo-polimetalico">
+              <span>Compra asociada</span>
+              <strong>{textoCompra(insumo.compra_asociada)}</strong>
+            </div>
+
+            <div className="dato-insumo-polimetalico">
+              <span>Venta asociada</span>
+              <strong>{textoVenta(insumo.venta_asociada)}</strong>
             </div>
           </div>
         </section>

@@ -13,7 +13,7 @@ export default function EmpleadoFiltros({
 
         <input
           type="text"
-          placeholder="Buscar por nombre, documento o teléfono..."
+          placeholder="Buscar por nombre, documento, cargo o correo..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />

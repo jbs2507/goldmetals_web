@@ -1,9 +1,12 @@
+import BotonAnular from "../BotonAnular.jsx";
 import React from "react";
+import DocumentosCargados from "../DocumentosCargados.jsx";
+import Permiso from "../Permiso.jsx";
 
 const CompraCard = ({
   compra,
   onConsultar,
-  onEditar,
+  onAnular,
 }) => {
   return (
     <div className="compra-card">
@@ -56,12 +59,12 @@ const CompraCard = ({
           </strong>
         </div>
 
-        <div className="dato-compra">
+        <Permiso dato="precios"><div className="dato-compra">
           <span>Valor total</span>
           <strong>
             {compra.valorTotal}
           </strong>
-        </div>
+        </div></Permiso>
 
       </div>
 
@@ -75,13 +78,16 @@ const CompraCard = ({
           Consultar
         </button>
 
-        <button
-          type="button"
-          className="btn-editar"
-          onClick={() => onEditar(compra)}
-        >
-          Editar
-        </button>
+        <DocumentosCargados
+          titulo={`Documentos de la compra #${compra.id}`}
+          documentos={[
+            { titulo: "Certificado de origen", valor: compra.certificadoOrigen },
+            { titulo: "Resultado de laboratorio", valor: compra.resultadoLaboratorio },
+            { titulo: "Factura", valor: compra.factura },
+          ]}
+        />
+
+        <BotonAnular entidad="compra" nombre={`la compra #${compra.id}`} deshabilitado={compra.estado === "ANULADA"} onConfirmar={(m) => onAnular(compra, m)} />
 
       </div>
 

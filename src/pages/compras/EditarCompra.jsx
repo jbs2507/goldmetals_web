@@ -21,6 +21,9 @@ const EditarCompra = () => {
     precioUnitario: "10000",
     valorRegalias: "500000",
     estado: "REGISTRADA",
+    certificadoOrigen: "certificado_origen.pdf",
+    resultadoLaboratorio: "resultado_laboratorio.pdf",
+    factura: "factura.pdf",
   };
 
   const actualizarCompra = (datosCompra) => {

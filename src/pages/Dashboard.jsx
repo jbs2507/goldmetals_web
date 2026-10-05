@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cerrarSesion as cerrarSesionAuth, usuarioActual, obtenerIniciales } from '../auth.js'
 
+import Permiso from '../components/Permiso.jsx'
+
 import {
   KpiRow,
   ChartCard,
   DistCard,
   OrdersCard,
-  ProductionCard,
+  GoldOrdersCard,
   PricesCard
 } from '../components/Cards.jsx'
 
@@ -81,7 +83,7 @@ export default function Dashboard({ theme, onToggleTheme }) {
 
   return (
 
-    <>
+    <div className="dash">
 
       {/* =========================================
           ENCABEZADO
@@ -319,10 +321,30 @@ export default function Dashboard({ theme, onToggleTheme }) {
           CONTENIDO DEL DASHBOARD
       ========================================= */}
 
-      <div className="body">
+      <Permiso
+        dato="estadisticas"
+        alternativa={
+          <div className="body">
+            <div className="dash-restringido">
+              <h2>Bienvenido al sistema</h2>
+              <p>
+                Tu rol{usuarioActivo?.rol ? ` (${usuarioActivo.rol})` : ''} permite consultar la información
+                general y descargar documentos desde el menú lateral. Las estadísticas, precios y
+                cantidades no están disponibles para este rol.
+              </p>
+            </div>
+          </div>
+        }
+      >
+      <div className="body dash-body">
 
+        {/* 1. LO MÁS IMPORTANTE: PRECIO DEL ORO Y DEL DÓLAR */}
+        <PricesCard />
+
+        {/* 2. INDICADORES */}
         <KpiRow />
 
+        {/* 3. GRÁFICAS */}
         <div className="gr r1">
 
           <ChartCard />
@@ -331,20 +353,20 @@ export default function Dashboard({ theme, onToggleTheme }) {
 
         </div>
 
-
+        {/* 4. PEDIDOS (polimetálicos y lingotes de oro) */}
         <div className="gr r2">
 
           <OrdersCard />
 
-          <ProductionCard />
-
-          <PricesCard />
+          <GoldOrdersCard />
 
         </div>
 
       </div>
 
-    </>
+      </Permiso>
+
+    </div>
 
   )
 }

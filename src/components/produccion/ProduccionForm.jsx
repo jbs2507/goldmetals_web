@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { filtrarSoloLetras, validarCampo } from "../../utils/validaciones.js";
+import { formatoMonto } from "../../data/produccionesMock.js";
+import { puedeVerDato } from "../../permisos.js";
 
 const ProduccionForm = ({
   modo = "registrar",
@@ -8,6 +10,9 @@ const ProduccionForm = ({
   onCancelar,
 }) => {
   const esConsulta = modo === "consultar";
+  // En consulta se ocultan cantidades y montos a los roles que no tienen ese privilegio.
+  const ocultarCantidades = esConsulta && !puedeVerDato("cantidades");
+  const ocultarPrecios = esConsulta && !puedeVerDato("precios");
 
   const [cantidad, setCantidad] = useState(produccion.cantidad || "");
   const [fecha, setFecha] = useState(produccion.fecha || "2026-09-23");
@@ -26,7 +31,7 @@ const ProduccionForm = ({
         const errCantidad = validarCampo(cantidad, { requerido: true, tipo: "number" });
         if (errCantidad) nuevosErrores.cantidad = errCantidad;
 
-        const errFecha = validarCampo(fecha, { requerido: true, tipo: "date" });
+        const errFecha = validarCampo(fecha, { requerido: true });
         if (errFecha) nuevosErrores.fecha = errFecha;
 
         const errCliente = validarCampo(cliente, { requerido: true });
@@ -145,6 +150,7 @@ const ProduccionForm = ({
           </div>
 
           {/* CANTIDAD */}
+          {!ocultarCantidades && (
           <div className="form-campo">
             <label>Cantidad</label>
 
@@ -159,6 +165,7 @@ const ProduccionForm = ({
             />
             {errores.cantidad && <span className="err">{errores.cantidad}</span>}
           </div>
+          )}
 
           {/* FECHA */}
           <div className="form-campo">
@@ -181,6 +188,14 @@ const ProduccionForm = ({
             <input type="text" name="mina" value={mina} onChange={(e) => setMina(e.target.value)} placeholder="Ingrese la mina" disabled={esConsulta} required />
             {errores.mina && <span className="err">{errores.mina}</span>}
           </div>
+
+          {/* MONTO (calculado a partir del pedido) */}
+          {produccion.monto != null && !ocultarPrecios && (
+            <div className="form-campo">
+              <label>Monto de la producción</label>
+              <input type="text" value={formatoMonto(produccion.monto)} disabled readOnly />
+            </div>
+          )}
 
         </div>
       </div>

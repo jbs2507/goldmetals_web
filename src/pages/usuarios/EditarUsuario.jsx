@@ -12,28 +12,20 @@ const usuarios = [
   },
   {
     id_usuario: 2,
-    correo: "compras@mmmetalsgold.com",
-    nombre_completo: "Jefe de compras",
+    correo: "contador@mmmetalsgold.com",
+    nombre_completo: "Contador",
     telefono: "3012345678",
-    rol: "Compras",
+    rol: "Contador",
     estado: "ACTIVO",
   },
   {
     id_usuario: 3,
-    correo: "produccion@mmmetalsgold.com",
-    nombre_completo: "Analista de producción",
+    correo: "abogado@mmmetalsgold.com",
+    nombre_completo: "Abogado",
     telefono: "3023456789",
-    rol: "Producción",
+    rol: "Abogado",
     estado: "ACTIVO",
-  },
-  {
-    id_usuario: 4,
-    correo: "logistica@mmmetalsgold.com",
-    nombre_completo: "Auxiliar de logística",
-    telefono: "3034567890",
-    rol: "Logística",
-    estado: "INACTIVO",
-  },
+  }
 ];
 
 export default function EditarUsuario() {
@@ -56,7 +48,6 @@ export default function EditarUsuario() {
     usuario?.telefono || ""
   );
 
-  const [contrasena, setContrasena] = useState("");
   const [rol, setRol] = useState(usuario?.rol || "");
 
   const [estado, setEstado] = useState(
@@ -81,10 +72,6 @@ export default function EditarUsuario() {
       rol,
       estado,
     };
-
-    if (contrasena.trim()) {
-      usuarioActualizado.contrasena = contrasena;
-    }
 
     console.log(
       "Usuario actualizado:",
@@ -209,10 +196,8 @@ export default function EditarUsuario() {
               <select id="rol-usuario" value={rol} onChange={(e) => setRol(e.target.value)} required>
                 <option value="">Seleccionar rol</option>
                 <option value="Administrador">Administrador</option>
-                <option value="Compras">Compras</option>
-                <option value="Producción">Producción</option>
-                <option value="Ventas">Ventas</option>
-                <option value="Logística">Logística</option>
+                <option value="Contador">Contador</option>
+                <option value="Abogado">Abogado</option>
               </select>
             </div>
 
@@ -237,22 +222,6 @@ export default function EditarUsuario() {
                   Inactivo
                 </option>
               </select>
-            </div>
-
-            <div className="form-campo">
-              <label htmlFor="contrasena-usuario">
-                Nueva contraseña
-              </label>
-
-              <input
-                id="contrasena-usuario"
-                type="password"
-                placeholder="Dejar vacío para conservarla"
-                value={contrasena}
-                onChange={(e) =>
-                  setContrasena(e.target.value)
-                }
-              />
             </div>
 
           </div>

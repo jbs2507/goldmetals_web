@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { comprasDisponibles, ventasDisponibles } from "../../data/insumosVinculos.js";
 import { filtrarSoloLetras, validarCampo } from "../../utils/validaciones.js";
 
 export default function InsumoOroForm({
@@ -19,9 +20,19 @@ export default function InsumoOroForm({
     datosIniciales.unidad_medida || "g"
   );
 
-  const [estado, setEstado] = useState(
-    datosIniciales.estado || "ACTIVO"
+  const [fechaIngreso, setFechaIngreso] = useState(
+    datosIniciales.fecha_ingreso || ""
   );
+
+  const [compraAsociada, setCompraAsociada] = useState(
+    datosIniciales.compra_asociada || ""
+  );
+
+  const [ventaAsociada, setVentaAsociada] = useState(
+    datosIniciales.venta_asociada ? String(datosIniciales.venta_asociada) : ""
+  );
+
+  const hoy = new Date().toISOString().slice(0, 10);
 
   const [error, setError] = useState("");
 
@@ -41,12 +52,29 @@ export default function InsumoOroForm({
       return;
     }
 
+    if (!fechaIngreso) {
+      setError("La fecha de ingreso es obligatoria.");
+      return;
+    }
+
+    if (fechaIngreso > hoy) {
+      setError("La fecha de ingreso no puede ser posterior a hoy.");
+      return;
+    }
+
+    if (!compraAsociada) {
+      setError("Debes seleccionar la compra asociada.");
+      return;
+    }
+
     const datos = {
       tipo_insumo: "ORO",
       nombre: nombre.trim(),
       cantidad: Number(cantidad),
       unidad_medida: unidadMedida,
-      estado,
+      fecha_ingreso: fechaIngreso,
+      compra_asociada: compraAsociada,
+      venta_asociada: ventaAsociada ? Number(ventaAsociada) : null,
     };
 
     onGuardar(datos);
@@ -142,12 +170,47 @@ export default function InsumoOroForm({
               </option>
             </select>
           </div>
+          <div className="form-campo">
+            <label htmlFor="fecha-ingreso-insumo-oro">Fecha de ingreso</label>
+            <input
+              id="fecha-ingreso-insumo-oro"
+              type="date"
+              max={hoy}
+              value={fechaIngreso}
+              onChange={(e) => setFechaIngreso(e.target.value)}
+            />
+          </div>
+
+          <div className="form-campo">
+            <label htmlFor="compra-insumo-oro">Compra asociada</label>
+            <select
+              id="compra-insumo-oro"
+              value={compraAsociada}
+              onChange={(e) => setCompraAsociada(e.target.value)}
+            >
+              <option value="">Seleccionar compra</option>
+              {comprasDisponibles().map((c) => (
+                <option key={c.id} value={c.id}>
+                  {`Compra #${c.id} · ${c.proveedor}`}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {modo === "editar" && (
             <div className="form-campo">
-              <label htmlFor="estado-insumo-oro">Estado</label>
-              <select id="estado-insumo-oro" value={estado} onChange={(e) => setEstado(e.target.value)}>
-                <option value="ACTIVO">Activo</option>
-                <option value="INACTIVO">Inactivo</option>
+              <label htmlFor="venta-insumo-oro">Venta asociada (salida del insumo)</label>
+              <select
+                id="venta-insumo-oro"
+                value={ventaAsociada}
+                onChange={(e) => setVentaAsociada(e.target.value)}
+              >
+                <option value="">Aún no ha salido</option>
+                {ventasDisponibles("ORO").map((v) => (
+                  <option key={v.id_venta} value={String(v.id_venta)}>
+                    {`Venta #${v.id_venta} · ${v.cliente} · ${v.cantidad}`}
+                  </option>
+                ))}
               </select>
             </div>
           )}

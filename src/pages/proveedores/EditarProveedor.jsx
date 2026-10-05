@@ -10,8 +10,12 @@ const EditarProveedor = () => {
     id: id,
     razon_social: "Proveedor Minero Chocó",
     tipo_persona: "JURIDICA",
+    tipo_documento: "NIT",
     numero_documento: "900123456",
     estado: "ACTIVO",
+    camaraComercio: "camara_comercio.pdf",
+    rut: "rut.pdf",
+    certificadoRucom: "rucom.pdf",
   };
 
   const actualizarProveedor = (e) => {

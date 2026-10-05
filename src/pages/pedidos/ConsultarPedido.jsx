@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import Permiso from "../../components/Permiso.jsx";
 
 const pedidos = [
   {
@@ -8,13 +9,15 @@ const pedidos = [
     fecha_pedido: "2026-09-20T10:00",
     fecha_entrega: "2026-10-20T10:00",
     estado: "ABIERTO",
+    fecha_estado: "2026-09-20",
     moneda: "COP",
     tasa_cambio: "",
     valor_total: 125000000,
     valor_pagado: 112500000,
-    porcentaje_pago_inicial: 0.9,
     detalles: [
       {
+        producto: "Oro en lingote",
+        detalle_producto: "Lingotes de 995 milésimas, empaque sellado",
         insumo: "Oro",
         cantidad: 500,
         precio_unitario: 250000,
@@ -24,7 +27,6 @@ const pedidos = [
     pagos: [
       {
         fecha_pago: "2026-09-20",
-        valor: 112500000,
         cuenta_bancaria: "BANCOLOMBIA",
         comprobante: null,
       },
@@ -125,18 +127,23 @@ export default function ConsultarPedido() {
             </div>
 
             <div className="dato-pedido">
+              <span>Fecha del estado</span>
+              <strong>{pedido.fecha_estado || pedido.fecha_pedido}</strong>
+            </div>
+
+            <div className="dato-pedido">
               <span>Moneda</span>
               <strong>{pedido.moneda}</strong>
             </div>
 
-            <div className="dato-pedido">
+            <Permiso dato="precios"><div className="dato-pedido">
               <span>Tasa de cambio</span>
               <strong>
                 {pedido.tasa_cambio || "No aplica"}
               </strong>
-            </div>
+            </div></Permiso>
 
-            <div className="dato-pedido">
+            <Permiso dato="precios"><div className="dato-pedido">
               <span>Valor total</span>
               <strong>
                 {formatearValor(
@@ -144,24 +151,27 @@ export default function ConsultarPedido() {
                   pedido.moneda
                 )}
               </strong>
-            </div>
+            </div></Permiso>
 
-            <div className="dato-pedido">
-              <span>Valor pagado</span>
+            <Permiso dato="precios"><div className="dato-pedido">
+              <span>Valor pagado (pago inicial 90 %)</span>
               <strong>
                 {formatearValor(
                   pedido.valor_pagado,
                   pedido.moneda
                 )}
               </strong>
-            </div>
+            </div></Permiso>
 
-            <div className="dato-pedido">
-              <span>Porcentaje de pago inicial</span>
+            <Permiso dato="precios"><div className="dato-pedido">
+              <span>Saldo pendiente (10 %)</span>
               <strong>
-                {pedido.porcentaje_pago_inicial * 100}%
+                {formatearValor(
+                  pedido.valor_total - pedido.valor_pagado,
+                  pedido.moneda
+                )}
               </strong>
-            </div>
+            </div></Permiso>
 
           </div>
 
@@ -182,16 +192,26 @@ export default function ConsultarPedido() {
                 key={index}
               >
                 <div>
+                  <span>Producto</span>
+                  <strong>{detalle.producto}</strong>
+                </div>
+
+                <div>
+                  <span>Detalle del producto</span>
+                  <strong>{detalle.detalle_producto}</strong>
+                </div>
+
+                <div>
                   <span>Insumo</span>
                   <strong>{detalle.insumo}</strong>
                 </div>
 
-                <div>
+                <Permiso dato="cantidades"><div>
                   <span>Cantidad</span>
                   <strong>{detalle.cantidad}</strong>
-                </div>
+                </div></Permiso>
 
-                <div>
+                <Permiso dato="precios"><div>
                   <span>Precio unitario</span>
                   <strong>
                     {formatearValor(
@@ -199,9 +219,9 @@ export default function ConsultarPedido() {
                       pedido.moneda
                     )}
                   </strong>
-                </div>
+                </div></Permiso>
 
-                <div>
+                <Permiso dato="precios"><div>
                   <span>Valor total</span>
                   <strong>
                     {formatearValor(
@@ -209,7 +229,7 @@ export default function ConsultarPedido() {
                       pedido.moneda
                     )}
                   </strong>
-                </div>
+                </div></Permiso>
               </div>
             ))}
 
@@ -217,7 +237,7 @@ export default function ConsultarPedido() {
 
         </section>
 
-        <section className="form-seccion">
+        <Permiso dato="precios"><section className="form-seccion">
 
           <div className="form-seccion-titulo">
             <h2>Pagos del pedido</h2>
@@ -228,22 +248,12 @@ export default function ConsultarPedido() {
 
             {pedido.pagos.map((pago, index) => (
               <div
-                className="pedido-detalle-item"
+                className="pedido-detalle-item pedido-pago-consulta"
                 key={index}
               >
                 <div>
                   <span>Fecha de pago</span>
                   <strong>{pago.fecha_pago}</strong>
-                </div>
-
-                <div>
-                  <span>Valor</span>
-                  <strong>
-                    {formatearValor(
-                      pago.valor,
-                      pedido.moneda
-                    )}
-                  </strong>
                 </div>
 
                 <div>
@@ -264,7 +274,7 @@ export default function ConsultarPedido() {
 
           </div>
 
-        </section>
+        </section></Permiso>
 
         <div className="consulta-acciones-pedido">
           <button

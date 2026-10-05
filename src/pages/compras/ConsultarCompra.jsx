@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import DocumentoAdjunto from "../../components/DocumentoAdjunto.jsx";
+import Permiso from "../../components/Permiso.jsx";
 
 const ConsultarCompra = () => {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ const ConsultarCompra = () => {
     estado: "REGISTRADA",
     certificadoOrigen: "certificado_origen.pdf",
     resultadoLaboratorio: "resultado_laboratorio.pdf",
+    factura: "factura.pdf",
   };
 
   const formatoMoneda = (valor) => {
@@ -93,10 +96,10 @@ const ConsultarCompra = () => {
             <strong>{compra.moneda}</strong>
           </div>
 
-          <div className="consulta-dato">
+          <Permiso dato="precios"><div className="consulta-dato">
             <span>Tasa de cambio</span>
             <strong>{compra.tasaCambio}</strong>
-          </div>
+          </div></Permiso>
 
         </div>
       </div>
@@ -114,36 +117,36 @@ const ConsultarCompra = () => {
             <strong>{compra.insumo}</strong>
           </div>
 
-          <div className="consulta-dato">
+          <Permiso dato="cantidades"><div className="consulta-dato">
             <span>Peso</span>
             <strong>{compra.peso} g</strong>
-          </div>
+          </div></Permiso>
 
-          <div className="consulta-dato">
+          <Permiso dato="cantidades"><div className="consulta-dato">
             <span>Ley</span>
             <strong>{compra.ley}</strong>
-          </div>
+          </div></Permiso>
 
-          <div className="consulta-dato">
+          <Permiso dato="precios"><div className="consulta-dato">
             <span>Precio unitario</span>
             <strong>
               {formatoMoneda(compra.precioUnitario)}
             </strong>
-          </div>
+          </div></Permiso>
 
-          <div className="consulta-dato">
+          <Permiso dato="precios"><div className="consulta-dato">
             <span>Valor de regalías</span>
             <strong>
               {formatoMoneda(compra.valorRegalias)}
             </strong>
-          </div>
+          </div></Permiso>
 
-          <div className="consulta-dato consulta-total">
+          <Permiso dato="precios"><div className="consulta-dato consulta-total">
             <span>Valor total</span>
             <strong>
               {formatoMoneda(compra.valorTotal)}
             </strong>
-          </div>
+          </div></Permiso>
 
         </div>
       </div>
@@ -154,52 +157,27 @@ const ConsultarCompra = () => {
           <h2>Documentos de la compra</h2>
         </div>
 
-        <div className="documentos-consulta">
+        <div className="documentos-unificados-grid">
+          <DocumentoAdjunto
+            titulo="Certificado de origen"
+            name="certificadoOrigen"
+            value={compra.certificadoOrigen}
+            disabled
+          />
 
-          <div className="documento-consulta">
-            <div>
-              <span>Certificado de origen</span>
+          <DocumentoAdjunto
+            titulo="Resultado de laboratorio"
+            name="resultadoLaboratorio"
+            value={compra.resultadoLaboratorio}
+            disabled
+          />
 
-              <strong>
-                {compra.certificadoOrigen}
-              </strong>
-            </div>
-
-            <button
-              type="button"
-              className="btn-documento"
-              onClick={() =>
-                alert(
-                  "Vista previa del certificado de origen"
-                )
-              }
-            >
-              Consultar
-            </button>
-          </div>
-
-          <div className="documento-consulta">
-            <div>
-              <span>Resultado de laboratorio</span>
-
-              <strong>
-                {compra.resultadoLaboratorio}
-              </strong>
-            </div>
-
-            <button
-              type="button"
-              className="btn-documento"
-              onClick={() =>
-                alert(
-                  "Vista previa del resultado de laboratorio"
-                )
-              }
-            >
-              Consultar
-            </button>
-          </div>
-
+          <DocumentoAdjunto
+            titulo="Factura"
+            name="factura"
+            value={compra.factura}
+            disabled
+          />
         </div>
       </div>
 

@@ -23,7 +23,7 @@ export default function RegistrarVenta() {
           </h1>
 
           <p>
-            Registra la información correspondiente a la venta.
+            Selecciona el pedido pagado por completo; el pedido define si la venta es de oro o de arenas polimetálicas.
           </p>
         </div>
 

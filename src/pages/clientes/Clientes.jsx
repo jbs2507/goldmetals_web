@@ -1,22 +1,36 @@
+import { usePaginacion, BarraListado, Paginador } from "../../components/Listado.jsx";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BotonEliminar from "../../components/BotonEliminar";
+import { etiquetaTipoDocumento } from "../../components/clientes/tiposDocumento.js";
+import DocumentosCargados from "../../components/DocumentosCargados.jsx";
+import Permiso from "../../components/Permiso.jsx";
 
 const clientesIniciales = [
   {
     id_cliente: 1,
     tipo_cliente: "JURIDICA",
+    tipo_documento: "NIT",
     nombre: "M&M Trading S.A.S.",
     identificacion_tributaria: "900123456-1",
     pais: "Colombia",
+    telefono: "3001112233",
+    correo: "contacto@mmtrading.com",
+    camaraComercio: "camara_comercio.pdf",
+    contrato: "contrato.pdf",
     estado: "ACTIVO",
   },
   {
     id_cliente: 2,
     tipo_cliente: "JURIDICA",
+    tipo_documento: "NIT",
     nombre: "Global Metals International",
     identificacion_tributaria: "901234567-8",
     pais: "Estados Unidos",
+    telefono: "3104445566",
+    correo: "ventas@globalmetals.com",
+    camaraComercio: "camara_comercio.pdf",
+    contrato: "contrato.pdf",
     estado: "ACTIVO",
   },
 ];
@@ -41,7 +55,9 @@ export default function Clientes() {
       cliente.nombre.toLowerCase().includes(texto) ||
       cliente.identificacion_tributaria
         .toLowerCase()
-        .includes(texto);
+        .includes(texto) ||
+      (cliente.correo || "").toLowerCase().includes(texto) ||
+      (cliente.telefono || "").includes(texto);
 
     const coincideEstado =
       estado === "TODOS" ||
@@ -49,6 +65,8 @@ export default function Clientes() {
 
     return coincideBusqueda && coincideEstado;
   });
+
+  const pag = usePaginacion(clientesFiltrados);
 
   return (
     <div className="clientes-page">
@@ -62,7 +80,7 @@ export default function Clientes() {
           </p>
         </div>
 
-        <button
+        <Permiso accion="crear"><button
           type="button"
           className="btn-registrar-cliente"
           onClick={() =>
@@ -70,7 +88,7 @@ export default function Clientes() {
           }
         >
           + Registrar cliente
-        </button>
+        </button></Permiso>
       </div>
 
       <div className="clientes-filtros">
@@ -109,7 +127,7 @@ export default function Clientes() {
 
       </div>
 
-      <div className="clientes-resumen">
+      <Permiso dato="estadisticas"><div className="clientes-resumen">
 
         <div className="resumen-cliente-item">
           <span>Total clientes</span>
@@ -145,9 +163,11 @@ export default function Clientes() {
           </strong>
         </div>
 
-      </div>
+      </div></Permiso>
 
       <div className="clientes-lista">
+
+        <BarraListado pag={pag} archivo="clientes" />
 
         {clientesFiltrados.length === 0 ? (
           <div className="sin-clientes">
@@ -160,7 +180,7 @@ export default function Clientes() {
             </p>
           </div>
         ) : (
-          clientesFiltrados.map((cliente) => (
+          pag.items.map((cliente) => (
 
             <div
               className="cliente-card"
@@ -208,7 +228,17 @@ export default function Clientes() {
 
                 <div className="dato-cliente">
                   <span>
-                    Identificación tributaria
+                    Tipo de documento
+                  </span>
+
+                  <strong>
+                    {etiquetaTipoDocumento(cliente.tipo_documento)}
+                  </strong>
+                </div>
+
+                <div className="dato-cliente">
+                  <span>
+                    {cliente.tipo_documento === "NIT" ? "Número de NIT" : "Número de documento"}
                   </span>
 
                   <strong>
@@ -223,6 +253,26 @@ export default function Clientes() {
 
                   <strong>
                     {cliente.pais}
+                  </strong>
+                </div>
+
+                <div className="dato-cliente">
+                  <span>
+                    Teléfono
+                  </span>
+
+                  <strong>
+                    {cliente.telefono || "No registrado"}
+                  </strong>
+                </div>
+
+                <div className="dato-cliente">
+                  <span>
+                    Correo electrónico
+                  </span>
+
+                  <strong>
+                    {cliente.correo || "No registrado"}
                   </strong>
                 </div>
 
@@ -242,7 +292,15 @@ export default function Clientes() {
                   Consultar
                 </button>
 
-                <button
+                <DocumentosCargados
+                  titulo={`Documentos de ${cliente.nombre}`}
+                  documentos={[
+                    { titulo: "Cámara de Comercio", valor: cliente.camaraComercio },
+                    { titulo: "Contrato", valor: cliente.contrato },
+                  ]}
+                />
+
+                <Permiso accion="editar"><button
                   type="button"
                   className="btn-editar-cliente"
                   onClick={() =>
@@ -252,7 +310,7 @@ export default function Clientes() {
                   }
                 >
                   Editar
-                </button>
+                </button></Permiso>
 
                 <BotonEliminar
                   entidad="cliente"
@@ -269,6 +327,8 @@ export default function Clientes() {
 
       </div>
 
+
+      <Paginador pag={pag} />
     </div>
   );
 }

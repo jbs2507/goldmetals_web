@@ -1,11 +1,13 @@
 import React from "react";
-import BotonEliminar from "../BotonEliminar";
+import BotonAnular from "../BotonAnular.jsx";
+import HistorialProduccion from "./HistorialProduccion.jsx";
+import { etiquetaEstadoProduccion, formatoMonto } from "../../data/produccionesMock.js";
+import Permiso from "../Permiso.jsx";
 
 const ProduccionCard = ({
   produccion,
   onConsultar,
-  onEditar,
-  onEliminar,
+  onAnular,
 }) => {
   return (
     <div className="produccion-card">
@@ -19,6 +21,12 @@ const ProduccionCard = ({
             Registro de producción
           </h3>
         </div>
+
+        {produccion.estado && (
+          <span className={`estado-produccion estado-produccion-${produccion.estado.toLowerCase()}`}>
+            {etiquetaEstadoProduccion(produccion.estado)}
+          </span>
+        )}
       </div>
 
       <div className="produccion-card-body">
@@ -36,12 +44,12 @@ const ProduccionCard = ({
           </strong>
         </div>
 
-        <div className="dato-produccion">
+        <Permiso dato="cantidades"><div className="dato-produccion">
           <span>Cantidad</span>
           <strong>
             {produccion.cantidad}
           </strong>
-        </div>
+        </div></Permiso>
 
         <div className="dato-produccion">
           <span>Cliente</span>
@@ -57,6 +65,11 @@ const ProduccionCard = ({
           <span>Mina</span>
           <strong>{produccion.mina}</strong>
         </div>
+
+        <Permiso dato="precios"><div className="dato-produccion">
+          <span>Monto</span>
+          <strong>{formatoMonto(produccion.monto)}</strong>
+        </div></Permiso>
       </div>
 
       <div className="produccion-card-actions">
@@ -68,18 +81,13 @@ const ProduccionCard = ({
           Consultar
         </button>
 
-        <button
-          type="button"
-          className="btn-editar-produccion"
-          onClick={() => onEditar(produccion)}
-        >
-          Editar
-        </button>
+        <HistorialProduccion produccion={produccion} />
 
-        <BotonEliminar
+        <BotonAnular
           entidad="registro de producción"
           nombre={`${produccion.insumo} (${produccion.fecha})`}
-          onConfirmar={() => onEliminar(produccion)}
+          deshabilitado={produccion.estado === "ANULADA"}
+          onConfirmar={(m) => onAnular(produccion, m)}
         />
       </div>
     </div>

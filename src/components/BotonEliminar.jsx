@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePermisos } from "../permisos.js";
 
 /**
  * Botón "Eliminar" con ventana de confirmación.
@@ -14,12 +15,15 @@ export default function BotonEliminar({
   nombre = "",
   onConfirmar,
 }) {
+  const { puede } = usePermisos();
   const [abierto, setAbierto] = useState(false);
 
   const confirmar = () => {
     setAbierto(false);
     if (onConfirmar) onConfirmar();
   };
+
+  if (!puede("eliminar")) return null;
 
   return (
     <>

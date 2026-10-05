@@ -11,28 +11,20 @@ const usuarios = [
   },
   {
     id_usuario: 2,
-    correo: "compras@mmmetalsgold.com",
-    nombre_completo: "Jefe de compras",
+    correo: "contador@mmmetalsgold.com",
+    nombre_completo: "Contador",
     telefono: "3012345678",
-    rol: "Compras",
+    rol: "Contador",
     estado: "ACTIVO",
   },
   {
     id_usuario: 3,
-    correo: "produccion@mmmetalsgold.com",
-    nombre_completo: "Analista de producción",
+    correo: "abogado@mmmetalsgold.com",
+    nombre_completo: "Abogado",
     telefono: "3023456789",
-    rol: "Producción",
+    rol: "Abogado",
     estado: "ACTIVO",
-  },
-  {
-    id_usuario: 4,
-    correo: "logistica@mmmetalsgold.com",
-    nombre_completo: "Auxiliar de logística",
-    telefono: "3034567890",
-    rol: "Logística",
-    estado: "INACTIVO",
-  },
+  }
 ];
 
 export default function ConsultarUsuario() {

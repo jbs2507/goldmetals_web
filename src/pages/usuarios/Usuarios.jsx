@@ -1,6 +1,8 @@
+import { usePaginacion, BarraListado, Paginador } from "../../components/Listado.jsx";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BotonEliminar from "../../components/BotonEliminar";
+import Permiso from "../../components/Permiso.jsx";
 
 const usuariosIniciales = [
   {
@@ -13,28 +15,20 @@ const usuariosIniciales = [
   },
   {
     id_usuario: 2,
-    correo: "compras@mmmetalsgold.com",
-    nombre_completo: "Jefe de compras",
+    correo: "contador@mmmetalsgold.com",
+    nombre_completo: "Contador",
     telefono: "3012345678",
-    rol: "Compras",
+    rol: "Contador",
     estado: "ACTIVO",
   },
   {
     id_usuario: 3,
-    correo: "produccion@mmmetalsgold.com",
-    nombre_completo: "Analista de producción",
+    correo: "abogado@mmmetalsgold.com",
+    nombre_completo: "Abogado",
     telefono: "3023456789",
-    rol: "Producción",
+    rol: "Abogado",
     estado: "ACTIVO",
-  },
-  {
-    id_usuario: 4,
-    correo: "logistica@mmmetalsgold.com",
-    nombre_completo: "Auxiliar de logística",
-    telefono: "3034567890",
-    rol: "Logística",
-    estado: "INACTIVO",
-  },
+  }
 ];
 
 export default function Usuarios() {
@@ -81,6 +75,8 @@ export default function Usuarios() {
     (usuario) => usuario.estado === "INACTIVO"
   ).length;
 
+  const pag = usePaginacion(usuariosFiltrados);
+
   return (
     <div className="usuarios-page">
 
@@ -95,14 +91,14 @@ export default function Usuarios() {
           </p>
         </div>
 
-        <button
+        <Permiso accion="crear"><button
           className="btn-registrar-usuario"
           onClick={() =>
             navigate("/usuarios/registrar")
           }
         >
           + Registrar usuario
-        </button>
+        </button></Permiso>
 
       </div>
 
@@ -177,6 +173,8 @@ export default function Usuarios() {
       {/* LISTA */}
       <div className="usuarios-lista">
 
+        <BarraListado pag={pag} archivo="usuarios" />
+
         {usuariosFiltrados.length === 0 ? (
 
           <div className="sin-usuarios">
@@ -193,7 +191,7 @@ export default function Usuarios() {
 
         ) : (
 
-          usuariosFiltrados.map((usuario) => (
+          pag.items.map((usuario) => (
 
             <div
               className="usuario-card"
@@ -282,7 +280,7 @@ export default function Usuarios() {
                   Consultar
                 </button>
 
-                <button
+                <Permiso accion="editar"><button
                   className="btn-editar-usuario"
                   onClick={() =>
                     navigate(
@@ -291,7 +289,7 @@ export default function Usuarios() {
                   }
                 >
                   Editar
-                </button>
+                </button></Permiso>
 
                 <BotonEliminar
                   entidad="usuario"
@@ -309,6 +307,8 @@ export default function Usuarios() {
 
       </div>
 
+
+      <Paginador pag={pag} />
     </div>
   );
 }

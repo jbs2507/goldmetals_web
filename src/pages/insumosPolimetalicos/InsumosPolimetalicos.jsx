@@ -1,6 +1,10 @@
+import { usePaginacion, BarraListado, Paginador } from "../../components/Listado.jsx";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BotonEliminar from "../../components/BotonEliminar";
+import BotonAnular from "../../components/BotonAnular.jsx";
+import { formatearFecha, textoCompra, textoVenta } from "../../data/insumosVinculos.js";
+import { conEstado } from "../../utils/listados.js";
+import Permiso from "../../components/Permiso.jsx";
 
 const insumosPolimetalicosIniciales = [
   {
@@ -9,7 +13,9 @@ const insumosPolimetalicosIniciales = [
     nombre: "Arena polimetálica",
     cantidad: 500,
     unidad_medida: "kg",
-    estado: "ACTIVO",
+    fecha_ingreso: "2026-09-22",
+    compra_asociada: "002",
+    venta_asociada: null,
     mina: "Mina Chocó",
     acopio: "Acopio principal",
   },
@@ -19,7 +25,9 @@ const insumosPolimetalicosIniciales = [
     nombre: "Arena polimetálica fina",
     cantidad: 250,
     unidad_medida: "kg",
-    estado: "ACTIVO",
+    fecha_ingreso: "2026-09-23",
+    compra_asociada: "001",
+    venta_asociada: null,
     mina: "Mina Bolívar",
     acopio: "Acopio Bolívar",
   },
@@ -29,7 +37,9 @@ const insumosPolimetalicosIniciales = [
     nombre: "Material polimetálico de acopio",
     cantidad: 100,
     unidad_medida: "kg",
-    estado: "INACTIVO",
+    fecha_ingreso: "2026-09-20",
+    compra_asociada: "001",
+    venta_asociada: 2,
     mina: "Mina Chocó",
     acopio: "Acopio Chocó",
   },
@@ -54,13 +64,9 @@ export default function InsumosPolimetalicos() {
   );
 
   const [busqueda, setBusqueda] = useState("");
-  const [estado, setEstado] = useState("TODOS");
 
-  const eliminarInsumo = (id) => {
-    setInsumos((actuales) =>
-      actuales.filter((i) => i.id_insumo !== id)
-    );
-  };
+  const anularInsumo = (id, motivo) =>
+    setInsumos((a) => a.map((i) => (i.id_insumo === id ? conEstado(i, "ANULADO", motivo) : i)));
 
   const insumosFiltrados = insumos.filter((insumo) => {
     const texto = busqueda.toLowerCase();
@@ -70,22 +76,13 @@ export default function InsumosPolimetalicos() {
       insumo.mina.toLowerCase().includes(texto) ||
       insumo.acopio.toLowerCase().includes(texto);
 
-    const coincideEstado =
-      estado === "TODOS" ||
-      insumo.estado === estado;
 
-    return coincideBusqueda && coincideEstado;
+    return coincideBusqueda;
   });
 
   const totalInsumos = insumos.length;
 
-  const insumosActivos = insumos.filter(
-    (insumo) => insumo.estado === "ACTIVO"
-  ).length;
-
-  const insumosInactivos = insumos.filter(
-    (insumo) => insumo.estado === "INACTIVO"
-  ).length;
+  const pag = usePaginacion(insumosFiltrados);
 
   return (
     <div className="insumos-polimetalicos-page">
@@ -100,14 +97,14 @@ export default function InsumosPolimetalicos() {
           </p>
         </div>
 
-        <button
+        <Permiso accion="crear"><button
           className="btn-registrar-insumo-polimetalico"
           onClick={() =>
             navigate("/insumos-polimetalicos/registrar")
           }
         >
           + Registrar insumo
-        </button>
+        </button></Permiso>
       </div>
 
       {/* FILTROS */}
@@ -126,49 +123,23 @@ export default function InsumosPolimetalicos() {
           />
         </div>
 
-        <select
-          value={estado}
-          onChange={(e) =>
-            setEstado(e.target.value)
-          }
-        >
-          <option value="TODOS">
-            Todos los estados
-          </option>
-
-          <option value="ACTIVO">
-            Activo
-          </option>
-
-          <option value="INACTIVO">
-            Inactivo
-          </option>
-        </select>
 
       </div>
 
       {/* RESUMEN */}
-      <div className="insumos-polimetalicos-resumen">
+      <Permiso dato="estadisticas"><div className="insumos-polimetalicos-resumen">
 
         <div className="resumen-insumo-polimetalico-item">
           <span>Total insumos</span>
           <strong>{totalInsumos}</strong>
         </div>
 
-        <div className="resumen-insumo-polimetalico-item">
-          <span>Activos</span>
-          <strong>{insumosActivos}</strong>
-        </div>
-
-        <div className="resumen-insumo-polimetalico-item">
-          <span>Inactivos</span>
-          <strong>{insumosInactivos}</strong>
-        </div>
-
-      </div>
+      </div></Permiso>
 
       {/* LISTA */}
       <div className="insumos-polimetalicos-lista">
+
+        <BarraListado pag={pag} archivo="insumos_polimetalicos" />
 
         {insumosFiltrados.length === 0 ? (
 
@@ -182,7 +153,7 @@ export default function InsumosPolimetalicos() {
 
         ) : (
 
-          insumosFiltrados.map((insumo) => (
+          pag.items.map((insumo) => (
 
             <div
               className="insumo-polimetalico-card"
@@ -202,15 +173,11 @@ export default function InsumosPolimetalicos() {
                   </h2>
                 </div>
 
-                <span
-                  className={`estado-insumo-polimetalico ${
-                    insumo.estado === "ACTIVO"
-                      ? "estado-insumo-polimetalico-activo"
-                      : "estado-insumo-polimetalico-inactivo"
-                  }`}
-                >
-                  {insumo.estado}
-                </span>
+                {insumo.estado === "ANULADO" && (
+                  <span className="estado-insumo-polimetalico estado-insumo-polimetalico-inactivo">
+                    ANULADO
+                  </span>
+                )}
 
               </div>
 
@@ -233,14 +200,14 @@ export default function InsumosPolimetalicos() {
                   </strong>
                 </div>
 
-                <div className="dato-insumo-polimetalico">
+                <Permiso dato="cantidades"><div className="dato-insumo-polimetalico">
                   <span>Cantidad</span>
 
                   <strong>
                     {insumo.cantidad}{" "}
                     {formatearUnidad(insumo.unidad_medida)}
                   </strong>
-                </div>
+                </div></Permiso>
 
                 <div className="dato-insumo-polimetalico">
                   <span>Unidad de medida</span>
@@ -268,6 +235,21 @@ export default function InsumosPolimetalicos() {
                   </strong>
                 </div>
 
+                <div className="dato-insumo-polimetalico">
+                  <span>Fecha de ingreso</span>
+                  <strong>{formatearFecha(insumo.fecha_ingreso)}</strong>
+                </div>
+
+                <div className="dato-insumo-polimetalico">
+                  <span>Compra asociada</span>
+                  <strong>{textoCompra(insumo.compra_asociada)}</strong>
+                </div>
+
+                <div className="dato-insumo-polimetalico">
+                  <span>Venta asociada</span>
+                  <strong>{textoVenta(insumo.venta_asociada)}</strong>
+                </div>
+
               </div>
 
               {/* ACCIONES */}
@@ -284,22 +266,7 @@ export default function InsumosPolimetalicos() {
                   Consultar
                 </button>
 
-                <button
-                  className="btn-editar-insumo-polimetalico"
-                  onClick={() =>
-                    navigate(
-                      `/insumos-polimetalicos/editar/${insumo.id_insumo}`
-                    )
-                  }
-                >
-                  Editar
-                </button>
-
-                <BotonEliminar
-                  entidad="insumo polimetálico"
-                  nombre={insumo.nombre}
-                  onConfirmar={() => eliminarInsumo(insumo.id_insumo)}
-                />
+                <BotonAnular entidad="insumo polimetálico" nombre={insumo.nombre} deshabilitado={insumo.estado === "ANULADO"} onConfirmar={(m) => anularInsumo(insumo.id_insumo, m)} />
 
               </div>
 
@@ -311,6 +278,8 @@ export default function InsumosPolimetalicos() {
 
       </div>
 
+
+      <Paginador pag={pag} />
     </div>
   );
 }

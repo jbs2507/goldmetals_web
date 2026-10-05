@@ -1,73 +1,139 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import PedidoForm from "../../components/pedidos/PedidoForm.jsx";
+import { formatearFecha } from "../../data/insumosVinculos.js";
+import {
+  pedidosMock,
+  codigoPedido,
+  estadosSiguientesPedido,
+  etiquetaEstadoPedido,
+} from "../../data/pedidosMock.js";
+import { conEstado } from "../../utils/listados.js";
 
-const pedidoInicial = {
-  id_pedido: 1,
-  id_cliente: 1,
-  id_acopio: 1,
-  fecha_pedido: "2026-09-20T10:00",
-    fecha_entrega: "2026-10-20T10:00",
-  estado: "ABIERTO",
-  moneda: "COP",
-  tasa_cambio: "",
-  valor_total: 125000000,
-  valor_pagado: 112500000,
-  porcentaje_pago_inicial: 0.9,
+const formatearValor = (valor, moneda) =>
+  `$ ${Number(valor).toLocaleString(moneda === "USD" ? "en-US" : "es-CO", {
+    minimumFractionDigits: moneda === "USD" ? 2 : 0,
+    maximumFractionDigits: moneda === "USD" ? 2 : 0,
+  })}`;
 
-  detalles: [
-    {
-      id_insumo: 1,
-      cantidad: 500,
-      precio_unitario: 250000,
-      valor_total: 125000000,
-    },
-  ],
-
-  pagos: [
-    {
-      fecha_pago: "2026-09-20",
-      valor: 112500000,
-      cuenta_bancaria: "BANCOLOMBIA",
-      comprobante: null,
-    },
-  ],
-};
-
+// En un pedido solo se puede cambiar el estado; el resto de datos queda bloqueado.
 export default function EditarPedido() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  console.log("Editando pedido:", id);
+  const pedido = pedidosMock.find((p) => p.id_pedido === Number(id));
+  const siguientes = pedido ? estadosSiguientesPedido(pedido.estado) : [];
+  const [nuevoEstado, setNuevoEstado] = useState(pedido?.estado || "");
 
-  const actualizarPedido = (datos) => {
-    console.log("Pedido actualizado:", datos);
+  if (!pedido) {
+    return (
+      <div className="pedidos-page">
+        <div className="sin-pedidos">
+          <h3>Pedido no encontrado</h3>
+          <p>El pedido solicitado no existe.</p>
+          <button className="btn-volver-pedido" onClick={() => navigate("/pedidos")}>
+            Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const opciones = [pedido.estado, ...siguientes];
+  const sinCambios = nuevoEstado === pedido.estado;
+
+  const guardar = (e) => {
+    e.preventDefault();
+    if (sinCambios) return;
+    // Prototipo sin backend: se actualiza el pedido de ejemplo para que el listado lo refleje.
+    Object.assign(pedido, conEstado(pedido, nuevoEstado));
     navigate("/pedidos");
   };
 
   return (
     <div className="pedidos-page">
-
       <div className="pedidos-header">
         <div>
           <h1>Editar pedido</h1>
-          <p>Actualiza la información del pedido</p>
+          <p>Solo se puede cambiar el estado del pedido</p>
         </div>
 
-        <button
-          className="btn-volver-pedido"
-          onClick={() => navigate("/pedidos")}
-        >
+        <button className="btn-volver-pedido" onClick={() => navigate("/pedidos")}>
           Volver
         </button>
       </div>
 
-      <PedidoForm
-        modo="editar"
-        datosIniciales={pedidoInicial}
-        onGuardar={actualizarPedido}
-        onCancelar={() => navigate("/pedidos")}
-      />
+      <form className="pedido-form" onSubmit={guardar}>
+        <section className="form-seccion">
+          <div className="form-seccion-titulo">
+            <h2>{codigoPedido(pedido.id_pedido)}</h2>
+            <p>Datos del pedido (no se pueden modificar)</p>
+          </div>
 
+          <div className="pedido-detalle-grid">
+            <div className="dato-pedido">
+              <span>Cliente</span>
+              <strong>{pedido.cliente}</strong>
+            </div>
+            <div className="dato-pedido">
+              <span>Acopio</span>
+              <strong>{pedido.acopio}</strong>
+            </div>
+            <div className="dato-pedido">
+              <span>Fecha del pedido</span>
+              <strong>{formatearFecha(pedido.fecha_pedido)}</strong>
+            </div>
+            <div className="dato-pedido">
+              <span>Fecha del estado actual</span>
+              <strong>{formatearFecha(pedido.fecha_estado || pedido.fecha_pedido)}</strong>
+            </div>
+            <div className="dato-pedido">
+              <span>Valor total</span>
+              <strong>{formatearValor(pedido.valor_total, pedido.moneda)}</strong>
+            </div>
+            <div className="dato-pedido">
+              <span>Valor pagado</span>
+              <strong>{formatearValor(pedido.valor_pagado, pedido.moneda)}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="form-seccion">
+          <div className="form-seccion-titulo">
+            <h2>Estado del pedido</h2>
+            <p>El estado solo puede avanzar. Al guardar se registra la fecha de hoy.</p>
+          </div>
+
+          <div className="form-grid">
+            <div className="form-campo">
+              <label htmlFor="estado_pedido">Estado</label>
+              <select
+                id="estado_pedido"
+                value={nuevoEstado}
+                onChange={(e) => setNuevoEstado(e.target.value)}
+                disabled={siguientes.length === 0}
+              >
+                {opciones.map((estado) => (
+                  <option key={estado} value={estado}>
+                    {etiquetaEstadoPedido(estado)}
+                  </option>
+                ))}
+              </select>
+              {siguientes.length === 0 && (
+                <small>Este pedido ya está en su último estado.</small>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <div className="form-acciones-pedido">
+          <button type="button" className="btn-cancelar-pedido" onClick={() => navigate("/pedidos")}>
+            Cancelar
+          </button>
+          <button type="submit" className="btn-guardar-pedido" disabled={sinCambios}>
+            Guardar estado
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

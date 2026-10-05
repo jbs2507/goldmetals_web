@@ -1,58 +1,14 @@
 import { useNavigate, useParams } from "react-router-dom";
 
-const ventas = [
-  {
-    id_venta: 1,
-    cliente: "M&M Trading S.A.S.",
-    pedido: "PED-001",
-    tipo_material: "Oro en lingote",
-    cantidad: "500 g",
-    precio: "120000000",
-    moneda: "COP",
-    fecha: "2026-09-20",
-    pais_destino: "India",
-    encargado_transporte: "Carlos Gómez",
-    placa_vehiculo: "ABC123",
-    estado: "REGISTRADA",
-    documentos: true,
-    pago_completo: false,
-    produccion_lista: false,
-  },
-  {
-    id_venta: 2,
-    cliente: "Global Metals International",
-    pedido: "PED-002",
-    tipo_material: "Arena procesada",
-    cantidad: "1.000 kg",
-    precio: "85000000",
-    moneda: "COP",
-    fecha: "2026-09-18",
-    pais_destino: "China",
-    encargado_transporte: "Juan Rodríguez",
-    placa_vehiculo: "XYZ789",
-    estado: "DESPACHADA",
-    documentos: true,
-    pago_completo: false,
-    produccion_lista: false,
-  },
-  {
-    id_venta: 3,
-    cliente: "Global Metals International",
-    pedido: "PED-003",
-    tipo_material: "Oro en lingote",
-    cantidad: "250 g",
-    precio: "62000000",
-    moneda: "COP",
-    fecha: "2026-09-15",
-    pais_destino: "Estados Unidos",
-    encargado_transporte: "Laura Pérez",
-    placa_vehiculo: "DEF456",
-    estado: "CANCELADA",
-    documentos: false,
-    pago_completo: false,
-    produccion_lista: false,
-  },
-];
+import DocumentoAdjunto from "../../components/DocumentoAdjunto.jsx";
+import HistorialEstados from "../../components/HistorialEstados.jsx";
+import { formatearFecha } from "../../data/insumosVinculos.js";
+import {
+  ventasVisibles as ventas,
+  fechaUltimoEstado,
+  etiquetaEstadoVenta,
+} from "../../data/ventasMock.js";
+import Permiso from "../../components/Permiso.jsx";
 
 export default function ConsultarVenta() {
   const navigate = useNavigate();
@@ -73,8 +29,8 @@ export default function ConsultarVenta() {
       case "ENTREGADA":
         return "estado-venta-entregada";
 
-      case "CANCELADA":
-        return "estado-venta-cancelada";
+      case "ANULADA":
+        return "estado-venta-anulada";
 
       default:
         return "";
@@ -154,13 +110,21 @@ export default function ConsultarVenta() {
 
         </div>
 
-        <button
+        <div className="produccion-header-acciones">
+          <HistorialEstados
+            titulo={`Historial de la venta #${venta.id_venta}`}
+            historial={venta.historial || []}
+            etiqueta={etiquetaEstadoVenta}
+          />
+
+          <button
           type="button"
           className="btn-volver-venta"
           onClick={() => navigate("/ventas")}
         >
           Volver
-        </button>
+          </button>
+        </div>
 
       </div>
 
@@ -216,7 +180,7 @@ export default function ConsultarVenta() {
               </strong>
             </div>
 
-            <div className="dato-venta">
+            <Permiso dato="cantidades"><div className="dato-venta">
               <span>
                 Cantidad
               </span>
@@ -224,9 +188,21 @@ export default function ConsultarVenta() {
               <strong>
                 {venta.cantidad}
               </strong>
-            </div>
+            </div></Permiso>
 
-            <div className="dato-venta">
+            {venta.tipo_material === "Arenas polimetálicas" && venta.ley && (
+              <Permiso dato="cantidades"><div className="dato-venta">
+                <span>
+                  Ley (g/t)
+                </span>
+
+                <strong>
+                  {venta.ley}
+                </strong>
+              </div></Permiso>
+            )}
+
+            <Permiso dato="precios"><div className="dato-venta">
               <span>
                 Precio
               </span>
@@ -235,7 +211,7 @@ export default function ConsultarVenta() {
                 {formatearPrecio(venta.precio)}{" "}
                 {venta.moneda}
               </strong>
-            </div>
+            </div></Permiso>
 
             <div className="dato-venta">
               <span>
@@ -264,6 +240,36 @@ export default function ConsultarVenta() {
 
               <strong>
                 {venta.pais_destino}
+              </strong>
+            </div>
+
+            <div className="dato-venta">
+              <span>
+                Acopio de origen
+              </span>
+
+              <strong>
+                {venta.acopio || "No registrado"}
+              </strong>
+            </div>
+
+            <div className="dato-venta">
+              <span>
+                Mina de origen
+              </span>
+
+              <strong>
+                {venta.mina || "No registrada"}
+              </strong>
+            </div>
+
+            <div className="dato-venta">
+              <span>
+                Fecha del último estado
+              </span>
+
+              <strong>
+                {formatearFecha(fechaUltimoEstado(venta))}
               </strong>
             </div>
 
@@ -314,7 +320,7 @@ export default function ConsultarVenta() {
               </span>
 
               <strong>
-                {venta.pago_completo && venta.produccion_lista ? (venta.encargado_transporte || "Pendiente de registrar") : "Pendiente: completar pago y producción"}
+                {venta.encargado_transporte || "Pendiente de registrar"}
               </strong>
 
             </div>
@@ -326,7 +332,43 @@ export default function ConsultarVenta() {
               </span>
 
               <strong>
-                {venta.pago_completo && venta.produccion_lista ? (venta.placa_vehiculo || "Pendiente de registrar") : "Pendiente: completar pago y producción"}
+                {venta.placa_vehiculo || "Pendiente de registrar"}
+              </strong>
+
+            </div>
+
+            <div className="dato-venta">
+
+              <span>
+                Dirección del puerto
+              </span>
+
+              <strong>
+                {venta.direccion_puerto || "No registrada"}
+              </strong>
+
+            </div>
+
+            <div className="dato-venta">
+
+              <span>
+                Cliente que recibe
+              </span>
+
+              <strong>
+                {venta.contacto_entrega_nombre || "No registrado"}
+              </strong>
+
+            </div>
+
+            <div className="dato-venta">
+
+              <span>
+                Teléfono de entrega
+              </span>
+
+              <strong>
+                {venta.contacto_entrega_telefono || "No registrado"}
               </strong>
 
             </div>
@@ -376,6 +418,22 @@ export default function ConsultarVenta() {
             </div>
 
           </div>
+
+          <div className="documentos-unificados-grid">
+              <DocumentoAdjunto
+                titulo="Factura"
+                name="factura"
+                value={venta.factura}
+                disabled
+              />
+
+              <DocumentoAdjunto
+                titulo="Resultado de laboratorio"
+                name="resultado_laboratorio"
+                value={venta.resultado_laboratorio}
+                disabled
+              />
+            </div>
 
         </section>
 

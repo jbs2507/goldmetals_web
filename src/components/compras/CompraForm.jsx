@@ -29,8 +29,9 @@ const CompraForm = ({
     precioUnitario: compraInicial?.precioUnitario || "",
     valorRegalias: compraInicial?.valorRegalias || "",
     estado: compraInicial?.estado || "REGISTRADA",
-    certificadoOrigen: null,
-    resultadoLaboratorio: null,
+    certificadoOrigen: compraInicial?.certificadoOrigen || null,
+    resultadoLaboratorio: compraInicial?.resultadoLaboratorio || null,
+    factura: compraInicial?.factura || null,
   });
 
   const manejarCambio = (e) => {
@@ -67,6 +68,7 @@ const CompraForm = ({
     const nuevosErrores = validarFormulario(formulario, REGLAS_COMPRA);
     if (!formulario.certificadoOrigen) nuevosErrores.certificadoOrigen = "Campo obligatorio";
     if (!formulario.resultadoLaboratorio) nuevosErrores.resultadoLaboratorio = "Campo obligatorio";
+    if (!formulario.factura) nuevosErrores.factura = "Campo obligatorio";
     setErrores(nuevosErrores);
     if (Object.keys(nuevosErrores).length > 0) return;
 
@@ -217,7 +219,7 @@ const CompraForm = ({
               >
                 <option value="REGISTRADA">Registrada</option>
                 <option value="APROBADA">Aprobada</option>
-                <option value="CANCELADA">Cancelada</option>
+                <option value="ANULADA">Anulada</option>
               </select>
             </div>
           )}
@@ -360,6 +362,14 @@ const CompraForm = ({
             value={formulario.resultadoLaboratorio}
             onChange={manejarArchivo}
             error={errores.resultadoLaboratorio}
+          />
+
+          <DocumentoAdjunto
+            titulo="Factura"
+            name="factura"
+            value={formulario.factura}
+            onChange={manejarArchivo}
+            error={errores.factura}
           />
         </div>
       </div>
