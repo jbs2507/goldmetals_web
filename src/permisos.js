@@ -22,6 +22,8 @@ export const ACCIONES = [
 // Módulos del sistema (el id coincide con el primer tramo de la ruta).
 export const MODULOS = [
   // Mismo orden que el alcance de la ficha del proyecto.
+  // El Dashboard solo tiene "Ver": sin él, el rol entra a una pantalla de bienvenida.
+  { id: 'dashboard', nombre: 'Dashboard', grupo: 'Principal', soloVer: true },
   { id: 'roles', nombre: 'Roles', grupo: 'Configuración' },
   { id: 'usuarios', nombre: 'Usuarios', grupo: 'Configuración' },
   { id: 'insumos', nombre: 'Insumos', grupo: 'Compras' },
@@ -44,18 +46,22 @@ export const DATOS_SENSIBLES = [
 export const clavePermiso = (modulo, accion) => `${modulo}.${accion}`
 export const claveDato = (dato) => `datos.${dato}`
 
+// Privilegios que aplican a un módulo (el Dashboard solo tiene "Ver").
+export const accionesDeModulo = (m) => (m.soloVer ? ACCIONES.filter((a) => a.id === 'ver') : ACCIONES)
+
 const todosLosPermisos = () => [
-  ...MODULOS.flatMap((m) => ACCIONES.map((a) => clavePermiso(m.id, a.id))),
+  ...MODULOS.flatMap((m) => accionesDeModulo(m).map((a) => clavePermiso(m.id, a.id))),
   ...DATOS_SENSIBLES.map((d) => claveDato(d.id)),
 ]
 
 // Solo consulta: ver y descargar documentos en los módulos operativos,
 // sin precios, cantidades ni estadísticas (por ahora).
 const soloConsulta = () =>
-  MODULOS.filter((m) => m.grupo !== 'Configuración').flatMap((m) => [
-    clavePermiso(m.id, 'ver'),
-    clavePermiso(m.id, 'descargar'),
-  ])
+  MODULOS.filter((m) => m.grupo !== 'Configuración').flatMap((m) =>
+    m.soloVer
+      ? [clavePermiso(m.id, 'ver')]
+      : [clavePermiso(m.id, 'ver'), clavePermiso(m.id, 'descargar')]
+  )
 
 const SEMILLA = [
   {
@@ -95,7 +101,12 @@ export function listarRoles() {
       localStorage.setItem(K_ROLES, JSON.stringify(SEMILLA))
       return SEMILLA.map((r) => ({ ...r, permisos: [...r.permisos] }))
     }
-    const roles = JSON.parse(raw)
+    // Los roles guardados antes de existir la fila "Dashboard" conservan su acceso (se les marca "Ver").
+    const roles = JSON.parse(raw).map((r) =>
+      r.permisosV2 || r.permisos.includes(clavePermiso('dashboard', 'ver'))
+        ? r
+        : { ...r, permisos: [...r.permisos, clavePermiso('dashboard', 'ver')] }
+    )
     // El Administrador siempre conserva todos los permisos (aunque se agreguen módulos nuevos).
     // Los roles guardados antes de existir el estado quedan ACTIVOS; el Administrador siempre está activo.
     return roles.map((r) =>
@@ -108,7 +119,8 @@ export function listarRoles() {
   }
 }
 
-const guardarRoles = (roles) => localStorage.setItem(K_ROLES, JSON.stringify(roles))
+const guardarRoles = (roles) =>
+  localStorage.setItem(K_ROLES, JSON.stringify(roles.map((r) => ({ ...r, permisosV2: true }))))
 
 export const obtenerRol = (id) => listarRoles().find((r) => r.id_rol === Number(id)) || null
 export const obtenerRolPorNombre = (nombre) =>

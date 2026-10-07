@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 
 import Sidebar from './components/Sidebar.jsx'
+import Migas, { tituloDeRuta } from './components/Migas.jsx'
+import Icono from './components/Iconos.jsx'
+import logoDark from './assets/logo-dark.png'
+import logoGold from './assets/logo-gold.png'
 import { haySesion } from './auth.js'
 import { moduloDeRuta, puede } from './permisos.js'
 
@@ -71,7 +75,7 @@ function RutaPrivada() {
   if (!haySesion()) return <Navigate to="/ingresar" replace />
 
   const { modulo, accion } = moduloDeRuta(pathname)
-  if (modulo && !puede(modulo, accion)) return <Navigate to="/dashboard" replace />
+  if (modulo && modulo !== 'dashboard' && !puede(modulo, accion)) return <Navigate to="/dashboard" replace />
 
   return <Outlet />
 }
@@ -87,20 +91,66 @@ function RutaPublica() {
 function LayoutApp() {
   const { pathname } = useLocation()
   const mainRef = useRef(null)
+  const [menuAbierto, setMenuAbierto] = useState(false)
 
-  // Al cambiar de pantalla, el contenido vuelve arriba (el menú no se mueve).
+  // Al cambiar de pantalla: el contenido vuelve arriba, se cierra el menú móvil
+  // y la pestaña del navegador muestra dónde estás.
   useEffect(() => {
     if (mainRef.current) mainRef.current.scrollTop = 0
+    setMenuAbierto(false)
   }, [pathname])
 
+  // Esc cierra el menú móvil; al pasar a pantalla ancha se cierra solo.
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && setMenuAbierto(false)
+    const onResize = () => window.innerWidth > 900 && setMenuAbierto(false)
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
+
   return (
-    <div className="web">
+    <div className={`web${menuAbierto ? ' nav-open' : ''}`}>
+      <a className="ux-skip" href="#contenido" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>
+        Saltar al contenido
+      </a>
+
+      {/* Barra superior: solo se ve en celular/tablet */}
+      <header className="app-top">
+        <button
+          type="button"
+          className="app-burger"
+          onClick={() => setMenuAbierto(true)}
+          aria-label="Abrir menú"
+          aria-expanded={menuAbierto}
+        >
+          <Icono nombre="menu" size={22} />
+        </button>
+        <img className="lgl" src={logoDark} alt="Gold Metals App" />
+        <img className="lgd" src={logoGold} alt="Gold Metals App" />
+      </header>
+
       <Sidebar />
-      <section className="main" ref={mainRef}>
+      <div className="app-scrim" onClick={() => setMenuAbierto(false)} aria-hidden="true" />
+
+      <section className="main" id="contenido" tabIndex={-1} ref={mainRef}>
+        <Migas />
         <Outlet />
       </section>
     </div>
   )
+}
+
+// El título de la pestaña se actualiza en TODAS las pantallas (incluido Login y Registro).
+function TituloPestana() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    document.title = tituloDeRuta(pathname)
+  }, [pathname])
+  return null
 }
 
 export default function App() {
@@ -119,6 +169,8 @@ export default function App() {
   }
 
   return (
+    <>
+    <TituloPestana />
     <Routes>
 
       <Route element={<RutaPublica />}>
@@ -217,5 +269,6 @@ export default function App() {
       <Route path="*" element={<Navigate to="/ingresar" replace />} />
 
     </Routes>
+    </>
   )
 }

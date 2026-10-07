@@ -91,10 +91,6 @@ export default function InsumosPolimetalicos() {
       <div className="insumos-polimetalicos-header">
         <div>
           <h1>Insumos de materiales polimetálicos</h1>
-
-          <p>
-            Gestión de insumos de materiales polimetálicos registrados
-          </p>
         </div>
 
         <Permiso accion="crear"><button

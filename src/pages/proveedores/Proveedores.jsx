@@ -93,9 +93,6 @@ const Proveedores = () => {
       <div className="proveedores-header">
         <div>
           <h1>Proveedores</h1>
-          <p>
-            Registro y gestión de proveedores
-          </p>
         </div>
 
         <Permiso accion="crear"><button

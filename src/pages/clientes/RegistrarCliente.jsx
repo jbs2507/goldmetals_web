@@ -18,10 +18,6 @@ export default function RegistrarCliente() {
       <div className="clientes-header">
         <div>
           <h1>Registrar cliente</h1>
-
-          <p>
-            Ingrese la información del nuevo cliente
-          </p>
         </div>
 
         <button

@@ -106,7 +106,6 @@ export default function Empleados() {
       <div className="empleados-header">
         <div>
           <h1>Empleados</h1>
-          <p>Consulta y administra la información de los empleados.</p>
         </div>
 
         <Permiso accion="crear"><button

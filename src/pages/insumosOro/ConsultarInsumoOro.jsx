@@ -92,10 +92,6 @@ export default function ConsultarInsumoOro() {
             Consultar insumo de oro
           </h1>
 
-          <p>
-            Información detallada del insumo registrado
-          </p>
-
         </div>
 
         <button
@@ -185,21 +181,6 @@ export default function ConsultarInsumoOro() {
           </div>
 
         </section>
-
-        {/* =================================================
-            ACCIONES
-        ================================================= */}
-
-        <div className="consulta-acciones-insumo-oro">
-
-          <button
-            className="btn-volver-insumo-oro"
-            onClick={() => navigate("/insumos-oro")}
-          >
-            Volver a insumos
-          </button>
-
-        </div>
 
       </div>
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { usePermisos } from "../permisos.js";
 
 /**
@@ -35,7 +36,7 @@ export default function BotonEliminar({
         Eliminar
       </button>
 
-      {abierto && (
+      {abierto && createPortal(
         <div
           className="modal-eliminar-overlay"
           onClick={() => setAbierto(false)}
@@ -72,7 +73,8 @@ export default function BotonEliminar({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

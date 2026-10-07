@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { formatearFecha } from "../data/insumosVinculos.js";
 
 const capitalizar = (t) =>
@@ -26,7 +27,7 @@ export default function HistorialEstados({
         Historial
       </button>
 
-      {abierto && (
+      {abierto && createPortal(
         <div className="modal-eliminar-overlay" onClick={() => setAbierto(false)}>
           <div
             className="modal-eliminar modal-historial"
@@ -60,7 +61,8 @@ export default function HistorialEstados({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

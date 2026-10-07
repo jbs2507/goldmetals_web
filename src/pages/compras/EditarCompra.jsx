@@ -46,10 +46,6 @@ const EditarCompra = () => {
           <h1>
             Editar compra #{compra.id}
           </h1>
-
-          <p>
-            Actualiza la información registrada de la compra
-          </p>
         </div>
 
         <button

@@ -22,11 +22,6 @@ const RegistrarProveedor = () => {
       <div className="proveedores-header">
         <div>
           <h1>Registrar proveedor</h1>
-
-          <p>
-            Registre la información legal, comercial y de contacto
-            del proveedor.
-          </p>
         </div>
 
         <button

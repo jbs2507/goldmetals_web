@@ -6,6 +6,18 @@ import { etiquetaTipoDocumento } from "../../components/clientes/tiposDocumento.
 import DocumentosCargados from "../../components/DocumentosCargados.jsx";
 import Permiso from "../../components/Permiso.jsx";
 
+// Columnas del Excel: lo mismo que se ve en pantalla.
+const columnasExcel = [
+  { titulo: "Cliente", valor: (c) => c.nombre },
+  { titulo: "Tipo de cliente", valor: (c) => (c.tipo_cliente === "JURIDICA" ? "Persona jurídica" : c.tipo_cliente === "NATURAL" ? "Persona natural" : c.tipo_cliente) },
+  { titulo: "Tipo de documento", valor: (c) => etiquetaTipoDocumento(c.tipo_documento) },
+  { titulo: "Identificación", valor: (c) => c.identificacion_tributaria },
+  { titulo: "País", valor: (c) => c.pais },
+  { titulo: "Teléfono", valor: (c) => c.telefono },
+  { titulo: "Correo", valor: (c) => c.correo },
+  { titulo: "Estado", valor: (c) => c.estado },
+];
+
 const clientesIniciales = [
   {
     id_cliente: 1,
@@ -74,10 +86,6 @@ export default function Clientes() {
       <div className="clientes-header">
         <div>
           <h1>Clientes</h1>
-
-          <p>
-            Gestión de clientes registrados
-          </p>
         </div>
 
         <Permiso accion="crear"><button
@@ -167,7 +175,7 @@ export default function Clientes() {
 
       <div className="clientes-lista">
 
-        <BarraListado pag={pag} archivo="clientes" />
+        <BarraListado pag={pag} archivo="clientes" excel columnas={columnasExcel} />
 
         {clientesFiltrados.length === 0 ? (
           <div className="sin-clientes">

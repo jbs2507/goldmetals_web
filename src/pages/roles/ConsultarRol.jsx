@@ -13,7 +13,6 @@ export default function ConsultarRol() {
       <div className="roles-header">
         <div>
           <h1>Consultar rol</h1>
-          <p>Consulta la información, los permisos y los privilegios del rol</p>
         </div>
 
         <button type="button" className="btn-volver-rol" onClick={() => navigate("/roles")}>

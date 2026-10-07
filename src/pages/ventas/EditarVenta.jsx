@@ -21,10 +21,6 @@ export default function EditarVenta() {
             <h1>
               Editar venta
             </h1>
-
-            <p>
-              Actualización de información.
-            </p>
           </div>
 
         </div>
@@ -80,10 +76,6 @@ export default function EditarVenta() {
           <h1>
             Editar venta
           </h1>
-
-          <p>
-            Actualiza la información registrada de la venta.
-          </p>
 
         </div>
 

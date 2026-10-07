@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { BarChart, Donut, useTamano } from './Charts.jsx'
 import { kpis, pedidos, pedidosOro } from '../data.js'
 import { cargarPrecios, precioOroPorGramo } from '../utils/precios.js'
@@ -94,9 +95,107 @@ export const GoldOrdersCard = () => (
 const formatoMoneda = (n) =>
   n.toLocaleString('es-CO', { maximumFractionDigits: 2 })
 
+// Estilos del botón "Actualizar precios" y del aviso (van aquí para que viajen con el componente).
+const ESTILOS_ACTUALIZAR = `
+.px-actualizar {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border: 1px solid #e6b53a;
+  border-radius: 999px;
+  background: #e6b53a22;
+  color: #f7e08a;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.px-actualizar:hover:not(:disabled) {
+  background: #e6b53a;
+  color: #2a1d05;
+}
+.px-actualizar:focus-visible {
+  outline: 2px solid #f7e08a;
+  outline-offset: 2px;
+}
+.px-actualizar:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+.px-actualizar-ico {
+  display: inline-block;
+  font-size: 15px;
+  line-height: 1;
+}
+.px-actualizar-ico.girando {
+  animation: px-girar 0.8s linear infinite;
+}
+@keyframes px-girar {
+  to { transform: rotate(360deg); }
+}
+.px-aviso {
+  position: fixed;
+  top: 22px;
+  right: 24px;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #1f6b3a;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  animation: px-aviso-in 0.2s ease both;
+}
+@keyframes px-aviso-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+`
+
 export const PricesCard = () => {
   const [precios, setPrecios] = useState(null)
   const [error, setError] = useState('')
+  const [actualizando, setActualizando] = useState(false)
+  const [aviso, setAviso] = useState('')
+  const temporizador = useRef(null)
+
+  function mostrarAviso(texto) {
+    setAviso(texto)
+    clearTimeout(temporizador.current)
+    temporizador.current = setTimeout(() => setAviso(''), 3500)
+  }
+
+  useEffect(() => () => clearTimeout(temporizador.current), [])
+
+  async function actualizar() {
+    if (actualizando) return
+    setActualizando(true)
+    try {
+      const datos = await cargarPrecios({ forzar: true })
+      // Si se pulsó muy seguido, no hay datos nuevos: se avisa sin repetir la consulta.
+      const nuevos = !precios || datos.actualizado !== precios.actualizado
+      setPrecios(datos)
+      setError('')
+      mostrarAviso(
+        nuevos
+          ? 'Los precios se actualizaron correctamente'
+          : 'Los precios ya están actualizados'
+      )
+    } catch (e) {
+      // Se conservan los precios que ya se estaban mostrando.
+      setError('No se pudo actualizar ahora. Se muestran los últimos precios guardados.')
+    } finally {
+      setActualizando(false)
+    }
+  }
 
   useEffect(() => {
     let activo = true
@@ -130,10 +229,27 @@ export const PricesCard = () => {
   return (
     <div className="c px px-top">
       <div className="px-info">
-        <h3>Precios del día</h3>
+        <h3 style={{ fontWeight: 400 }}>Precios del día</h3>
         <div className="s">
           Oro y dólar en tiempo real{hora ? ` · actualizado ${hora}` : ''}
         </div>
+        <button
+          type="button"
+          className="px-actualizar"
+          onClick={actualizar}
+          disabled={actualizando}
+        >
+          <span className={'px-actualizar-ico' + (actualizando ? ' girando' : '')} aria-hidden="true">↻</span>
+          {actualizando ? 'Actualizando…' : 'Actualizar precios'}
+        </button>
+        <style>{ESTILOS_ACTUALIZAR}</style>
+        {aviso &&
+          createPortal(
+            <div className="px-aviso" role="status" aria-live="polite">
+              <span aria-hidden="true">✓</span> {aviso}
+            </div>,
+            document.body
+          )}
       </div>
       <div className="v">
         <div>

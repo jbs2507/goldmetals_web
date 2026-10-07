@@ -18,7 +18,6 @@ export default function RegistrarInsumo() {
       <div className="insumos-header">
         <div>
           <h1>Registrar insumo polimetálico</h1>
-          <p>Los insumos polimetálicos ingresan de forma manual</p>
         </div>
 
         <button type="button" className="btn-volver-insumo" onClick={cancelar}>

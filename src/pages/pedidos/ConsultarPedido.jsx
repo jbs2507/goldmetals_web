@@ -79,7 +79,6 @@ export default function ConsultarPedido() {
       <div className="pedidos-header">
         <div>
           <h1>Consultar pedido</h1>
-          <p>Información detallada del pedido</p>
         </div>
 
         <button
@@ -275,15 +274,6 @@ export default function ConsultarPedido() {
           </div>
 
         </section></Permiso>
-
-        <div className="consulta-acciones-pedido">
-          <button
-            className="btn-volver-pedido"
-            onClick={() => navigate("/pedidos")}
-          >
-            Volver a pedidos
-          </button>
-        </div>
 
       </div>
 

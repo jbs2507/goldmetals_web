@@ -16,6 +16,41 @@ import {
   formatoDinero,
 } from "../../data/ventasMock.js";
 import Permiso from "../../components/Permiso.jsx";
+import { puedeVerDato } from "../../permisos.js";
+
+// Columnas del Excel: lo mismo que se ve en pantalla, con fechas y valores legibles.
+const columnasExcel = [
+  { titulo: "Venta", valor: (v) => v.id_venta },
+  { titulo: "Origen", valor: (v) => (v.origen === "DIRECTA" ? "Venta directa" : "Pedido") },
+  { titulo: "Cliente", valor: (v) => v.cliente },
+  { titulo: "Pedido", valor: (v) => v.pedido },
+  { titulo: "Material", valor: (v) => v.tipo_material },
+  { titulo: "Cantidad", valor: (v) => v.cantidad },
+  { titulo: "Ley", valor: (v) => v.ley ?? "" },
+  { titulo: "Precio", valor: (v) => Number(v.precio) },
+  { titulo: "Moneda", valor: (v) => v.moneda },
+  { titulo: "Fecha", valor: (v) => formatearFecha(v.fecha) },
+  { titulo: "Estado", valor: (v) => etiquetaEstadoVenta(v.estado) },
+  { titulo: "Fecha del estado", valor: (v) => formatearFecha(fechaUltimoEstado(v)) },
+  { titulo: "País de destino", valor: (v) => v.pais_destino },
+  { titulo: "Puerto de entrega", valor: (v) => v.direccion_puerto },
+  { titulo: "Contacto de entrega", valor: (v) => v.contacto_entrega_nombre },
+  { titulo: "Teléfono de contacto", valor: (v) => v.contacto_entrega_telefono },
+  { titulo: "Encargado del transporte", valor: (v) => v.encargado_transporte },
+  { titulo: "Placa del vehículo", valor: (v) => v.placa_vehiculo },
+  { titulo: "Acopio", valor: (v) => v.acopio },
+  { titulo: "Mina", valor: (v) => v.mina },
+];
+
+const COLUMNAS_PRECIO = ["Precio", "Moneda"];
+const COLUMNAS_CANTIDAD = ["Cantidad", "Ley"];
+
+const filtrarColumnasExcel = () =>
+  columnasExcel.filter(
+    (c) =>
+      (!COLUMNAS_PRECIO.includes(c.titulo) || puedeVerDato("precios")) &&
+      (!COLUMNAS_CANTIDAD.includes(c.titulo) || puedeVerDato("cantidades"))
+  );
 
 export default function Ventas() {
   const navigate = useNavigate();
@@ -116,10 +151,6 @@ export default function Ventas() {
           <h1>
             Ventas
           </h1>
-
-          <p>
-            Consulta y administra las ventas realizadas.
-          </p>
         </div>
 
         <Permiso accion="crear"><button
@@ -217,7 +248,7 @@ export default function Ventas() {
 
       <div className="ventas-lista">
 
-        <BarraListado pag={pag} archivo="ventas" />
+        <BarraListado pag={pag} archivo="ventas" excel columnas={filtrarColumnasExcel()} />
 
         {ventasFiltradas.length > 0 ? (
 

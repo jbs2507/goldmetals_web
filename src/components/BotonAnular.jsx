@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { usePermisos } from "../permisos.js";
 
 /**
@@ -34,7 +35,7 @@ export default function BotonAnular({ entidad = "registro", nombre = "", deshabi
         Anular
       </button>
 
-      {abierto && (
+      {abierto && createPortal(
         <div className="modal-eliminar-overlay" onClick={cerrar}>
           <div className="modal-eliminar" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h3>Anular {entidad}</h3>
@@ -57,7 +58,8 @@ export default function BotonAnular({ entidad = "registro", nombre = "", deshabi
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

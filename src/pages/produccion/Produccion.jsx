@@ -5,8 +5,29 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProduccionCard from "../../components/produccion/ProduccionCard";
 import ProduccionFiltros from "../../components/produccion/ProduccionFiltros";
-import { produccionesMock, esOro, formatoMonto } from "../../data/produccionesMock.js";
+import { produccionesMock, esOro, formatoMonto, etiquetaEstadoProduccion } from "../../data/produccionesMock.js";
+import { puedeVerDato } from "../../permisos.js";
 import Permiso from "../../components/Permiso.jsx";
+
+// Columnas del Excel: lo mismo que se ve en pantalla.
+const columnasExcel = [
+  { titulo: "Producción", valor: (p) => p.id },
+  { titulo: "Insumo", valor: (p) => p.insumo },
+  { titulo: "Cantidad", valor: (p) => p.cantidad },
+  { titulo: "Fecha", valor: (p) => p.fecha },
+  { titulo: "Cliente", valor: (p) => p.cliente },
+  { titulo: "Pedido", valor: (p) => p.pedido },
+  { titulo: "Mina", valor: (p) => p.mina },
+  { titulo: "Monto (COP)", valor: (p) => Number(p.monto) },
+  { titulo: "Estado", valor: (p) => etiquetaEstadoProduccion(p.estado) },
+];
+
+const filtrarColumnasExcel = () =>
+  columnasExcel.filter(
+    (c) =>
+      (c.titulo !== "Monto (COP)" || puedeVerDato("precios")) &&
+      (c.titulo !== "Cantidad" || puedeVerDato("cantidades"))
+  );
 
 const Produccion = () => {
   const navigate = useNavigate();
@@ -70,10 +91,6 @@ const Produccion = () => {
       <div className="produccion-header">
         <div>
           <h1>Producción</h1>
-          <p>
-            Gestión de producción. Las producciones se crean automáticamente
-            cuando se genera un pedido.
-          </p>
         </div>
       </div>
 
@@ -114,7 +131,7 @@ const Produccion = () => {
       </div></Permiso>
 
       <div className="producciones-lista">
-        <BarraListado pag={pag} archivo="produccion" />
+        <BarraListado pag={pag} archivo="produccion" excel columnas={filtrarColumnasExcel()} />
         {produccionesFiltradas.length > 0 ? (
           pag.items.map((produccion) => (
             <ProduccionCard

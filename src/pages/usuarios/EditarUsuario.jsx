@@ -113,10 +113,6 @@ export default function EditarUsuario() {
       <div className="usuarios-header">
         <div>
           <h1>Editar usuario</h1>
-
-          <p>
-            Actualiza la información del usuario
-          </p>
         </div>
 
         <button

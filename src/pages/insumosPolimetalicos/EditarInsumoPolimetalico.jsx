@@ -86,11 +86,6 @@ export default function EditarInsumoPolimetalico() {
           <h1>
             Editar insumo polimetálico
           </h1>
-
-          <p>
-            Actualiza la información del insumo
-            registrado
-          </p>
         </div>
 
         <button

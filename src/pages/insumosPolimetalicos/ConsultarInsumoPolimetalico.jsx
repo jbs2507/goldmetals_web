@@ -85,11 +85,6 @@ export default function ConsultarInsumoPolimetalico() {
           <h1>
             Consultar insumo polimetálico
           </h1>
-
-          <p>
-            Información detallada del insumo
-            registrado
-          </p>
         </div>
 
         <button
@@ -163,16 +158,6 @@ export default function ConsultarInsumoPolimetalico() {
           </div>
         </section>
 
-        <div className="consulta-acciones-insumo-polimetalico">
-          <button
-            className="btn-volver-insumo-polimetalico"
-            onClick={() =>
-              navigate("/insumos-polimetalicos")
-            }
-          >
-            Volver a insumos
-          </button>
-        </div>
       </div>
     </div>
   );

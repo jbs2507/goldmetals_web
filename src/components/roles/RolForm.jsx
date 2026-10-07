@@ -3,6 +3,7 @@ import { filtrarSoloLetras, validarCampo } from "../../utils/validaciones.js";
 import {
   ACCIONES,
   MODULOS,
+  accionesDeModulo,
   DATOS_SENSIBLES,
   clavePermiso,
   claveDato,
@@ -53,7 +54,10 @@ export default function RolForm({
     );
   };
 
-  const moduloCompleto = (modulo) => ACCIONES.every((a) => tiene(clavePermiso(modulo, a.id)));
+  const moduloPorId = (id) => MODULOS.find((m) => m.id === id);
+
+  const moduloCompleto = (modulo) =>
+    accionesDeModulo(moduloPorId(modulo)).every((a) => tiene(clavePermiso(modulo, a.id)));
 
   const alternarModulo = (modulo) => {
     if (bloqueado) return;
@@ -61,7 +65,7 @@ export default function RolForm({
       const sinModulo = actuales.filter((p) => !p.startsWith(`${modulo}.`));
       return moduloCompleto(modulo)
         ? sinModulo
-        : [...sinModulo, ...ACCIONES.map((a) => clavePermiso(modulo, a.id))];
+        : [...sinModulo, ...accionesDeModulo(moduloPorId(modulo)).map((a) => clavePermiso(modulo, a.id))];
     });
   };
 
@@ -124,13 +128,15 @@ export default function RolForm({
         </div>
       </section>
 
-      {/* PRIVILEGIOS: qué puede hacer el rol en cada módulo */}
+      {/* PERMISOS: qué puede hacer el rol en cada módulo y qué información sensible puede ver */}
       <section className="form-seccion">
         <div className="form-seccion-titulo">
           <h2>Permisos y privilegios por módulo</h2>
           <p>
             Define qué puede hacer el rol en el sistema. Para poder registrar, editar, eliminar o
-            descargar en un módulo, primero debe poder verlo.
+            descargar en un módulo, primero debe poder verlo. Todos los roles ven la información
+            general; los datos de la sección "Información que puede ver" solo los ven los roles que
+            los tengan marcados.
           </p>
         </div>
 
@@ -158,36 +164,37 @@ export default function RolForm({
                   bloqueado={bloqueado}
                 />
               ))}
+
+              {/* INFORMACIÓN SENSIBLE: dentro de la misma tabla */}
+              <tr className="permisos-grupo">
+                <td colSpan={ACCIONES.length + 2}>Información que puede ver</td>
+              </tr>
+              {DATOS_SENSIBLES.map((d) => (
+                <tr key={d.id}>
+                  <td className="permisos-modulo">
+                    {d.etiqueta}
+                    <small className="permisos-ayuda">{d.ayuda}</small>
+                  </td>
+                  {ACCIONES.map((a) => (
+                    <td key={a.id}>
+                      {a.id === "ver" ? (
+                        <input
+                          type="checkbox"
+                          aria-label={`Ver ${d.etiqueta}`}
+                          checked={tiene(claveDato(d.id))}
+                          onChange={() => alternarDato(d.id)}
+                          disabled={bloqueado}
+                        />
+                      ) : (
+                        <span className="permisos-na">—</span>
+                      )}
+                    </td>
+                  ))}
+                  <td><span className="permisos-na">—</span></td>
+                </tr>
+              ))}
             </tbody>
           </table>
-        </div>
-      </section>
-
-      {/* INFORMACIÓN SENSIBLE: qué puede ver el rol además de la información general */}
-      <section className="form-seccion">
-        <div className="form-seccion-titulo">
-          <h2>Información que puede ver</h2>
-          <p>
-            Todos los roles ven la información general. Estos datos solo los ven los roles que los
-            tengan marcados.
-          </p>
-        </div>
-
-        <div className="permisos-datos">
-          {DATOS_SENSIBLES.map((d) => (
-            <label key={d.id} className={`permiso-dato${tiene(claveDato(d.id)) ? " on" : ""}`}>
-              <input
-                type="checkbox"
-                checked={tiene(claveDato(d.id))}
-                onChange={() => alternarDato(d.id)}
-                disabled={bloqueado}
-              />
-              <span>
-                <strong>{d.etiqueta}</strong>
-                <small>{d.ayuda}</small>
-              </span>
-            </label>
-          ))}
         </div>
 
         {(error || errorExterno) && <div className="mensaje-error-rol">{error || errorExterno}</div>}
@@ -225,13 +232,17 @@ function FilasGrupo({ grupo, modulos, tiene, alternarPermiso, alternarModulo, mo
           <td className="permisos-modulo">{m.nombre}</td>
           {ACCIONES.map((a) => (
             <td key={a.id}>
-              <input
-                type="checkbox"
-                aria-label={`${a.etiqueta} en ${m.nombre}`}
-                checked={tiene(clavePermiso(m.id, a.id))}
-                onChange={() => alternarPermiso(m.id, a.id)}
-                disabled={bloqueado}
-              />
+              {accionesDeModulo(m).some((x) => x.id === a.id) ? (
+                <input
+                  type="checkbox"
+                  aria-label={`${a.etiqueta} en ${m.nombre}`}
+                  checked={tiene(clavePermiso(m.id, a.id))}
+                  onChange={() => alternarPermiso(m.id, a.id)}
+                  disabled={bloqueado}
+                />
+              ) : (
+                <span className="permisos-na">—</span>
+              )}
             </td>
           ))}
           <td>

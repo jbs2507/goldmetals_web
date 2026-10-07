@@ -54,7 +54,6 @@ export default function EditarPedido() {
       <div className="pedidos-header">
         <div>
           <h1>Editar pedido</h1>
-          <p>Solo se puede cambiar el estado del pedido</p>
         </div>
 
         <button className="btn-volver-pedido" onClick={() => navigate("/pedidos")}>

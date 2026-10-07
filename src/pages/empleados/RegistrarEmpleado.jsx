@@ -19,7 +19,6 @@ export default function RegistrarEmpleado() {
       <div className="empleados-header">
         <div>
           <h1>Registrar empleado</h1>
-          <p>Registra la información correspondiente al empleado.</p>
         </div>
 
         <Link to="/empleados" replace className="btn-volver-empleado">

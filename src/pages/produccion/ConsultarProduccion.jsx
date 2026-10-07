@@ -35,9 +35,6 @@ const ConsultarProduccion = () => {
       <div className="produccion-header">
         <div>
           <h1>Consultar producción</h1>
-          <p>
-            Información detallada de la producción #{id}
-          </p>
         </div>
 
         <div className="produccion-header-acciones">

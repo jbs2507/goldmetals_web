@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 const hoyISO = () => new Date().toISOString().slice(0, 10);
 
@@ -33,7 +34,7 @@ export default function RevincularEmpleado({ empleado, onConfirmar }) {
         Revincular
       </button>
 
-      {abierto && (
+      {abierto && createPortal(
         <div className="modal-eliminar-overlay" onClick={() => setAbierto(false)}>
           <div
             className="modal-eliminar"
@@ -70,7 +71,8 @@ export default function RevincularEmpleado({ empleado, onConfirmar }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

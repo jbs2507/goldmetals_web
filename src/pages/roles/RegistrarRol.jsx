@@ -21,7 +21,6 @@ export default function RegistrarRol() {
       <div className="roles-header">
         <div>
           <h1>Registrar rol</h1>
-          <p>Registra un nuevo rol y define sus permisos y privilegios</p>
         </div>
 
         <button type="button" className="btn-volver-rol" onClick={() => navigate("/roles")}>

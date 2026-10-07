@@ -96,7 +96,6 @@ export default function Pedidos() {
       <div className="pedidos-header">
         <div>
           <h1>Pedidos</h1>
-          <p>Gestión de pedidos registrados</p>
         </div>
 
         <Permiso accion="crear"><button

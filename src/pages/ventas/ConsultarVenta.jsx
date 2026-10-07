@@ -57,10 +57,6 @@ export default function ConsultarVenta() {
             <h1>
               Consultar venta
             </h1>
-
-            <p>
-              Información de la venta.
-            </p>
           </div>
 
         </div>
@@ -103,10 +99,6 @@ export default function ConsultarVenta() {
           <h1>
             Consultar venta
           </h1>
-
-          <p>
-            Consulta la información registrada de la venta.
-          </p>
 
         </div>
 
@@ -436,22 +428,6 @@ export default function ConsultarVenta() {
             </div>
 
         </section>
-
-        {/* =========================================
-            ACCIONES
-        ========================================= */}
-
-        <div className="consulta-acciones-venta">
-
-          <button
-            type="button"
-            className="btn-volver-venta"
-            onClick={() => navigate("/ventas")}
-          >
-            Volver
-          </button>
-
-        </div>
 
       </div>
 

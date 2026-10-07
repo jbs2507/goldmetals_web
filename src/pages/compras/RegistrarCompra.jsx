@@ -19,10 +19,6 @@ const RegistrarCompra = () => {
       <div className="compras-header">
         <div>
           <h1>Registrar compra</h1>
-
-          <p>
-            Registra la información de una nueva compra
-          </p>
         </div>
 
         <button

@@ -11,6 +11,7 @@ export const GRAMOS_POR_ONZA_TROY = 31.1035;
 
 const PRECIOS_CACHE_KEY = "gm_precios_dia_v1";
 const PRECIOS_CACHE_MS = 60 * 60 * 1000; // 1 hora
+const ACTUALIZAR_MIN_MS = 30 * 1000; // al pulsar "Actualizar", mínimo 30 s entre consultas
 
 const leerCache = () => {
   try {
@@ -43,10 +44,19 @@ async function obtenerPreciosDelDia() {
   return { oro, cop, actualizado: Date.now() };
 }
 
-/** Devuelve los precios del día (caché de 1 h). Si falla, usa el último guardado. */
-export async function cargarPrecios() {
+/**
+ * Devuelve los precios del día (caché de 1 h). Si falla, usa el último guardado.
+ * Con { forzar: true } (botón "Actualizar") consulta de nuevo sin esperar la hora de caché
+ * y, si falla, lanza el error para avisar al usuario (conservando los precios ya mostrados).
+ */
+export async function cargarPrecios({ forzar = false } = {}) {
   const cache = leerCache();
-  if (cache && Date.now() - cache.actualizado < PRECIOS_CACHE_MS) return cache;
+  if (cache) {
+    const edad = Date.now() - cache.actualizado;
+    if (!forzar && edad < PRECIOS_CACHE_MS) return cache;
+    // Evita saturar el servicio gratuito si se pulsa varias veces seguidas.
+    if (forzar && edad < ACTUALIZAR_MIN_MS) return cache;
+  }
 
   try {
     const datos = await obtenerPreciosDelDia();
@@ -57,7 +67,7 @@ export async function cargarPrecios() {
     }
     return datos;
   } catch (e) {
-    if (cache) return cache;
+    if (cache && !forzar) return cache;
     throw e;
   }
 }

@@ -46,9 +46,6 @@ const EditarProduccion = () => {
       <div className="produccion-header">
         <div>
           <h1>Editar producción</h1>
-          <p>
-            Actualice la información de la producción #{id}
-          </p>
         </div>
 
         <div className="produccion-header-acciones">

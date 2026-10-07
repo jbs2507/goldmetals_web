@@ -93,10 +93,6 @@ export default function EditarInsumoOro() {
             Editar insumo de oro
           </h1>
 
-          <p>
-            Actualiza la información del insumo registrado
-          </p>
-
         </div>
 
         <button

@@ -84,10 +84,6 @@ export default function InsumosOro() {
         <div>
           <h1>Insumos de oro</h1>
 
-          <p>
-            Gestión de insumos de oro registrados
-          </p>
-
           <p className="nota-insumo-automatico">
             El inventario de oro aumenta con las compras y disminuye con las ventas, por eso no se registra manualmente.
           </p>

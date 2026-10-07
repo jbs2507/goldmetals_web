@@ -26,10 +26,6 @@ const ConsultarProveedor = () => {
           <h1>
             Consultar proveedor
           </h1>
-
-          <p>
-            Información detallada del proveedor
-          </p>
         </div>
 
         <button

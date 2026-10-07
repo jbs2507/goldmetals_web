@@ -59,7 +59,6 @@ export default function ConsultarEmpleado() {
         <div className="empleados-header">
           <div>
             <h1>Consultar empleado</h1>
-            <p>Información del empleado.</p>
           </div>
         </div>
 
@@ -89,9 +88,6 @@ export default function ConsultarEmpleado() {
       <div className="empleados-header">
         <div>
           <h1>Consultar empleado</h1>
-          <p>
-            Consulta la información registrada del empleado.
-          </p>
         </div>
 
         <button
@@ -198,17 +194,6 @@ export default function ConsultarEmpleado() {
           </div>
 
         </section>
-
-        <div className="consulta-acciones-empleado">
-
-          <button
-            className="btn-volver-empleado"
-            onClick={() => navigate("/empleados")}
-          >
-            Volver
-          </button>
-
-        </div>
 
       </div>
 

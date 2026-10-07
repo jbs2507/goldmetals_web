@@ -70,10 +70,6 @@ export default function ConsultarCliente() {
           <h1>
             Consultar cliente
           </h1>
-
-          <p>
-            Información detallada del cliente
-          </p>
         </div>
 
         <button
@@ -221,24 +217,6 @@ export default function ConsultarCliente() {
             />
           </div>
         </section>
-
-        {/* =========================================
-            ACCIONES
-        ========================================= */}
-
-        <div className="consulta-acciones-cliente">
-
-          <button
-            type="button"
-            className="btn-cancelar-cliente"
-            onClick={() =>
-              navigate("/clientes")
-            }
-          >
-            Volver
-          </button>
-
-        </div>
 
       </div>
 

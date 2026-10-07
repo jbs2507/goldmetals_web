@@ -41,10 +41,6 @@ export default function ConsultarUsuario() {
       <div className="usuarios-header">
         <div>
           <h1>Consultar usuario</h1>
-
-          <p>
-            Consulta la información del usuario seleccionado
-          </p>
         </div>
 
         <button
@@ -124,18 +120,6 @@ export default function ConsultarUsuario() {
 
             </div>
           </section>
-
-          <div className="consulta-acciones-usuario">
-
-            <button
-              type="button"
-              className="btn-cancelar-usuario"
-              onClick={() => navigate("/usuarios")}
-            >
-              Volver
-            </button>
-
-          </div>
 
         </div>
       ) : (

@@ -85,10 +85,6 @@ export default function Usuarios() {
 
         <div>
           <h1>Usuarios</h1>
-
-          <p>
-            Gestión de usuarios del sistema
-          </p>
         </div>
 
         <Permiso accion="crear"><button

@@ -81,10 +81,6 @@ export default function EditarCliente() {
           <h1>
             Editar cliente
           </h1>
-
-          <p>
-            Solo se puede cambiar el estado del cliente
-          </p>
         </div>
 
         <button

@@ -63,10 +63,6 @@ export default function Roles() {
       <div className="roles-header">
         <div>
           <h1>Roles</h1>
-
-          <p>
-            Gestión de roles y permisos del sistema
-          </p>
         </div>
 
         <Permiso accion="crear"><button

@@ -103,10 +103,6 @@ const Compras = () => {
       <div className="compras-header">
         <div>
           <h1>Compras</h1>
-
-          <p>
-            Registro y gestión de compras
-          </p>
         </div>
 
         <Permiso accion="crear"><button

@@ -81,6 +81,20 @@ export default function Dashboard({ theme, onToggleTheme }) {
     navigate('/ingresar', { replace: true })
   }
 
+  // Pantalla que ve el rol sin acceso al resumen del Dashboard.
+  const bienvenida = (
+          <div className="body">
+            <div className="dash-restringido">
+              <h2>Bienvenido al sistema</h2>
+              <p>
+                Tu rol{usuarioActivo?.rol ? ` (${usuarioActivo.rol})` : ''} permite consultar la información
+                general y descargar documentos desde el menú lateral. Las estadísticas, precios y
+                cantidades no están disponibles para este rol.
+              </p>
+            </div>
+          </div>
+  )
+
   return (
 
     <div className="dash">
@@ -321,20 +335,10 @@ export default function Dashboard({ theme, onToggleTheme }) {
           CONTENIDO DEL DASHBOARD
       ========================================= */}
 
+      <Permiso modulo="dashboard" accion="ver" alternativa={bienvenida}>
       <Permiso
         dato="estadisticas"
-        alternativa={
-          <div className="body">
-            <div className="dash-restringido">
-              <h2>Bienvenido al sistema</h2>
-              <p>
-                Tu rol{usuarioActivo?.rol ? ` (${usuarioActivo.rol})` : ''} permite consultar la información
-                general y descargar documentos desde el menú lateral. Las estadísticas, precios y
-                cantidades no están disponibles para este rol.
-              </p>
-            </div>
-          </div>
-        }
+        alternativa={bienvenida}
       >
       <div className="body dash-body">
 
@@ -364,6 +368,7 @@ export default function Dashboard({ theme, onToggleTheme }) {
 
       </div>
 
+      </Permiso>
       </Permiso>
 
     </div>

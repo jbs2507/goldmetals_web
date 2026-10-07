@@ -21,10 +21,6 @@ export default function RegistrarVenta() {
           <h1>
             Registrar venta
           </h1>
-
-          <p>
-            Selecciona el pedido pagado por completo; el pedido define si la venta es de oro o de arenas polimetálicas.
-          </p>
         </div>
 
         <button

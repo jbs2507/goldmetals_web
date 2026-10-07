@@ -18,7 +18,6 @@ export default function RegistrarPedido() {
       <div className="pedidos-header">
         <div>
           <h1>Registrar pedido</h1>
-          <p>Registra la información del nuevo pedido</p>
         </div>
 
         <button

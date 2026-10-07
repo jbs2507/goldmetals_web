@@ -69,7 +69,6 @@ export default function Insumos() {
       <div className="insumos-header">
         <div>
           <h1>Insumos</h1>
-          <p>Gestión de insumos registrados</p>
         </div>
 
         {tipo === "POLIMETALICO" && (

@@ -27,7 +27,8 @@ export default function Sidebar() {
           // Solo se muestran los módulos que el rol puede ver.
           items: g.items.filter((i) => {
             const { modulo } = moduloDeRuta(i.path || "/dashboard");
-            return !modulo || puede(modulo, "ver");
+            // El Dashboard siempre aparece en el menú (sin permiso solo muestra la bienvenida).
+            return !modulo || modulo === "dashboard" || puede(modulo, "ver");
           }),
         }))
         .filter((g) => g.items.length > 0)

@@ -44,10 +44,6 @@ const ConsultarCompra = () => {
           <h1>
             Consultar compra #{compra.id}
           </h1>
-
-          <p>
-            Consulta la información registrada de la compra
-          </p>
         </div>
 
         <button
@@ -179,19 +175,6 @@ const ConsultarCompra = () => {
             disabled
           />
         </div>
-      </div>
-
-      {/* ACCIONES */}
-      <div className="consulta-acciones">
-
-        <button
-          type="button"
-          className="btn-cancelar-compra"
-          onClick={() => navigate("/compras")}
-        >
-          Volver
-        </button>
-
       </div>
 
     </div>

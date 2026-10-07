@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { descargarArchivo, pdfEjemplo, verArchivo } from "../utils/documentos.js";
 import { usePermisos } from "../permisos.js";
 
@@ -26,7 +27,7 @@ export default function DocumentosCargados({
         Documentos ({cargados}/{documentos.length})
       </button>
 
-      {abierto && (
+      {abierto && createPortal(
         <div className="modal-eliminar-overlay" onClick={() => setAbierto(false)}>
           <div
             className="modal-eliminar modal-historial"
@@ -72,7 +73,8 @@ export default function DocumentosCargados({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

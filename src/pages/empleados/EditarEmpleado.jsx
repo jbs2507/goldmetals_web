@@ -58,7 +58,6 @@ export default function EditarEmpleado() {
         <div className="empleados-header">
           <div>
             <h1>Editar empleado</h1>
-            <p>Actualización de información.</p>
           </div>
         </div>
 
@@ -99,9 +98,6 @@ export default function EditarEmpleado() {
       <div className="empleados-header">
         <div>
           <h1>Editar empleado</h1>
-          <p>
-            Actualiza la información registrada del empleado.
-          </p>
         </div>
 
         <button

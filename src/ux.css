@@ -1,0 +1,695 @@
+/* =========================================================
+   CAPA DE UX  (se carga DESPUÉS de styles.css)
+   ---------------------------------------------------------
+   - No reemplaza ni borra nada de styles.css: solo suma.
+   - Todo está limitado a la app interna (.web). El Login y el
+     Registro (.auth) no se ven afectados.
+   Contenido:
+     2. Migas de pan y enlace "saltar al contenido"
+     3. Pulido general: foco, hover, botones, animación suave
+     4. Celular y tablet: menú tipo cajón + contenido a todo el ancho
+========================================================= */
+
+:root {
+  --ux-hover: rgba(23, 17, 10, 0.1);
+  --ux-line: rgba(42, 29, 5, 0.22);
+  --ux-panel: rgba(23, 17, 10, 0.1);
+  --ux-ring: #b98010;
+}
+
+:root[data-theme="dark"] {
+  --ux-hover: rgba(240, 217, 138, 0.1);
+  --ux-line: rgba(240, 217, 138, 0.22);
+  --ux-panel: rgba(255, 255, 255, 0.05);
+  --ux-ring: #f7e08a;
+}
+
+/* ---------- 2. MIGAS DE PAN / SALTAR AL CONTENIDO ---------- */
+
+.web .main {
+  position: relative;
+}
+
+.web .ux-crumbs {
+  position: absolute;
+  top: 3px;
+  left: 24px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  font-size: 11.5px;
+  line-height: 14px;
+  color: var(--mu);
+}
+
+.web .ux-crumbs a {
+  display: inline-flex;
+  align-items: center;
+  color: var(--mu);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0 6px;
+  border-radius: 6px;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.web .ux-crumbs a:hover {
+  color: var(--tx);
+  background: var(--ux-hover);
+}
+
+.web .ux-crumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.web .ux-crumb-sep {
+  opacity: 0.5;
+}
+
+.web .ux-crumb-actual {
+  padding: 0 6px;
+  color: var(--tx);
+  font-weight: 700;
+}
+
+/* Deja un respiro arriba para las migas */
+.web .main > .ux-crumbs + div[class*="page"] {
+  padding-top: 22px;
+}
+
+.web .ux-skip {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 200;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--blk);
+  color: var(--g1);
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.web .ux-skip:focus {
+  top: 12px;
+}
+
+.web .main:focus {
+  outline: none;
+}
+
+/* La barra superior y el fondo oscuro del cajón solo aplican en celular */
+.web .app-top,
+.web .app-scrim {
+  display: none;
+}
+
+/* ---------- 3. PULIDO GENERAL ---------- */
+
+/* Foco visible para quien navega con teclado */
+.web a:focus-visible,
+.web button:focus-visible,
+.web summary:focus-visible,
+.web [tabindex]:focus-visible {
+  outline: 2px solid var(--ux-ring);
+  outline-offset: 2px;
+}
+
+.web .side a:focus-visible {
+  outline-color: var(--blk);
+}
+
+:root[data-theme="dark"] .web .side a:focus-visible {
+  outline-color: var(--g1);
+}
+
+/* Botones: respuesta al toque y estado desactivado claro */
+.web .main button {
+  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease,
+    transform 0.1s ease, opacity 0.16s ease;
+}
+
+.web .main button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.web .main button:disabled {
+  cursor: not-allowed;
+}
+
+/* Tarjetas de los listados: levantan un poco al pasar el cursor */
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card):hover {
+  box-shadow: 0 8px 22px rgba(138, 118, 72, 0.16);
+  border-color: rgba(224, 170, 43, 0.55);
+}
+
+/* ---------- 3b. LISTADOS COMPACTOS ----------
+   Objetivo: ver al menos 3 registros por módulo sin hacer scroll.
+   El encabezado y los botones van en la misma línea; los datos se
+   reparten en columnas automáticas. */
+
+.web .main > div[class*="page"] {
+  padding: 20px 24px 14px;
+}
+
+.web .main > [class$="-page"] > [class$="-header"] {
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.web .main > [class$="-page"] > [class$="-header"] h1 {
+  font-size: 20px;
+}
+
+.web .main > [class$="-page"] > [class$="-header"] p {
+  margin-top: 0;
+  font-size: 12px;
+}
+
+.web .main > [class$="-page"] > [class$="-header"] > :is(button, a) {
+  padding: 8px 16px;
+  min-height: 0;
+  font-size: 12.5px;
+}
+
+.web .main [class$="-filtros"] {
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.web .main [class$="-filtros"] :is(input, select) {
+  min-height: 34px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.web .main [class$="-resumen"] {
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.web .main [class$="-resumen"] > div {
+  padding: 5px 14px;
+  border-radius: 12px;
+}
+
+.web .main [class$="-resumen"] > div strong {
+  font-size: 17px;
+}
+
+.web .main .barra-listado {
+  margin: 0 0 6px;
+  font-size: 12px;
+}
+
+.web .main [class$="-lista"],
+.web .main .producciones-lista {
+  gap: 8px;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 14px;
+  padding: 8px 14px;
+  border-radius: 14px;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-header"] {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+/* "Compra  #001" en una sola línea */
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-header"] > div:first-child {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-header"] h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-actions"] {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  gap: 6px;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-actions"] button {
+  padding: 5px 12px;
+  min-height: 30px;
+  font-size: 12px;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-body"] {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 6px 0 0;
+  padding: 6px 0 0;
+  border-top: 1px solid var(--ln);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 4px 14px;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-body"] > * {
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-body"] span {
+  font-size: 10.5px;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-body"] strong {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+/* Ventas: los documentos legales suben a la línea del título */
+.web .main .venta-card > .venta-documentos {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* Menú del usuario (Dashboard): queda por encima de las tarjetas */
+.web .dash .hero {
+  z-index: 40;
+}
+
+
+/* --- Ajuste fino: parte superior y filas de datos --- */
+
+.web .main > div[class*="page"] {
+  padding-top: 18px;
+}
+
+.web .main > .ux-crumbs + div[class*="page"] {
+  padding-top: 20px;
+}
+
+/* Título y subtítulo en una sola línea */
+.web .main > [class$="-page"] > [class$="-header"] > div:first-child {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 10px;
+}
+
+.web .main > [class$="-page"] > [class$="-header"] h1 {
+  font-size: 19px;
+  margin: 0;
+}
+
+.web .main [class$="-filtros"] {
+  padding: 4px 8px;
+  margin-bottom: 6px;
+}
+
+.web .main [class$="-filtros"] :is(input, select) {
+  min-height: 32px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  font-size: 13px;
+}
+
+/* Resumen: todas las tarjetitas en una sola fila */
+.web .main [class$="-resumen"] {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-bottom: 6px;
+}
+
+.web .main [class$="-resumen"] > div {
+  padding: 4px 12px;
+}
+
+.web .main [class$="-resumen"] > div span {
+  font-size: 11.5px;
+}
+
+.web .main .barra-listado {
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.web .main .nota-insumo-automatico {
+  padding: 6px 12px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.web .main .insumos-tabs {
+  margin-bottom: 6px;
+}
+
+.web .main .insumos-tabs :is(button, a) {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-header"] {
+  min-height: 30px;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-header"] > div:first-child > * {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-body"] {
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 3px 12px;
+  margin-top: 4px;
+  padding-top: 5px;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-body"] span {
+  display: block;
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.15;
+}
+
+.web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-body"] strong {
+  display: block;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+/* Ventas: resumen en una fila compacta */
+.web .main .ventas-resumen {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: stretch;
+}
+
+.web .main .resumen-venta-item {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  min-height: 0;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.web .main .resumen-venta-item strong,
+.web .main .resumen-venta-item strong.resumen-dinero {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.web .main .resumen-venta-item span {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* Barra de herramientas: filtros y resumen comparten línea en pantallas anchas */
+@media (min-width: 1001px) {
+  .web .main > [class$="-page"]:has(> [class$="-filtros"]):has(> [class$="-resumen"]):not(:has(> [class$="-resumen"] > :nth-child(4))) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    column-gap: 10px;
+    align-items: start;
+  }
+
+  .web .main > [class$="-page"]:has(> [class$="-filtros"]):has(> [class$="-resumen"]):not(:has(> [class$="-resumen"] > :nth-child(4))) > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .web .main > [class$="-page"]:has(> [class$="-filtros"]):has(> [class$="-resumen"]):not(:has(> [class$="-resumen"] > :nth-child(4))) > [class$="-filtros"] {
+    grid-column: 1;
+  }
+
+  .web .main > [class$="-page"]:has(> [class$="-filtros"]):has(> [class$="-resumen"]):not(:has(> [class$="-resumen"] > :nth-child(4))) > [class$="-resumen"] {
+    grid-column: 2;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    align-self: stretch;
+  }
+
+  .web .main [class$="-resumen"] > div {
+    min-width: 0;
+  }
+}
+
+/* Roles: textos largos en 4 columnas */
+.web .main [class$="-lista"] > .rol-card > .rol-card-body {
+  grid-template-columns: 1.5fr 0.6fr 1.3fr 1.5fr;
+}
+
+.web .main .rol-card .dato-rol-ancho {
+  grid-column: auto;
+}
+
+/* Resúmenes con 4 o más totales: etiqueta arriba y valor abajo, sin partir los números */
+.web .main [class$="-resumen"]:has(> :nth-child(4)) > div {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+}
+
+.web .main [class$="-resumen"]:has(> :nth-child(4)) > div strong {
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+/* Entrada suave de cada pantalla (solo opacidad: no afecta modales) */
+@keyframes ux-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.web .main > :not(.ux-crumbs) {
+  animation: ux-in 0.22s ease both;
+}
+
+/* Textos largos nunca rompen la tarjeta; las etiquetas no se parten */
+.web .main [class$="-card"] [class*="badge"],
+.web .main [class*="estado-"] {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.web .main [class$="-card-body"] > *,
+.web .main [class$="-resumen"] > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+::selection {
+  background: #e6b53a66;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .web *,
+  .web *::before,
+  .web *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- 4. CELULAR Y TABLET (≤ 900px) ---------- */
+
+@media (max-width: 900px) {
+  .web {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* Barra superior con botón de menú */
+  .web .app-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 14px 0;
+    background: var(--card);
+    border-bottom: 1px solid var(--ln);
+    z-index: 30;
+  }
+
+  .web .app-top img {
+    height: 32px;
+    width: auto;
+  }
+
+  .web .app-burger {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--ln);
+    background: transparent;
+    color: var(--tx);
+    cursor: pointer;
+  }
+
+  .web .app-burger:hover {
+    background: var(--ux-hover);
+  }
+
+  /* El menú pasa a ser un cajón que entra desde la izquierda */
+  .web .side {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    height: 100dvh;
+    width: min(288px, 86vw);
+    z-index: 60;
+    padding: 18px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-104%);
+    visibility: hidden;
+    transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.26s;
+  }
+
+  .web.nav-open .side {
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
+    box-shadow: 14px 0 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .web .side img {
+    width: 128px;
+  }
+
+  /* Barra del Dashboard: el buscador baja a su propia línea en vez de cortarse */
+  .web .hero .bar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .web .hero .bar .s {
+    order: 3;
+    width: 100%;
+  }
+
+  .web .app-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(10, 7, 3, 0.55);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .web.nav-open .app-scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .web.nav-open .main {
+    overflow: hidden;
+  }
+
+  /* El contenido usa todo el ancho */
+  .web .main {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  .web .ux-crumbs {
+    left: 16px;
+  }
+
+  .web .main > div[class*="page"] {
+    padding: 14px 16px 28px;
+  }
+
+  .web .main > .ux-crumbs + div[class*="page"] {
+    padding-top: 22px;
+  }
+}
+
+@media (max-width: 760px) {
+  .web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 6px;
+  }
+
+  .web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-header"],
+  .web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-body"],
+  .web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-actions"],
+  .web .main .venta-card > .venta-documentos {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-header"] {
+    justify-content: space-between;
+  }
+
+  .web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-body"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .web .main [class$="-lista"] > :is([class$="-card"], .insumo-unificado-card) > [class$="-card-actions"] {
+    flex-wrap: wrap;
+  }
+}
+
+/* Celulares: controles cómodos para el dedo y sin zoom automático en iPhone */
+@media (max-width: 650px) {
+  .web .main input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .web .main select,
+  .web .main textarea {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .web .main button,
+  .web .main [class*="btn-"] {
+    min-height: 40px;
+  }
+}

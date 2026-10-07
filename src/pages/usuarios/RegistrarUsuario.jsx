@@ -39,10 +39,6 @@ export default function RegistrarUsuario() {
       <div className="usuarios-header">
         <div>
           <h1>Registrar usuario</h1>
-
-          <p>
-            Registra un nuevo usuario en el sistema
-          </p>
         </div>
 
         <button

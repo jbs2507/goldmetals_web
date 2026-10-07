@@ -20,11 +20,6 @@ export default function RegistrarInsumoPolimetalico() {
           <h1>
             Registrar insumo polimetálico
           </h1>
-
-          <p>
-            Registra la información del nuevo
-            material polimetálico
-          </p>
         </div>
 
         <button

@@ -37,10 +37,6 @@ const EditarProveedor = () => {
           <h1>
             Editar proveedor
           </h1>
-
-          <p>
-            Actualice la información del proveedor
-          </p>
         </div>
 
         <button

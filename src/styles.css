@@ -1473,6 +1473,9 @@ body {
 .user-avatar {
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
 
   border-radius: 50%;
 
@@ -1489,6 +1492,10 @@ body {
   justify-content: center;
 }
 
+.user-dropdown-header > div:last-child {
+  min-width: 0;
+}
+
 .user-dropdown-header strong {
   display: block;
 
@@ -1498,6 +1505,7 @@ body {
 }
 
 .user-dropdown-header span {
+  overflow-wrap: anywhere;
   display: block;
 
   margin-top: 2px;
@@ -12416,4 +12424,175 @@ div:has(> input[required], > select[required], > textarea[required]) > label::af
   .hero .bar {
     transform: translateY(18px);
   }
+}
+
+
+/* =========================================================
+   DASHBOARD (tema claro) - CAFÉ EN LUGAR DE NEGRO
+   - El encabezado y las tarjetas vuelven al café del diseño.
+   - La tarjeta de precios queda completa: el encabezado ya no
+     la tapa (solo el menú del usuario/notificaciones va encima).
+   El tema oscuro no cambia.
+========================================================= */
+
+:root:not([data-theme="dark"]) {
+  --cafe: #4a3020;
+  --cafe-hero-a: #4a2e21;
+  --cafe-hero-b: #725327;
+  --b2: #4a3020;
+}
+
+:root:not([data-theme="dark"]) .dash .hero {
+  background:
+    radial-gradient(circle at 88% 0, #b8892e66, transparent 50%),
+    linear-gradient(100deg, var(--cafe-hero-a) 0%, #503525 55%, var(--cafe-hero-b) 100%);
+}
+
+:root:not([data-theme="dark"]) .dash .hero p {
+  color: #e4cf97;
+}
+
+:root:not([data-theme="dark"]) .dash-body .kc:not(.gd),
+:root:not([data-theme="dark"]) .dash-body .px-top {
+  background: var(--cafe);
+}
+
+/* El encabezado deja de tapar la tarjeta de precios: su fondo queda detrás
+   y los menús desplegables siguen por encima de todo. */
+.dash .hero,
+.web .dash .hero,
+.web .dash .hero.hero {
+  z-index: auto;
+}
+
+.dash .hero .bar {
+  position: relative;
+  z-index: 50;
+}
+
+.dash-body .px-top {
+  position: relative;
+  z-index: 2;
+}
+
+
+/* Menú lateral (tema claro): el ítem activo en café en lugar de negro */
+:root:not([data-theme="dark"]) {
+  --non: #4a3020;
+}
+
+
+/* =========================================================
+   MENÚ LATERAL - MÁS AIRE Y SIN FORMA OVALADA
+   - Más espacio entre opciones y entre secciones.
+   - El ítem activo es un bloque con esquinas suaves (no píldora).
+   - Si la pantalla es baja, el menú se desplaza solo (sin barra visible).
+========================================================= */
+
+.web .side {
+  padding: 22px 16px 28px;
+  gap: 4px;
+}
+
+.web .side img {
+  width: clamp(110px, 16vh, 150px);
+  margin: 0 auto 14px;
+}
+
+.web .side small {
+  margin: 22px 12px 8px;
+  font-size: 11px;
+  letter-spacing: .16em;
+}
+
+.web .side .nv {
+  padding: 11px 16px;
+  font-size: 14px;
+  line-height: 1.3;
+  border-radius: 6px;
+  transition: background .15s ease;
+}
+
+.web .side .nv:hover:not(.on) {
+  background: rgba(74, 48, 32, .10);
+}
+
+.web .side .nv.on {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   MENÚ LATERAL - SE VE COMPLETO EN LA PANTALLA
+   Mismo aspecto, pero los espacios se ajustan a la altura de
+   la ventana para que todas las opciones quepan sin cortarse.
+========================================================= */
+
+.web .side {
+  padding: clamp(10px, 2vh, 22px) 16px clamp(10px, 2vh, 22px);
+  gap: clamp(1px, 0.4vh, 4px);
+}
+
+.web .side img {
+  width: clamp(80px, 12vh, 140px);
+  margin: 0 auto clamp(2px, 0.8vh, 10px);
+}
+
+.web .side small {
+  margin: clamp(6px, 1.7vh, 20px) 12px clamp(2px, 0.6vh, 7px);
+  font-size: 11px;
+}
+
+.web .side .nv {
+  padding: clamp(6px, 1.15vh, 11px) 16px;
+  font-size: 14px;
+}
+
+
+/* Menú lateral: un poco más compacto para que quede completo con margen abajo */
+.web .side {
+  padding: clamp(8px, 1.6vh, 18px) 16px clamp(14px, 2.4vh, 26px);
+  gap: clamp(1px, 0.3vh, 3px);
+}
+
+.web .side img {
+  width: clamp(76px, 11vh, 124px);
+}
+
+.web .side small {
+  margin: clamp(5px, 1.2vh, 14px) 12px clamp(2px, 0.4vh, 5px);
+}
+
+.web .side .nv {
+  padding: clamp(5px, 0.9vh, 9px) 16px;
+}
+
+
+/* Roles: información que puede ver, dentro de la misma tabla de permisos */
+.permisos-tabla .permisos-ayuda {
+  display: block;
+  margin-top: 2px;
+  color: var(--mu);
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.permisos-tabla .permisos-na {
+  color: var(--mu);
+  opacity: 0.55;
+}
+
+
+/* Ventanas emergentes (documentos, historial, anular): se dibujan sobre toda la pantalla,
+   siempre al frente y sin animaciones de la tarjeta de donde se abren. */
+.modal-eliminar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
 }
