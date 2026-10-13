@@ -186,7 +186,10 @@ const permisosDelUsuario = () => {
 }
 
 export const puede = (modulo, accion) => permisosDelUsuario().includes(clavePermiso(modulo, accion))
-export const puedeVerDato = (dato) => permisosDelUsuario().includes(claveDato(dato))
+// Precios, cantidades y estadísticas ya no se restringen por rol: todos los roles que pueden ver
+// un módulo ven su información completa. (Se conserva la función para no tocar las pantallas.)
+// eslint-disable-next-line no-unused-vars
+export const puedeVerDato = (dato) => true
 
 // Qué módulo y acción corresponde a una ruta: /compras/editar/3 -> compras + editar.
 export function moduloDeRuta(pathname) {

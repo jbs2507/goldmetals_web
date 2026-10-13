@@ -693,3 +693,617 @@
     min-height: 40px;
   }
 }
+
+
+/* =========================================================
+   TABLAS DE LISTADO (reemplazan las tarjetas)
+   Usan las mismas variables y colores de estado de siempre.
+========================================================= */
+
+.tabla-datos {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--ln);
+  border-radius: 18px;
+  box-shadow: 0 4px 14px #a8730f14;
+  overflow: hidden;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.tabla-datos table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla-datos th {
+  padding: 12px 14px;
+  background: #e6b53a14;
+  border-bottom: 1.5px solid var(--g2);
+  color: var(--mu);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.tabla-datos td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ln);
+  color: var(--tx);
+  vertical-align: middle;
+}
+
+.tabla-datos tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tabla-datos tbody tr:hover td {
+  background: #e6b53a0d;
+}
+
+.tabla-datos .der {
+  text-align: right;
+}
+
+.tabla-datos .nw {
+  white-space: nowrap;
+}
+
+.tabla-datos .tabla-fuerte,
+.tabla-datos .tabla-principal {
+  font-weight: 700;
+}
+
+.tabla-datos .tabla-principal {
+  display: block;
+}
+
+.tabla-datos .tabla-sec {
+  display: block;
+  margin-top: 2px;
+  color: var(--mu);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tabla-datos .tabla-moneda {
+  margin-left: 5px;
+  color: var(--mu);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tabla-datos tr.fila-anulada td:not(.tabla-acc) {
+  color: var(--mu);
+}
+
+.tabla-datos .tabla-largo {
+  max-width: 240px;
+  line-height: 1.4;
+}
+
+.tabla-datos .estado,
+.tabla-datos [class^="estado-"] {
+  white-space: nowrap;
+}
+
+.tabla-acc {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.tabla-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Botones cuadrados con ícono */
+.ico-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--tx);
+  font-family: inherit;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.web .main button.ico-btn {
+  min-height: 0;
+}
+
+.ico-btn:hover {
+  background: #e6b53a12;
+  border-color: var(--g2);
+}
+
+.ico-btn.dorado {
+  color: var(--g3);
+}
+
+[data-theme="dark"] .ico-btn.dorado {
+  color: var(--g1);
+}
+
+.ico-btn.peligro {
+  color: #b84a4a;
+}
+
+.ico-btn.peligro:hover {
+  background: #fbeaea;
+  border-color: #e7b5b5;
+}
+
+[data-theme="dark"] .ico-btn.peligro {
+  color: #e48a82;
+}
+
+[data-theme="dark"] .ico-btn.peligro:hover {
+  background: #3a1a18;
+  border-color: #7a3a36;
+}
+
+.ico-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: transparent;
+  border-color: var(--ln);
+}
+
+.ico-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--met);
+  color: #2a1d05;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .ico-btn,
+  .web .main button.ico-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+
+/* ---------- CONSULTAR / EDITAR: la tarjeta ocupa todo el alto ----------
+   Antes la tarjeta quedaba arriba y debajo sobraba un bloque en blanco.
+   Ahora la página se estira hasta el final de la pantalla, la última
+   tarjeta crece para llenar ese espacio y los botones quedan abajo. */
+
+.web .main.vista-detalle > [class$="-page"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.web .main.vista-detalle > [class$="-page"] > [class$="-header"] {
+  flex: none;
+}
+
+/* El bloque que sigue al encabezado (formulario o tarjeta) crece */
+.web .main.vista-detalle > [class$="-page"] > :not(:empty):not(:has(~ :not(:empty))):not([class$="-header"]):not([class^="sin-"]) {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-width: none;
+}
+
+/* La última sección del formulario toma el espacio sobrante */
+.web .main.vista-detalle .form-seccion:not(:has(~ .form-seccion)) {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Botones (Guardar / Cancelar) pegados al final de la tarjeta */
+.web .main.vista-detalle .form-seccion > [class^="form-acciones"] {
+  margin-top: auto;
+}
+
+/* Los contenedores vacíos de acciones no deben ocupar espacio */
+.web .main.vista-detalle [class^="consulta-acciones"]:empty {
+  display: none;
+}
+
+/* La última tarjeta de compras también crece */
+.web .main.vista-consultar .consulta-compra-card:not(:has(~ .consulta-compra-card)) {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Editar: los campos se reparten el alto de la tarjeta */
+.web .main.vista-detalle .form-seccion:not(:has(~ .form-seccion)) > .form-grid {
+  flex: 1 1 auto;
+  grid-auto-rows: minmax(min-content, 1fr);
+  align-content: stretch;
+}
+
+.web .main.vista-detalle .form-seccion:not(:has(~ .form-seccion)) > .form-grid > .form-campo {
+  justify-content: center;
+}
+
+.web .main.vista-detalle .form-campo :is(input, select) {
+  min-height: 44px;
+}
+
+/* =========================================================
+   CONSULTAR: FICHA DE DATOS (mismo diseño en todos los módulos)
+   - Franja dorada arriba con el título de la sección.
+   - Datos en filas: etiqueta a la izquierda, valor a la derecha,
+     con una línea fina entre filas (2 columnas si hay varios datos).
+   - Sin cajas ni huecos: las filas crecen un poco con el alto de
+     la pantalla para que la ficha se vea llena.
+========================================================= */
+
+.web .main:is(.vista-consultar, .vista-editar) {
+  --fila: clamp(64px, 11.5vh, 112px);
+  --f-fs: clamp(15px, 2vh, 19px);
+  --f-lb: clamp(13px, 1.7vh, 15px);
+}
+
+/* La tarjeta ya no se estira: se ajusta a su contenido */
+.web .main:is(.vista-consultar, .vista-editar) .form-seccion,
+.web .main:is(.vista-consultar, .vista-editar) .form-seccion:not(:has(~ .form-seccion)) {
+  flex: 0 0 auto;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+/* Franja con el título */
+.web .main:is(.vista-consultar, .vista-editar) .form-seccion-titulo {
+  margin: 0;
+  padding: clamp(16px, 2.6vh, 26px) 28px;
+  background: var(--met);
+  border: 0;
+  color: #2a1d05;
+}
+
+.web .main:is(.vista-consultar, .vista-editar) .form-seccion-titulo h2 {
+  margin: 0;
+  color: #2a1d05;
+  font-size: clamp(17px, 2.2vh, 21px);
+}
+
+.web .main:is(.vista-consultar, .vista-editar) .form-seccion-titulo p {
+  margin: 3px 0 0;
+  color: #2a1d05;
+  opacity: 0.75;
+  font-size: 13px;
+}
+
+/* Todo lo que va debajo de la franja, con aire a los lados */
+.web .main:is(.vista-consultar, .vista-editar) .form-seccion > :not(.form-seccion-titulo) {
+  margin: 8px 28px 20px;
+}
+
+/* Cuadrículas de datos: 1 columna, 2 si hay 4 datos o más */
+.web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 56px;
+  align-content: start;
+  grid-auto-rows: var(--fila);
+}
+
+.web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid).form-grid,
+.web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid):has(> :nth-child(4)) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Cada dato = una fila */
+.web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid) > * {
+  display: grid;
+  grid-template-columns: minmax(120px, 40%) minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 0 4px;
+  min-width: 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--ln);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Etiqueta */
+.web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid) > * > :is(span:first-child, label) {
+  color: var(--mu);
+  font-size: var(--f-lb);
+  font-weight: 600;
+}
+
+/* Valor (texto o campo de solo lectura) */
+.web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid) > * > :is(strong, input, select, textarea) {
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  outline: 0;
+  color: var(--tx);
+  font-size: var(--f-fs);
+  font-weight: 700;
+  line-height: 1.3;
+  opacity: 1;
+  -webkit-text-fill-color: currentColor;
+  overflow-wrap: anywhere;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: none;
+}
+
+/* Sin asteriscos de obligatorio: aquí solo se leen datos */
+.web .main.vista-consultar div:has(> input[required], > select[required], > textarea[required]) > label::after {
+  content: none;
+}
+
+/* Ítems del detalle del pedido: más compactos y separados entre sí */
+.web .main:is(.vista-consultar, .vista-editar) .pedido-detalles-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.web .main:is(.vista-consultar, .vista-editar) .pedido-detalle-item {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 56px;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 1000px) {
+  .web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid).form-grid,
+  .web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid):has(> :nth-child(4)),
+  .web .main:is(.vista-consultar, .vista-editar) .pedido-detalle-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid) > * {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 10px 4px;
+  }
+  .web .main:is(.vista-consultar, .vista-editar) :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .pedido-detalle-item, .venta-documentos-consulta, .form-grid) {
+    grid-auto-rows: auto;
+  }
+}
+
+/* Consultar gana a la regla de Editar que estira las filas */
+.web .main:is(.vista-consultar, .vista-editar) .form-seccion:not(:has(~ .form-seccion)) > .form-grid {
+  flex: 0 0 auto;
+  grid-auto-rows: var(--fila);
+  align-content: start;
+}
+
+@media (max-width: 560px) {
+  .web .main:is(.vista-consultar, .vista-editar) .form-seccion:not(:has(~ .form-seccion)) > .form-grid {
+    grid-auto-rows: auto;
+  }
+}
+
+/* Consultar: los documentos (Ver / Descargar) caben dentro de la tarjeta.
+   Antes medían el 100% más los márgenes y el de la derecha se salía. */
+.web .main:is(.vista-consultar, .vista-editar) .form-seccion > :not(.form-seccion-titulo) {
+  width: auto;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+.web .main:is(.vista-consultar, .vista-editar) .documentos-unificados-grid {
+  gap: 14px;
+}
+
+.web .main:is(.vista-consultar, .vista-editar) .documento-unificado {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.web .main:is(.vista-consultar, .vista-editar) .documento-unificado-info {
+  min-width: 0;
+  flex: 1 1 140px;
+}
+
+.web .main:is(.vista-consultar, .vista-editar) .documento-acciones {
+  flex: 0 0 auto;
+}
+
+/* 3 documentos o más: 3 columnas en pantallas anchas */
+@media (min-width: 1400px) {
+  .web .main:is(.vista-consultar, .vista-editar) .documentos-unificados-grid:has(> :nth-child(3)) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================================================
+   EDITAR: misma ficha que Consultar, con los datos editables
+   - Reutiliza la ficha de arriba (franja dorada, filas con la
+     etiqueta a la izquierda y el valor a la derecha).
+   - Los campos que se pueden modificar llevan un recuadro fino
+     para que se note que son editables; los bloqueados se ven
+     igual que en Consultar (solo texto).
+========================================================= */
+
+/* Las filas crecen si hay un mensaje de error o un texto largo */
+@media (min-width: 561px) {
+  .web .main.vista-editar :is([class$="-card-body"], [class$="-detalle-grid"], .consulta-grid, .form-grid),
+  .web .main.vista-editar .form-seccion:not(:has(~ .form-seccion)) > .form-grid {
+    grid-auto-rows: minmax(var(--fila), auto);
+  }
+}
+
+.web .main.vista-editar .form-grid > .form-campo {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Campo editable */
+.web .main.vista-editar .form-grid > .form-campo > :is(input, select, textarea):not(:disabled):not([readonly]) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  background-color: var(--bg);
+  border: 1px solid var(--ln);
+  border-radius: 11px;
+  color: var(--tx);
+  -webkit-text-fill-color: var(--tx);
+  font-family: inherit;
+  font-size: clamp(14px, 1.8vh, 16px);
+  font-weight: 600;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.web .main.vista-editar .form-grid > .form-campo > :is(input, select, textarea):not(:disabled):not([readonly]):focus {
+  border-color: var(--g2);
+  box-shadow: 0 0 0 3px rgba(224, 170, 43, 0.12);
+  outline: 0;
+}
+
+.web .main.vista-editar .form-grid > .form-campo > :is(input, textarea)::placeholder {
+  color: var(--mu);
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* Las listas desplegables recuperan su flecha (Consultar la oculta) */
+.web .main.vista-editar .form-grid > .form-campo > select:not(:disabled) {
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23a8730f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 8px;
+  cursor: pointer;
+}
+
+/* Mensajes de error y ayudas: debajo del campo, en la columna del valor */
+.web .main.vista-editar .form-grid > .form-campo > :is(.err, small, .mensaje-error, .ayuda) {
+  grid-column: 2;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.web .main.vista-editar .form-grid > .form-campo > .err {
+  color: #b84a4a;
+  font-weight: 600;
+}
+
+/* Etiquetas con asterisco de obligatorio: se conserva en Editar */
+.web .main.vista-editar .form-grid > .form-campo > label {
+  align-self: center;
+}
+
+@media (max-width: 560px) {
+  .web .main.vista-editar .form-grid > .form-campo > :is(.err, small, .mensaje-error, .ayuda) {
+    grid-column: 1;
+  }
+}
+
+/* Barra de Guardar / Cancelar alineada con el contenido de la ficha */
+.web .main.vista-editar .form-seccion > [class^="form-acciones"] {
+  margin-top: 8px;
+}
+
+
+/* =========================================================
+   INTERRUPTOR DE ESTADO (último dato de la fila)
+   Columna angosta y centrada para no desordenar la tabla.
+========================================================= */
+
+.tabla-datos th.tabla-sw,
+.tabla-datos td.tabla-sw {
+  width: 1%;
+  padding-left: 6px;
+  padding-right: 18px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tabla-datos td.tabla-sw {
+  vertical-align: middle;
+}
+
+.interruptor-estado {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--ln);
+  border-radius: 999px;
+  background: #c9c2b3;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.web .main button.interruptor-estado {
+  min-height: 0;
+}
+
+.interruptor-estado-bola {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(42, 29, 5, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.interruptor-estado.on {
+  background: #398052;
+  border-color: #398052;
+}
+
+.interruptor-estado.on .interruptor-estado-bola {
+  transform: translateX(18px);
+}
+
+.interruptor-estado:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(224, 170, 43, 0.35);
+}
+
+.interruptor-estado:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

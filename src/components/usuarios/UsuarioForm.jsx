@@ -29,7 +29,7 @@ export default function UsuarioForm({
     e.preventDefault();
     setError("");
 
-    const errNombre = validarCampo(nombreCompleto, { requerido: true, soloLetras: true });
+    const errNombre = validarCampo(nombreCompleto, { requerido: true, soloLetras: true, longitudMin: 3 });
     if (errNombre) {
       setError(errNombre);
       return;
@@ -41,7 +41,7 @@ export default function UsuarioForm({
       return;
     }
 
-    const errTelefono = validarCampo(telefono, { soloDigitos: true });
+    const errTelefono = validarCampo(telefono, { soloDigitos: true, telefono: true });
     if (errTelefono) {
       setError(errTelefono);
       return;

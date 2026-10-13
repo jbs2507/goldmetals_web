@@ -1,39 +1,13 @@
 import { useNavigate, useParams } from "react-router-dom";
 import InsumoOroForm from "../../components/insumosOro/InsumoOroForm.jsx";
+import { useAlmacen, actualizarRegistro } from "../../utils/almacen.js";
+import { CLAVES, INSUMOS_ORO_SEMILLA } from "../../data/semillas.js";
 
-const insumosOro = [
-  {
-    id_insumo: 1,
-    tipo_insumo: "ORO",
-    nombre: "Oro",
-    unidad_medida: "g",
-    fecha_ingreso: "2026-09-23",
-    compra_asociada: "001",
-    venta_asociada: null,
-  },
-  {
-    id_insumo: 2,
-    tipo_insumo: "ORO",
-    nombre: "Oro en polvo",
-    unidad_medida: "g",
-    fecha_ingreso: "2026-09-22",
-    compra_asociada: "002",
-    venta_asociada: null,
-  },
-  {
-    id_insumo: 3,
-    tipo_insumo: "ORO",
-    nombre: "Oro en lingote",
-    unidad_medida: "kg",
-    fecha_ingreso: "2026-09-20",
-    compra_asociada: "001",
-    venta_asociada: 1,
-  },
-];
 
 export default function EditarInsumoOro() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [insumosOro] = useAlmacen(CLAVES.insumosOro, INSUMOS_ORO_SEMILLA);
 
   const insumo = insumosOro.find(
     (item) => item.id_insumo === Number(id)
@@ -67,14 +41,7 @@ export default function EditarInsumoOro() {
   }
 
   const actualizarInsumo = (datos) => {
-    console.log(
-      "Insumo de oro actualizado:",
-      {
-        id_insumo: insumo.id_insumo,
-        ...datos,
-      }
-    );
-
+    actualizarRegistro(CLAVES.insumosOro, INSUMOS_ORO_SEMILLA, "id_insumo", insumo.id_insumo, datos);
     navigate("/insumos-oro");
   };
 

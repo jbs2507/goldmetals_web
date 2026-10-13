@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { filtrarSoloDigitos, filtrarSoloLetras, validarFormulario } from "../../utils/validaciones.js";
+import { filtrarSoloDigitos, filtrarSoloLetras, hoyISO, validarFormulario, validarNumeroDocumento } from "../../utils/validaciones.js";
+import { buscarDocumentoRepetido } from "../../utils/duplicados.js";
+import { CLAVES, EMPLEADOS_SEMILLA } from "../../data/semillas.js";
 import { TIPOS_DOCUMENTO, tipoDocumentoSoloDigitos } from "../clientes/tiposDocumento.js";
 
 const DATOS_EMPLEADO_VACIOS = {
@@ -14,11 +16,11 @@ const DATOS_EMPLEADO_VACIOS = {
 };
 
 const REGLAS_EMPLEADO = {
-  nombre_completo: { requerido: true, soloLetras: true },
+  nombre_completo: { requerido: true, soloLetras: true, longitudMin: 3 },
   tipo_documento: { requerido: true },
   numero_documento: { requerido: true },
-  fecha_ingreso: { requerido: true },
-  telefono: { soloDigitos: true },
+  fecha_ingreso: { requerido: true, tipo: "date" },
+  telefono: { soloDigitos: true, telefono: true },
   cargo: { requerido: true },
   correo: { tipo: "email" },
 };
@@ -83,7 +85,30 @@ export default function EmpleadoForm({
   const manejarSubmit = (e) => {
     e.preventDefault();
 
-    const nuevosErrores = validarFormulario(formulario, REGLAS_EMPLEADO);
+    // La fecha de ingreso no puede ser anterior a hoy; al editar solo se revisa si se cambió.
+    const nuevosErrores = validarFormulario(formulario, {
+      ...REGLAS_EMPLEADO,
+      fecha_ingreso: { ...REGLAS_EMPLEADO.fecha_ingreso, valorOriginal: modoEdicion ? datosIniciales?.fecha_ingreso : undefined },
+    });
+
+    // Formato del número y que no exista ya otro empleado con el mismo documento.
+    if (!nuevosErrores.numero_documento) {
+      const errFormato = validarNumeroDocumento(formulario.tipo_documento, formulario.numero_documento);
+      if (errFormato) nuevosErrores.numero_documento = errFormato;
+      else if (
+        buscarDocumentoRepetido({
+          clave: CLAVES.empleados,
+          semilla: EMPLEADOS_SEMILLA,
+          campoDocumento: "numero_documento",
+          campoId: "id_empleado",
+          idActual: datosIniciales?.id_empleado,
+          numero: formulario.numero_documento,
+          tipoDocumento: formulario.tipo_documento,
+        })
+      ) {
+        nuevosErrores.numero_documento = "Ya existe un empleado con este número de documento";
+      }
+    }
 
     if (
       formulario.fecha_finalizacion &&
@@ -281,6 +306,7 @@ export default function EmpleadoForm({
               id="fecha_ingreso"
               name="fecha_ingreso"
               type="date"
+              min={modoEdicion ? undefined : hoyISO()}
               value={formulario.fecha_ingreso}
               onChange={manejarCambio}
               required
@@ -289,24 +315,26 @@ export default function EmpleadoForm({
 
           </div>
 
-          {/* FECHA DE FINALIZACIÓN */}
-          <div className="form-campo">
+          {/* FECHA DE FINALIZACIÓN (solo al editar) */}
+          {modoEdicion && (
+            <div className="form-campo">
 
-            <label htmlFor="fecha_finalizacion">
-              Fecha de finalización (si ya no trabaja aquí)
-            </label>
+              <label htmlFor="fecha_finalizacion">
+                Fecha de finalización (si ya no trabaja aquí)
+              </label>
 
-            <input
-              id="fecha_finalizacion"
-              name="fecha_finalizacion"
-              type="date"
-              min={formulario.fecha_ingreso || undefined}
-              value={formulario.fecha_finalizacion}
-              onChange={manejarCambio}
-            />
-            {errores.fecha_finalizacion && <span className="err">{errores.fecha_finalizacion}</span>}
+              <input
+                id="fecha_finalizacion"
+                name="fecha_finalizacion"
+                type="date"
+                min={formulario.fecha_ingreso || undefined}
+                value={formulario.fecha_finalizacion}
+                onChange={manejarCambio}
+              />
+              {errores.fecha_finalizacion && <span className="err">{errores.fecha_finalizacion}</span>}
 
-          </div>
+            </div>
+          )}
 
           {modoEdicion && (
             <div className="form-campo">

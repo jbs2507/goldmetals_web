@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { usePermisos } from "../permisos.js";
+import { Ico } from "./Tabla.jsx";
 
 /**
  * Botón "Anular" con confirmación y motivo obligatorio.
  * Los registros no se eliminan ni se editan: se anulan y queda el rastro.
  */
-export default function BotonAnular({ entidad = "registro", nombre = "", deshabilitado = false, onConfirmar }) {
+export default function BotonAnular({ entidad = "registro", nombre = "", deshabilitado = false, icono = false, onConfirmar }) {
   const { puede } = usePermisos();
   const [abierto, setAbierto] = useState(false);
   const [motivo, setMotivo] = useState("");
@@ -31,8 +32,15 @@ export default function BotonAnular({ entidad = "registro", nombre = "", deshabi
 
   return (
     <>
-      <button type="button" className="btn-eliminar" disabled={deshabilitado} onClick={() => setAbierto(true)}>
-        Anular
+      <button
+        type="button"
+        className={icono ? "ico-btn peligro" : "btn-eliminar"}
+        disabled={deshabilitado}
+        title={icono ? "Anular" : undefined}
+        aria-label={icono ? "Anular" : undefined}
+        onClick={() => setAbierto(true)}
+      >
+        {icono ? <Ico nombre="ban" /> : "Anular"}
       </button>
 
       {abierto && createPortal(

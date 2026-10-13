@@ -3,8 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import DocumentoAdjunto from "../../components/DocumentoAdjunto.jsx";
 import HistorialEstados from "../../components/HistorialEstados.jsx";
 import { formatearFecha } from "../../data/insumosVinculos.js";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES } from "../../data/semillas.js";
 import {
-  ventasVisibles as ventas,
+  ventasMock,
+  ventaVisible,
   fechaUltimoEstado,
   etiquetaEstadoVenta,
 } from "../../data/ventasMock.js";
@@ -14,7 +17,8 @@ export default function ConsultarVenta() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const venta = ventas.find(
+  const [ventas] = useAlmacen(CLAVES.ventas, ventasMock);
+  const venta = ventas.filter(ventaVisible).find(
     (item) => item.id_venta === Number(id)
   );
 
@@ -182,6 +186,21 @@ export default function ConsultarVenta() {
               </strong>
             </div></Permiso>
 
+            <div className="dato-venta">
+              <span>
+                Unidad de medida
+              </span>
+
+              <strong>
+                {venta.unidad_medida ||
+                  (String(venta.tipo_material).startsWith("Oro")
+                    ? "Gramos"
+                    : venta.tipo_material === "Arenas polimetálicas"
+                    ? "Toneladas"
+                    : "No registrada")}
+              </strong>
+            </div>
+
             {venta.tipo_material === "Arenas polimetálicas" && venta.ley && (
               <Permiso dato="cantidades"><div className="dato-venta">
                 <span>
@@ -196,7 +215,7 @@ export default function ConsultarVenta() {
 
             <Permiso dato="precios"><div className="dato-venta">
               <span>
-                Precio
+                Valor total de la venta
               </span>
 
               <strong>

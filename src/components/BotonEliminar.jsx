@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { usePermisos } from "../permisos.js";
+import { Ico } from "./Tabla.jsx";
 
 /**
  * Botón "Eliminar" con ventana de confirmación.
@@ -14,6 +15,7 @@ import { usePermisos } from "../permisos.js";
 export default function BotonEliminar({
   entidad = "registro",
   nombre = "",
+  icono = false,
   onConfirmar,
 }) {
   const { puede } = usePermisos();
@@ -30,10 +32,12 @@ export default function BotonEliminar({
     <>
       <button
         type="button"
-        className="btn-eliminar"
+        className={icono ? "ico-btn peligro" : "btn-eliminar"}
+        title={icono ? "Eliminar" : undefined}
+        aria-label={icono ? "Eliminar" : undefined}
         onClick={() => setAbierto(true)}
       >
-        Eliminar
+        {icono ? <Ico nombre="papelera" /> : "Eliminar"}
       </button>
 
       {abierto && createPortal(

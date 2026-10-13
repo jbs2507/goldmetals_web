@@ -5,19 +5,23 @@ import BotonAnular from "../../components/BotonAnular.jsx";
 import { conEstado } from "../../utils/listados.js";
 import HistorialEstados from "../../components/HistorialEstados.jsx";
 import { formatearFecha } from "../../data/insumosVinculos.js";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES } from "../../data/semillas.js";
 import {
-  pedidosMock as pedidosIniciales,
+  pedidosMock,
   codigoPedido,
   etiquetaEstadoPedido,
   pagoCompletoPedido,
 } from "../../data/pedidosMock.js";
 import Permiso from "../../components/Permiso.jsx";
 import { puedeVerDato } from "../../permisos.js";
+import Tabla, { BotonIcono, Doble } from "../../components/Tabla.jsx";
 
 // Columnas del Excel: lo mismo que se ve en pantalla, con fechas y valores legibles.
 const columnasExcel = [
   { titulo: "Pedido", valor: (p) => codigoPedido(p.id_pedido) },
   { titulo: "Cliente", valor: (p) => p.cliente },
+  { titulo: "Mina", valor: (p) => p.mina || "" },
   { titulo: "Acopio", valor: (p) => p.acopio },
   { titulo: "Fecha del pedido", valor: (p) => formatearFecha(p.fecha_pedido) },
   { titulo: "Estado", valor: (p) => etiquetaEstadoPedido(p.estado) },
@@ -57,7 +61,7 @@ const formatearEstado = (estado) => {
 export default function Pedidos() {
   const navigate = useNavigate();
 
-  const [pedidos, setPedidos] = useState(pedidosIniciales);
+  const [pedidos, setPedidos] = useAlmacen(CLAVES.pedidos, pedidosMock);
   const [busqueda, setBusqueda] = useState("");
   const [estado, setEstado] = useState("TODOS");
 
@@ -69,6 +73,7 @@ export default function Pedidos() {
 
     const coincideBusqueda =
       pedido.cliente.toLowerCase().includes(texto) ||
+      (pedido.mina || "").toLowerCase().includes(texto) ||
       pedido.acopio.toLowerCase().includes(texto) ||
       pedido.moneda.toLowerCase().includes(texto);
 
@@ -166,137 +171,73 @@ export default function Pedidos() {
 
         <BarraListado pag={pag} archivo="pedidos" excel columnas={puedeVerDato("precios") ? columnasExcel : columnasExcel.filter((c) => !COLUMNAS_PRECIO.includes(c.titulo))} />
 
-        {pedidosFiltrados.length === 0 ? (
-          <div className="sin-pedidos">
-            <h3>No se encontraron pedidos</h3>
-            <p>
-              Intenta cambiar los filtros de búsqueda.
-            </p>
-          </div>
-        ) : (
-          pag.items.map((pedido) => (
-            <div
-              className="pedido-card"
-              key={pedido.id_pedido}
-            >
-
-              <div className="pedido-card-header">
-
-                <div>
-                  <span className="pedido-label">
-                    Cliente
-                  </span>
-
-                  <h2>{pedido.cliente}</h2>
-                </div>
-
-                <span
-                  className={`estado-pedido estado-${pedido.estado.toLowerCase()}`}
-                >
-                  {formatearEstado(pedido.estado)}
-                </span>
-
-              </div>
-
-              <div className="pedido-card-body">
-
-                <div className="dato-pedido">
-                  <span>Acopio</span>
-                  <strong>{pedido.acopio}</strong>
-                </div>
-
-                <div className="dato-pedido">
-                  <span>Fecha del pedido</span>
-                  <strong>{formatearFecha(pedido.fecha_pedido)}</strong>
-                </div>
-
-                <div className="dato-pedido">
-                  <span>Estado</span>
-                  <strong>{formatearEstado(pedido.estado)}</strong>
-                </div>
-
-                <div className="dato-pedido">
-                  <span>Fecha del estado</span>
-                  <strong>{formatearFecha(pedido.fecha_estado || pedido.fecha_pedido)}</strong>
-                </div>
-
-                <div className="dato-pedido">
-                  <span>Moneda</span>
-                  <strong>{pedido.moneda}</strong>
-                </div>
-
-                <Permiso dato="precios"><div className="dato-pedido">
-                  <span>Tasa de cambio</span>
-                  <strong>
-                    {pedido.tasa_cambio
-                      ? pedido.tasa_cambio
-                      : "No aplica"}
-                  </strong>
-                </div></Permiso>
-
-                <Permiso dato="precios"><div className="dato-pedido">
-                  <span>Valor total</span>
-                  <strong>
-                    {formatearValor(
-                      pedido.valor_total,
-                      pedido.moneda
-                    )}
-                  </strong>
-                </div></Permiso>
-
-                <Permiso dato="precios"><div className="dato-pedido">
-                  <span>Valor pagado</span>
-                  <strong>
-                    {formatearValor(
-                      pedido.valor_pagado,
-                      pedido.moneda
-                    )}
-                  </strong>
-                </div></Permiso>
-
-              </div>
-
-              <div className="pedido-card-actions">
-
-                <button
-                  className="btn-consultar-pedido"
-                  onClick={() =>
-                    navigate(
-                      `/pedidos/consultar/${pedido.id_pedido}`
-                    )
-                  }
-                >
-                  Consultar
-                </button>
-
-                <Permiso accion="editar"><button
-                  className="btn-editar-pedido"
-                  disabled={pedido.estado === "ANULADO"}
-                  onClick={() =>
-                    navigate(
-                      `/pedidos/editar/${pedido.id_pedido}`
-                    )
-                  }
-                >
-                  Editar
-                </button></Permiso>
-
-                <HistorialEstados
-                  titulo={`Historial del pedido #${pedido.id_pedido}`}
-                  historial={pedido.historial || []}
-                  etiqueta={etiquetaEstadoPedido}
-                />
-
-                <BotonAnular entidad="pedido" nombre={`el pedido #${pedido.id_pedido} de ${pedido.cliente}`} deshabilitado={pedido.estado === "ANULADO"} onConfirmar={(m) => anularPedido(pedido.id_pedido, m)} />
-
-              </div>
-
+        <Tabla
+          filas={pag.items}
+          clave={(p) => p.id_pedido}
+          claseFila={(p) => (p.estado === "ANULADO" ? "fila-anulada" : "")}
+          vacio={
+            <div className="sin-pedidos">
+              <h3>No se encontraron pedidos</h3>
+              <p>Intenta cambiar los filtros de búsqueda.</p>
             </div>
-          ))
-        )}
-
+          }
+          columnas={[
+            { titulo: "Cliente", render: (p) => <Doble principal={p.cliente} secundario={p.acopio} /> },
+            { titulo: "Fecha del pedido", sinSalto: true, render: (p) => formatearFecha(p.fecha_pedido) },
+            {
+              titulo: "Estado",
+              render: (p) => (
+                <span className={`estado-pedido estado-${p.estado.toLowerCase()}`}>{formatearEstado(p.estado)}</span>
+              ),
+            },
+            {
+              titulo: "Valor total",
+              dato: "precios",
+              alinear: "der",
+              sinSalto: true,
+              render: (p) => formatearValor(p.valor_total, p.moneda),
+            },
+            {
+              titulo: "Valor pagado",
+              dato: "precios",
+              alinear: "der",
+              sinSalto: true,
+              render: (p) => formatearValor(p.valor_pagado, p.moneda),
+            },
+          ]}
+          acciones={(p) => (
+            <>
+              <BotonIcono
+                icono="ver"
+                titulo="Consultar"
+                onClick={() => navigate(`/pedidos/consultar/${p.id_pedido}`)}
+              />
+              <Permiso accion="editar">
+                <BotonIcono
+                  icono="editar"
+                  titulo="Editar"
+                  tono="dorado"
+                  deshabilitado={p.estado === "ANULADO"}
+                  onClick={() => navigate(`/pedidos/editar/${p.id_pedido}`)}
+                />
+              </Permiso>
+              <HistorialEstados
+                icono
+                titulo={`Historial del pedido #${p.id_pedido}`}
+                historial={p.historial || []}
+                etiqueta={etiquetaEstadoPedido}
+              />
+              <BotonAnular
+                icono
+                entidad="pedido"
+                nombre={`el pedido #${p.id_pedido} de ${p.cliente}`}
+                deshabilitado={p.estado === "ANULADO"}
+                onConfirmar={(m) => anularPedido(p.id_pedido, m)}
+              />
+            </>
+          )}
+        />
       </div>
-
 
       <Paginador pag={pag} />
     </div>

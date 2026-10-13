@@ -3,9 +3,14 @@ import { conEstado } from "../../utils/listados.js";
 import { usePaginacion, BarraListado, Paginador } from "../../components/Listado.jsx";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import CompraCard from "../../components/compras/CompraCard";
 import CompraFiltros from "../../components/compras/CompraFiltros";
 import Permiso from "../../components/Permiso.jsx";
+import Tabla, { BotonIcono, Doble } from "../../components/Tabla.jsx";
+import DocumentosCargados from "../../components/DocumentosCargados.jsx";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, COMPRAS_SEMILLA } from "../../data/semillas.js";
+import { formatearFecha } from "../../data/insumosVinculos.js";
+import { formatoValorCompra } from "../../data/compras.js";
 
 const Compras = () => {
   const navigate = useNavigate();
@@ -13,51 +18,8 @@ const Compras = () => {
   const [busqueda, setBusqueda] = useState("");
   const [estado, setEstado] = useState("");
 
-  /*
-   * DATOS DE PRUEBA
-   * -----------------------------------------
-   * Estos datos representan únicamente COMPRAS.
-   * Más adelante serán reemplazados por la
-   * información proveniente de la base de datos.
-   */
-  const [compras, setCompras] = useState([
-    {
-      id: "001",
-      proveedor: "Proveedor asociado 1",
-      acopio: "Acopio principal",
-      fecha: "23/09/2026",
-      moneda: "COP",
-      valorTotal: "$5.000.000",
-      estado: "REGISTRADA",
-      certificadoOrigen: "certificado_origen.pdf",
-      resultadoLaboratorio: "resultado_laboratorio.pdf",
-      factura: "factura.pdf",
-    },
-    {
-      id: "002",
-      proveedor: "Proveedor asociado 2",
-      acopio: "Acopio principal",
-      fecha: "22/09/2026",
-      moneda: "COP",
-      valorTotal: "$8.500.000",
-      estado: "APROBADA",
-      certificadoOrigen: "certificado_origen.pdf",
-      resultadoLaboratorio: "resultado_laboratorio.pdf",
-      factura: "factura.pdf",
-    },
-    {
-      id: "003",
-      proveedor: "Proveedor asociado 3",
-      acopio: "Acopio secundario",
-      fecha: "20/09/2026",
-      moneda: "USD",
-      valorTotal: "$3.200",
-      estado: "ANULADA",
-      certificadoOrigen: "certificado_origen.pdf",
-      resultadoLaboratorio: "resultado_laboratorio.pdf",
-      factura: "factura.pdf",
-    },
-  ]);
+  // Las compras se leen del almacén: lo que se registra o edita aparece aquí al instante.
+  const [compras, setCompras] = useAlmacen(CLAVES.compras, COMPRAS_SEMILLA);
 
   /*
    * FILTRAR COMPRAS
@@ -68,7 +30,7 @@ const Compras = () => {
     const coincideBusqueda =
       compra.proveedor.toLowerCase().includes(texto) ||
       compra.acopio.toLowerCase().includes(texto) ||
-      compra.fecha.toLowerCase().includes(texto) ||
+      formatearFecha(compra.fechaCompra).toLowerCase().includes(texto) ||
       compra.moneda.toLowerCase().includes(texto);
 
     const coincideEstado =
@@ -166,27 +128,60 @@ const Compras = () => {
 
         <BarraListado pag={pag} archivo="compras" />
 
-        {comprasFiltradas.length > 0 ? (
-          pag.items.map((compra) => (
-            <CompraCard
-              key={compra.id}
-              compra={compra}
-              onConsultar={consultarCompra}
-              onAnular={anularCompra}
-            />
-          ))
-        ) : (
-          <div className="sin-compras">
-            <h3>
-              No se encontraron compras
-            </h3>
-
-            <p>
-              Intenta realizar otra búsqueda.
-            </p>
-          </div>
-        )}
-
+        <Tabla
+          filas={pag.items}
+          clave={(c) => c.id}
+          claseFila={(c) => (c.estado === "ANULADA" ? "fila-anulada" : "")}
+          vacio={
+            <div className="sin-compras">
+              <h3>No se encontraron compras</h3>
+              <p>Intenta realizar otra búsqueda.</p>
+            </div>
+          }
+          columnas={[
+            { titulo: "N.°", fuerte: true, sinSalto: true, render: (c) => `#${c.id}` },
+            { titulo: "Fecha", sinSalto: true, render: (c) => formatearFecha(c.fechaCompra) },
+            { titulo: "Proveedor", render: (c) => c.proveedor },
+            { titulo: "Acopio", render: (c) => c.acopio },
+            {
+              titulo: "Valor total",
+              dato: "precios",
+              alinear: "der",
+              sinSalto: true,
+              render: (c) => (
+                <>
+                  {formatoValorCompra(c.valorTotal, c.moneda)}
+                  <span className="tabla-moneda">{c.moneda}</span>
+                </>
+              ),
+            },
+            {
+              titulo: "Estado",
+              render: (c) => <span className={`estado estado-${c.estado.toLowerCase()}`}>{c.estado}</span>,
+            },
+          ]}
+          acciones={(c) => (
+            <>
+              <BotonIcono icono="ver" titulo="Consultar" onClick={() => consultarCompra(c)} />
+              <DocumentosCargados
+                icono
+                titulo={`Documentos de la compra #${c.id}`}
+                documentos={[
+                  { titulo: "Certificado de origen", valor: c.certificadoOrigen },
+                  { titulo: "Resultado de laboratorio", valor: c.resultadoLaboratorio },
+                  { titulo: "Factura", valor: c.factura },
+                ]}
+              />
+              <BotonAnular
+                icono
+                entidad="compra"
+                nombre={`la compra #${c.id}`}
+                deshabilitado={c.estado === "ANULADA"}
+                onConfirmar={(m) => anularCompra(c, m)}
+              />
+            </>
+          )}
+        />
       </div>
 
       <Paginador pag={pag} />

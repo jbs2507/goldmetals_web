@@ -5,6 +5,9 @@ import BotonEliminar from "../../components/BotonEliminar";
 import { etiquetaTipoDocumento } from "../../components/clientes/tiposDocumento.js";
 import DocumentosCargados from "../../components/DocumentosCargados.jsx";
 import Permiso from "../../components/Permiso.jsx";
+import Tabla, { BotonIcono, Doble, InterruptorEstado } from "../../components/Tabla.jsx";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, CLIENTES_SEMILLA } from "../../data/semillas.js";
 
 // Columnas del Excel: lo mismo que se ve en pantalla.
 const columnasExcel = [
@@ -18,45 +21,24 @@ const columnasExcel = [
   { titulo: "Estado", valor: (c) => c.estado },
 ];
 
-const clientesIniciales = [
-  {
-    id_cliente: 1,
-    tipo_cliente: "JURIDICA",
-    tipo_documento: "NIT",
-    nombre: "M&M Trading S.A.S.",
-    identificacion_tributaria: "900123456-1",
-    pais: "Colombia",
-    telefono: "3001112233",
-    correo: "contacto@mmtrading.com",
-    camaraComercio: "camara_comercio.pdf",
-    contrato: "contrato.pdf",
-    estado: "ACTIVO",
-  },
-  {
-    id_cliente: 2,
-    tipo_cliente: "JURIDICA",
-    tipo_documento: "NIT",
-    nombre: "Global Metals International",
-    identificacion_tributaria: "901234567-8",
-    pais: "Estados Unidos",
-    telefono: "3104445566",
-    correo: "ventas@globalmetals.com",
-    camaraComercio: "camara_comercio.pdf",
-    contrato: "contrato.pdf",
-    estado: "ACTIVO",
-  },
-];
-
 export default function Clientes() {
   const navigate = useNavigate();
 
-  const [clientes, setClientes] = useState(clientesIniciales);
+  const [clientes, setClientes] = useAlmacen(CLAVES.clientes, CLIENTES_SEMILLA);
   const [busqueda, setBusqueda] = useState("");
   const [estado, setEstado] = useState("TODOS");
 
   const eliminarCliente = (id) => {
     setClientes((actuales) =>
       actuales.filter((c) => c.id_cliente !== id)
+    );
+  };
+
+  const cambiarEstado = (id) => {
+    setClientes((actuales) =>
+      actuales.map((c) =>
+        c.id_cliente === id ? { ...c, estado: c.estado === "ACTIVO" ? "INACTIVO" : "ACTIVO" } : c
+      )
     );
   };
 
@@ -177,164 +159,83 @@ export default function Clientes() {
 
         <BarraListado pag={pag} archivo="clientes" excel columnas={columnasExcel} />
 
-        {clientesFiltrados.length === 0 ? (
-          <div className="sin-clientes">
-            <h3>
-              No se encontraron clientes
-            </h3>
-
-            <p>
-              Intenta cambiar los filtros de búsqueda.
-            </p>
-          </div>
-        ) : (
-          pag.items.map((cliente) => (
-
-            <div
-              className="cliente-card"
-              key={cliente.id_cliente}
-            >
-
-              <div className="cliente-card-header">
-
-                <div>
-                  <span className="cliente-label">
-                    Cliente
-                  </span>
-
-                  <h2>
-                    {cliente.nombre}
-                  </h2>
-                </div>
-
-                <span
-                  className={`estado-cliente ${
-                    cliente.estado === "ACTIVO"
-                      ? "activo"
-                      : "inactivo"
-                  }`}
-                >
-                  {cliente.estado}
-                </span>
-
-              </div>
-
-              <div className="cliente-card-body">
-
-                <div className="dato-cliente">
-                  <span>
-                    Tipo de cliente
-                  </span>
-
-                  <strong>
-                    {cliente.tipo_cliente ===
-                    "JURIDICA"
-                      ? "Persona jurídica"
-                      : "Persona natural"}
-                  </strong>
-                </div>
-
-                <div className="dato-cliente">
-                  <span>
-                    Tipo de documento
-                  </span>
-
-                  <strong>
-                    {etiquetaTipoDocumento(cliente.tipo_documento)}
-                  </strong>
-                </div>
-
-                <div className="dato-cliente">
-                  <span>
-                    {cliente.tipo_documento === "NIT" ? "Número de NIT" : "Número de documento"}
-                  </span>
-
-                  <strong>
-                    {cliente.identificacion_tributaria}
-                  </strong>
-                </div>
-
-                <div className="dato-cliente">
-                  <span>
-                    País
-                  </span>
-
-                  <strong>
-                    {cliente.pais}
-                  </strong>
-                </div>
-
-                <div className="dato-cliente">
-                  <span>
-                    Teléfono
-                  </span>
-
-                  <strong>
-                    {cliente.telefono || "No registrado"}
-                  </strong>
-                </div>
-
-                <div className="dato-cliente">
-                  <span>
-                    Correo electrónico
-                  </span>
-
-                  <strong>
-                    {cliente.correo || "No registrado"}
-                  </strong>
-                </div>
-
-              </div>
-
-              <div className="cliente-card-actions">
-
-                <button
-                  type="button"
-                  className="btn-consultar-cliente"
-                  onClick={() =>
-                    navigate(
-                      `/clientes/consultar/${cliente.id_cliente}`
-                    )
-                  }
-                >
-                  Consultar
-                </button>
-
-                <DocumentosCargados
-                  titulo={`Documentos de ${cliente.nombre}`}
-                  documentos={[
-                    { titulo: "Cámara de Comercio", valor: cliente.camaraComercio },
-                    { titulo: "Contrato", valor: cliente.contrato },
-                  ]}
-                />
-
-                <Permiso accion="editar"><button
-                  type="button"
-                  className="btn-editar-cliente"
-                  onClick={() =>
-                    navigate(
-                      `/clientes/editar/${cliente.id_cliente}`
-                    )
-                  }
-                >
-                  Editar
-                </button></Permiso>
-
-                <BotonEliminar
-                  entidad="cliente"
-                  nombre={cliente.nombre}
-                  onConfirmar={() => eliminarCliente(cliente.id_cliente)}
-                />
-
-              </div>
-
+        <Tabla
+          filas={pag.items}
+          clave={(c) => c.id_cliente}
+          vacio={
+            <div className="sin-clientes">
+              <h3>No se encontraron clientes</h3>
+              <p>Intenta cambiar los filtros de búsqueda.</p>
             </div>
-
-          ))
-        )}
-
+          }
+          columnas={[
+            {
+              titulo: "Cliente",
+              render: (c) => (
+                <Doble
+                  principal={c.nombre}
+                  secundario={c.tipo_cliente === "JURIDICA" ? "Persona jurídica" : "Persona natural"}
+                />
+              ),
+            },
+            {
+              titulo: "Documento",
+              sinSalto: true,
+              render: (c) => (
+                <Doble
+                  principal={c.identificacion_tributaria}
+                  secundario={etiquetaTipoDocumento(c.tipo_documento)}
+                />
+              ),
+            },
+            { titulo: "País", render: (c) => c.pais },
+            {
+              titulo: "Contacto",
+              render: (c) => <Doble principal={c.telefono || "No registrado"} secundario={c.correo || "Sin correo"} />,
+            },
+          ]}
+          interruptor={{
+            render: (c) => (
+              <InterruptorEstado
+                activo={c.estado === "ACTIVO"}
+                nombre={c.nombre}
+                onCambiar={() => cambiarEstado(c.id_cliente)}
+              />
+            ),
+          }}
+          acciones={(c) => (
+            <>
+              <BotonIcono
+                icono="ver"
+                titulo="Consultar"
+                onClick={() => navigate(`/clientes/consultar/${c.id_cliente}`)}
+              />
+              <DocumentosCargados
+                icono
+                titulo={`Documentos de ${c.nombre}`}
+                documentos={[
+                  { titulo: "Cámara de Comercio", valor: c.camaraComercio },
+                  { titulo: "Contrato", valor: c.contrato },
+                ]}
+              />
+              <Permiso accion="editar">
+                <BotonIcono
+                  icono="editar"
+                  titulo="Editar"
+                  tono="dorado"
+                  onClick={() => navigate(`/clientes/editar/${c.id_cliente}`)}
+                />
+              </Permiso>
+              <BotonEliminar
+                icono
+                entidad="cliente"
+                nombre={c.nombre}
+                onConfirmar={() => eliminarCliente(c.id_cliente)}
+              />
+            </>
+          )}
+        />
       </div>
-
 
       <Paginador pag={pag} />
     </div>

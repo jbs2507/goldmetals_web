@@ -1,13 +1,17 @@
 import { useNavigate, useParams } from "react-router-dom";
 import VentaForm from "../../components/ventas/VentaForm.jsx";
-import { ventasVisibles as ventas } from "../../data/ventasMock.js";
+import { construirVenta, ventasMock, ventaVisible } from "../../data/ventasMock.js";
+import { actualizarRegistro, useAlmacen } from "../../utils/almacen.js";
+import { CLAVES } from "../../data/semillas.js";
+import { conEstado } from "../../utils/listados.js";
 
 
 export default function EditarVenta() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const venta = ventas.find(
+  const [ventas] = useAlmacen(CLAVES.ventas, ventasMock);
+  const venta = ventas.filter(ventaVisible).find(
     (item) => item.id_venta === Number(id)
   );
 
@@ -54,14 +58,12 @@ export default function EditarVenta() {
   }
 
   const manejarActualizacion = (datos) => {
-    console.log(
-      "Venta actualizada:",
-      datos
-    );
-
-    alert(
-      "Venta actualizada correctamente."
-    );
+    let actualizada = { ...venta, ...construirVenta(datos), id_venta: venta.id_venta };
+    // Si cambió el estado, queda registrado en el historial.
+    if (datos.estado && datos.estado !== venta.estado) {
+      actualizada = conEstado(actualizada, datos.estado);
+    }
+    actualizarRegistro(CLAVES.ventas, ventasMock, "id_venta", venta.id_venta, actualizada);
 
     navigate("/ventas");
   };

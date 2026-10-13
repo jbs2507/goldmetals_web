@@ -8,6 +8,8 @@ import {
   etiquetaEstadoPedido,
 } from "../../data/pedidosMock.js";
 import { conEstado } from "../../utils/listados.js";
+import { actualizarRegistro, useAlmacen } from "../../utils/almacen.js";
+import { CLAVES } from "../../data/semillas.js";
 
 const formatearValor = (valor, moneda) =>
   `$ ${Number(valor).toLocaleString(moneda === "USD" ? "en-US" : "es-CO", {
@@ -20,7 +22,8 @@ export default function EditarPedido() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const pedido = pedidosMock.find((p) => p.id_pedido === Number(id));
+  const [pedidos] = useAlmacen(CLAVES.pedidos, pedidosMock);
+  const pedido = pedidos.find((p) => p.id_pedido === Number(id));
   const siguientes = pedido ? estadosSiguientesPedido(pedido.estado) : [];
   const [nuevoEstado, setNuevoEstado] = useState(pedido?.estado || "");
 
@@ -44,8 +47,8 @@ export default function EditarPedido() {
   const guardar = (e) => {
     e.preventDefault();
     if (sinCambios) return;
-    // Prototipo sin backend: se actualiza el pedido de ejemplo para que el listado lo refleje.
-    Object.assign(pedido, conEstado(pedido, nuevoEstado));
+    // Se guarda el nuevo estado (con su fecha e historial) para que el listado lo refleje.
+    actualizarRegistro(CLAVES.pedidos, pedidosMock, "id_pedido", pedido.id_pedido, conEstado(pedido, nuevoEstado));
     navigate("/pedidos");
   };
 
@@ -72,6 +75,10 @@ export default function EditarPedido() {
             <div className="dato-pedido">
               <span>Cliente</span>
               <strong>{pedido.cliente}</strong>
+            </div>
+            <div className="dato-pedido">
+              <span>Mina de origen</span>
+              <strong>{pedido.mina || "—"}</strong>
             </div>
             <div className="dato-pedido">
               <span>Acopio</span>

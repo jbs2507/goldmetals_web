@@ -2,13 +2,16 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ProduccionForm from "../../components/produccion/ProduccionForm";
 import HistorialProduccion from "../../components/produccion/HistorialProduccion.jsx";
-import { produccionesMock, fechaAISO } from "../../data/produccionesMock.js";
+import { produccionesMock, fechaAISO, fechaDeISO } from "../../data/produccionesMock.js";
+import { actualizarRegistro, useAlmacen } from "../../utils/almacen.js";
+import { CLAVES } from "../../data/semillas.js";
 
 const EditarProduccion = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const encontrada = produccionesMock.find((p) => p.id === id);
+  const [producciones] = useAlmacen(CLAVES.producciones, produccionesMock);
+  const encontrada = producciones.find((p) => p.id === id);
 
   if (!encontrada) {
     return (
@@ -30,13 +33,17 @@ const EditarProduccion = () => {
 
   const produccion = { ...encontrada, fecha: fechaAISO(encontrada.fecha) };
 
-  const actualizarProduccion = (e) => {
-    const datos = new FormData(e.target);
-
-    console.log(
-      "Producción actualizada:",
-      Object.fromEntries(datos.entries())
-    );
+  const actualizarProduccion = (datos) => {
+    actualizarRegistro(CLAVES.producciones, produccionesMock, "id", encontrada.id, {
+      id_orden_produccion: Number(datos.id_orden_produccion) || encontrada.id_orden_produccion,
+      id_acopio: Number(datos.id_acopio) || encontrada.id_acopio,
+      insumo: datos.insumo,
+      cantidad: datos.cantidad,
+      fecha: fechaDeISO(datos.fecha),
+      cliente: datos.cliente,
+      pedido: datos.pedido,
+      mina: datos.mina,
+    });
 
     navigate("/produccion");
   };

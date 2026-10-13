@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { registrarUsuario } from "../../auth.js";
+import { filtrarSoloDigitos, filtrarSoloLetras, validarCampo } from "../../utils/validaciones.js";
+import Modal from "../../components/Modal.jsx";
+import Usuarios from "./Usuarios.jsx";
 
 export default function RegistrarUsuario() {
   const navigate = useNavigate();
@@ -8,15 +12,19 @@ export default function RegistrarUsuario() {
   const [correo, setCorreo] = useState("");
   const [telefono, setTelefono] = useState("");
   const [rol, setRol] = useState("");
+  const [error, setError] = useState("");
 
   const manejarSubmit = (e) => {
     e.preventDefault();
+    setError("");
 
-    if (
-      !nombreCompleto.trim() ||
-      !correo.trim() ||
-      !rol.trim()
-    ) {
+    const mensaje =
+      validarCampo(nombreCompleto, { requerido: true, soloLetras: true, longitudMin: 3 }) ||
+      validarCampo(correo, { requerido: true, tipo: "email" }) ||
+      validarCampo(telefono, { soloDigitos: true, telefono: true }) ||
+      (!rol.trim() ? "Seleccione el rol" : "");
+    if (mensaje) {
+      setError(mensaje);
       return;
     }
 
@@ -28,28 +36,25 @@ export default function RegistrarUsuario() {
       estado: "ACTIVO",
     };
 
-    console.log("Usuario registrado:", nuevoUsuario);
+    const r = registrarUsuario(nuevoUsuario);
+    if (!r.ok) {
+      setError(r.error);
+      return;
+    }
 
     navigate("/usuarios");
   };
 
+  // El registro es una ventana emergente sobre la lista de usuarios.
   return (
-    <div className="usuarios-page">
-
-      <div className="usuarios-header">
-        <div>
-          <h1>Registrar usuario</h1>
-        </div>
-
-        <button
-          type="button"
-          className="btn-volver-usuario"
-          onClick={() => navigate("/usuarios")}
-        >
-          Volver
-        </button>
-      </div>
-
+    <>
+      <Usuarios />
+      <Modal
+        titulo="Registrar usuario"
+        subtitulo="Ingresa los datos del nuevo usuario"
+        ancho={640}
+        onCerrar={() => navigate("/usuarios")}
+      >
       <form
         className="usuario-form"
         onSubmit={manejarSubmit}
@@ -77,7 +82,7 @@ export default function RegistrarUsuario() {
                 placeholder="Ej. Juan Pérez"
                 value={nombreCompleto}
                 onChange={(e) =>
-                  setNombreCompleto(e.target.value)
+                  setNombreCompleto(filtrarSoloLetras(e.target.value))
                 }
                 required
               />
@@ -111,7 +116,7 @@ export default function RegistrarUsuario() {
                 placeholder="Ej. 3001234567"
                 value={telefono}
                 onChange={(e) =>
-                  setTelefono(e.target.value)
+                  setTelefono(filtrarSoloDigitos(e.target.value))
                 }
               />
             </div>
@@ -126,6 +131,8 @@ export default function RegistrarUsuario() {
             </div>
 
           </div>
+
+          {error && <div className="mensaje-error-usuario">{error}</div>}
         </section>
 
         <div className="form-acciones-usuario">
@@ -147,6 +154,7 @@ export default function RegistrarUsuario() {
 
         </div>
       </form>
-    </div>
+      </Modal>
+    </>
   );
 }

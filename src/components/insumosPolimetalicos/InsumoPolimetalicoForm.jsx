@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { comprasDisponibles, ventasDisponibles } from "../../data/insumosVinculos.js";
-import { filtrarSoloLetras, validarCampo } from "../../utils/validaciones.js";
+import { filtrarSoloLetras, hoyISO, validarCampo } from "../../utils/validaciones.js";
+import { agregarAcopio, agregarMina, leerAcopios, leerMinas } from "../../data/origenes.js";
 
 export default function InsumoPolimetalicoForm({
   modo = "registrar",
@@ -28,6 +30,123 @@ export default function InsumoPolimetalicoForm({
     datosIniciales.acopio || ""
   );
 
+  // Minas y acopios: el acopio depende de la mina elegida. Se pueden agregar nuevos desde aquí.
+  const [versionOrigenes, setVersionOrigenes] = useState(0);
+  const [agregando, setAgregando] = useState(null); // "mina" | "acopio" | null
+  const [nombreNuevo, setNombreNuevo] = useState("");
+  const [errorNuevo, setErrorNuevo] = useState("");
+
+  const minas = [...new Set([...leerMinas(), mina].filter(Boolean))];
+  const acopios = [...new Set([...(mina ? leerAcopios(mina) : []), acopio].filter(Boolean))];
+  // versionOrigenes fuerza a recalcular las listas cuando se agrega una mina o un acopio.
+  void versionOrigenes;
+
+  const AGREGAR = "__AGREGAR__";
+
+  const cambiarMina = (valor) => {
+    // La opción "+ Agregar mina" de la lista abre la ventana para crear una nueva.
+    if (valor === AGREGAR) {
+      abrirNuevo("mina");
+      return;
+    }
+    setMina(valor);
+    // El acopio elegido solo es válido si pertenece a la nueva mina.
+    if (!valor || !leerAcopios(valor).includes(acopio)) setAcopio("");
+  };
+
+  const cambiarAcopio = (valor) => {
+    if (valor === AGREGAR) {
+      abrirNuevo("acopio");
+      return;
+    }
+    setAcopio(valor);
+  };
+
+  const abrirNuevo = (tipo) => {
+    setAgregando(tipo);
+    setNombreNuevo("");
+    setErrorNuevo("");
+  };
+
+  const cancelarNuevo = () => {
+    setAgregando(null);
+    setNombreNuevo("");
+    setErrorNuevo("");
+  };
+
+  const confirmarNuevo = () => {
+    const r = agregando === "mina" ? agregarMina(nombreNuevo) : agregarAcopio(nombreNuevo, mina);
+    if (!r.ok) {
+      setErrorNuevo(r.error);
+      return;
+    }
+    setVersionOrigenes((v) => v + 1);
+    if (agregando === "mina") {
+      setMina(r.nombre);
+      setAcopio("");
+    } else {
+      setAcopio(r.nombre);
+    }
+    cancelarNuevo();
+  };
+
+  // Ventana para escribir el nombre de la nueva mina o acopio. Va en un portal (fuera del
+  // formulario) para que la tecla Enter no envíe el formulario de insumo.
+  const ventanaNueva =
+    agregando &&
+    createPortal(
+      <div className="venta-modal-backdrop" role="presentation" onMouseDown={cancelarNuevo}>
+        <div
+          className="venta-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-origen-titulo"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <div className="venta-modal-header">
+            <div>
+              <h3 id="modal-origen-titulo">{agregando === "mina" ? "Agregar mina" : "Agregar acopio"}</h3>
+              <p>
+                {agregando === "mina"
+                  ? "Escribe el nombre de la nueva mina."
+                  : `Escribe el nombre del nuevo acopio de ${mina}.`}
+              </p>
+            </div>
+            <button type="button" className="venta-modal-cerrar" onClick={cancelarNuevo} aria-label="Cerrar">
+              ×
+            </button>
+          </div>
+          <input
+            type="text"
+            autoFocus
+            value={nombreNuevo}
+            onChange={(e) => {
+              setNombreNuevo(e.target.value);
+              setErrorNuevo("");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                confirmarNuevo();
+              }
+              if (e.key === "Escape") cancelarNuevo();
+            }}
+            placeholder={agregando === "mina" ? "Ej. Mina Antioquia" : "Ej. Acopio Medellín"}
+          />
+          {errorNuevo && <span className="err">{errorNuevo}</span>}
+          <div className="venta-modal-acciones">
+            <button type="button" className="btn-cancelar-venta" onClick={cancelarNuevo}>
+              Cancelar
+            </button>
+            <button type="button" className="btn-guardar-venta" onClick={confirmarNuevo}>
+              {agregando === "mina" ? "Agregar mina" : "Agregar acopio"}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+
   const [fechaIngreso, setFechaIngreso] = useState(
     datosIniciales.fecha_ingreso || ""
   );
@@ -40,7 +159,8 @@ export default function InsumoPolimetalicoForm({
     datosIniciales.venta_asociada ? String(datosIniciales.venta_asociada) : ""
   );
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  // Fecha local (toISOString usa UTC y en Colombia adelanta el día desde las 7 p. m.).
+  const hoy = hoyISO();
 
   const [error, setError] = useState("");
 
@@ -48,7 +168,7 @@ export default function InsumoPolimetalicoForm({
     e.preventDefault();
     setError("");
 
-    const errNombre = validarCampo(nombre, { requerido: true, soloLetras: true });
+    const errNombre = validarCampo(nombre, { requerido: true, soloLetras: true, longitudMin: 3 });
     if (errNombre) {
       setError(errNombre);
       return;
@@ -82,6 +202,11 @@ export default function InsumoPolimetalicoForm({
       return;
     }
 
+    if (!compraAsociada) {
+      setError("Debes seleccionar la compra asociada.");
+      return;
+    }
+
 
     const datos = {
       tipo_insumo: "POLIMETALICO",
@@ -103,6 +228,7 @@ export default function InsumoPolimetalicoForm({
       className="insumo-polimetalico-form"
       onSubmit={manejarSubmit}
     >
+      {ventanaNueva}
       <section className="form-seccion">
 
         <div className="form-seccion-titulo">
@@ -198,23 +324,23 @@ export default function InsumoPolimetalicoForm({
             <select
               id="mina-insumo-polimetalico"
               value={mina}
-              onChange={(e) => setMina(e.target.value)}
+              onChange={(e) => cambiarMina(e.target.value)}
             >
               <option value="">
                 Seleccionar mina
               </option>
 
-              <option value="Mina Chocó">
-                Mina Chocó
-              </option>
+              {minas.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
 
-              <option value="Mina Bolívar">
-                Mina Bolívar
-              </option>
+              <option value={AGREGAR}>+ Agregar mina</option>
             </select>
           </div>
 
-          {/* ACOPIO */}
+          {/* ACOPIO (solo los de la mina seleccionada) */}
           <div className="form-campo">
             <label htmlFor="acopio-insumo-polimetalico">
               Acopio
@@ -223,25 +349,23 @@ export default function InsumoPolimetalicoForm({
             <select
               id="acopio-insumo-polimetalico"
               value={acopio}
-              onChange={(e) => setAcopio(e.target.value)}
+              onChange={(e) => cambiarAcopio(e.target.value)}
+              disabled={!mina}
             >
               <option value="">
-                Seleccionar acopio
+                {mina ? "Seleccionar acopio" : "Primero selecciona la mina"}
               </option>
 
-              <option value="Acopio principal">
-                Acopio principal
-              </option>
+              {acopios.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
 
-              <option value="Acopio Chocó">
-                Acopio Chocó
-              </option>
-
-              <option value="Acopio Bolívar">
-                Acopio Bolívar
-              </option>
+              {mina && <option value={AGREGAR}>+ Agregar acopio</option>}
             </select>
           </div>
+
           <div className="form-campo">
             <label htmlFor="fecha-ingreso-insumo-polimetalico">Fecha de ingreso</label>
             <input

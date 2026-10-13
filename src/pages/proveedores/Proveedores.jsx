@@ -2,9 +2,14 @@ import { usePaginacion, BarraListado, Paginador } from "../../components/Listado
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import ProveedorCard from "../../components/proveedores/ProveedorCard";
 import ProveedorFiltros from "../../components/proveedores/ProveedorFiltros";
 import Permiso from "../../components/Permiso.jsx";
+import Tabla, { BotonIcono, Doble, InterruptorEstado } from "../../components/Tabla.jsx";
+import DocumentosCargados from "../../components/DocumentosCargados.jsx";
+import BotonEliminar from "../../components/BotonEliminar";
+import { etiquetaTipoDocumento } from "../../components/clientes/tiposDocumento.js";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, PROVEEDORES_SEMILLA } from "../../data/semillas.js";
 
 const Proveedores = () => {
   const navigate = useNavigate();
@@ -12,45 +17,19 @@ const Proveedores = () => {
   const [busqueda, setBusqueda] = useState("");
   const [estado, setEstado] = useState("");
 
-  const [proveedores, setProveedores] = useState([
-    {
-      id: "001",
-      razon_social: "Proveedor Minero Chocó",
-      tipo_persona: "JURIDICA",
-      tipo_documento: "NIT",
-      numero_documento: "900123456",
-      estado: "ACTIVO",
-      camaraComercio: "camara_comercio.pdf",
-      rut: "rut.pdf",
-      certificadoRucom: "rucom.pdf",
-    },
-    {
-      id: "002",
-      razon_social: "Proveedor Minero Bolívar",
-      tipo_persona: "JURIDICA",
-      tipo_documento: "NIT",
-      numero_documento: "900234567",
-      estado: "ACTIVO",
-      camaraComercio: "camara_comercio.pdf",
-      rut: "rut.pdf",
-      certificadoRucom: "rucom.pdf",
-    },
-    {
-      id: "003",
-      razon_social: "Proveedor Natural",
-      tipo_persona: "NATURAL",
-      tipo_documento: "CC",
-      numero_documento: "1234567890",
-      estado: "INACTIVO",
-      camaraComercio: "camara_comercio.pdf",
-      rut: "rut.pdf",
-      certificadoRucom: "rucom.pdf",
-    },
-  ]);
+  const [proveedores, setProveedores] = useAlmacen(CLAVES.proveedores, PROVEEDORES_SEMILLA);
 
   const eliminarProveedor = (proveedor) => {
     setProveedores((actuales) =>
       actuales.filter((p) => p.id !== proveedor.id)
+    );
+  };
+
+  const cambiarEstado = (proveedor) => {
+    setProveedores((actuales) =>
+      actuales.map((p) =>
+        p.id === proveedor.id ? { ...p, estado: p.estado === "ACTIVO" ? "INACTIVO" : "ACTIVO" } : p
+      )
     );
   };
 
@@ -150,28 +129,69 @@ const Proveedores = () => {
       </div></Permiso>
 
       <div className="proveedores-lista">
-        <BarraListado pag={pag} archivo="proveedores" />
-        {proveedoresFiltrados.length > 0 ? (
-          pag.items.map((proveedor) => (
-            <ProveedorCard
-              key={proveedor.id}
-              proveedor={proveedor}
-              onConsultar={consultarProveedor}
-              onEditar={editarProveedor}
-              onEliminar={eliminarProveedor}
-            />
-          ))
-        ) : (
-          <div className="sin-proveedores">
-            <h3>
-              No se encontraron proveedores
-            </h3>
 
-            <p>
-              Intenta realizar otra búsqueda.
-            </p>
-          </div>
-        )}
+        <BarraListado pag={pag} archivo="proveedores" />
+
+        <Tabla
+          filas={pag.items}
+          clave={(p) => p.id}
+          vacio={
+            <div className="sin-proveedores">
+              <h3>No se encontraron proveedores</h3>
+              <p>Intenta realizar otra búsqueda.</p>
+            </div>
+          }
+          columnas={[
+            {
+              titulo: "Proveedor",
+              render: (p) => (
+                <Doble
+                  principal={p.razon_social}
+                  secundario={p.tipo_persona === "JURIDICA" ? "Persona jurídica" : "Persona natural"}
+                />
+              ),
+            },
+            {
+              titulo: "Documento",
+              sinSalto: true,
+              render: (p) => (
+                <Doble principal={p.numero_documento} secundario={etiquetaTipoDocumento(p.tipo_documento)} />
+              ),
+            },
+          ]}
+          interruptor={{
+            render: (p) => (
+              <InterruptorEstado
+                activo={p.estado === "ACTIVO"}
+                nombre={p.razon_social}
+                onCambiar={() => cambiarEstado(p)}
+              />
+            ),
+          }}
+          acciones={(p) => (
+            <>
+              <BotonIcono icono="ver" titulo="Consultar" onClick={() => consultarProveedor(p)} />
+              <DocumentosCargados
+                icono
+                titulo={`Documentos de ${p.razon_social}`}
+                documentos={[
+                  { titulo: "Cámara de Comercio", valor: p.camaraComercio },
+                  { titulo: "RUT", valor: p.rut },
+                  { titulo: "RUCOM", valor: p.certificadoRucom },
+                ]}
+              />
+              <Permiso accion="editar">
+                <BotonIcono icono="editar" titulo="Editar" tono="dorado" onClick={() => editarProveedor(p)} />
+              </Permiso>
+              <BotonEliminar
+                icono
+                entidad="proveedor"
+                nombre={p.razon_social}
+                onConfirmar={() => eliminarProveedor(p)}
+              />
+            </>
+          )}
+        />
       </div>
 
       <Paginador pag={pag} />

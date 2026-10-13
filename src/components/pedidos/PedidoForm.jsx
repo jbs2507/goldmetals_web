@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
-import { validarCampo } from "../../utils/validaciones.js";
+import { createPortal } from "react-dom";
+import { fechaLocal, hoyMasAnios, inicioDeHoyLocal, validarCampo } from "../../utils/validaciones.js";
 import { usePreciosDia, precioOroPorGramo } from "../../utils/precios.js";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, CLIENTES_SEMILLA } from "../../data/semillas.js";
+import { ACOPIOS_PEDIDO, INSUMOS_PEDIDO } from "../../data/pedidosMock.js";
+import { agregarAcopio, agregarMina, leerAcopios, leerMinas, minaDeAcopio } from "../../data/origenes.js";
 
 // El pago inicial siempre es del 90 % del valor del pedido.
 const PORCENTAJE_PAGO_INICIAL = 0.9;
@@ -26,38 +31,7 @@ const calcularFechaEntrega = (fechaInicio) => {
   return `${fecha.getFullYear()}-${pad(fecha.getMonth() + 1)}-${pad(fecha.getDate())}T${pad(fecha.getHours())}:${pad(fecha.getMinutes())}`;
 };
 
-const clientes = [
-  {
-    id_cliente: 1,
-    nombre: "M&M Trading S.A.S.",
-  },
-  {
-    id_cliente: 2,
-    nombre: "Global Metals International",
-  },
-];
-
-const acopios = [
-  {
-    id_acopio: 1,
-    nombre: "Acopio Chocó",
-  },
-  {
-    id_acopio: 2,
-    nombre: "Acopio Bolívar",
-  },
-];
-
-const insumos = [
-  {
-    id_insumo: 1,
-    nombre: "Oro",
-  },
-  {
-    id_insumo: 2,
-    nombre: "Material polimetálico",
-  },
-];
+const insumos = INSUMOS_PEDIDO;
 
 export default function PedidoForm({
   modo = "registrar",
@@ -65,13 +39,78 @@ export default function PedidoForm({
   onGuardar,
   onCancelar,
 }) {
+  // Clientes registrados en el módulo de clientes (solo activos).
+  const [todosLosClientes] = useAlmacen(CLAVES.clientes, CLIENTES_SEMILLA);
+  const clientes = todosLosClientes.filter(
+    (c) => c.estado === "ACTIVO" || c.id_cliente === datosIniciales.id_cliente
+  );
+
   const [cliente, setCliente] = useState(
     datosIniciales.id_cliente || ""
   );
 
   const [acopio, setAcopio] = useState(
-    datosIniciales.id_acopio || ""
+    datosIniciales.acopio || ""
   );
+
+  const [mina, setMina] = useState(
+    datosIniciales.mina || minaDeAcopio(datosIniciales.acopio)
+  );
+
+  // Mina y acopio: primero se elige la mina y el acopio sale solo de esa mina.
+  // Ambas listas terminan con la opción de agregar una nueva.
+  const AGREGAR = "__AGREGAR__";
+  const [versionOrigenes, setVersionOrigenes] = useState(0);
+  const [agregandoOrigen, setAgregandoOrigen] = useState(null); // "mina" | "acopio" | null
+  const [nombreOrigen, setNombreOrigen] = useState("");
+  const [errorOrigen, setErrorOrigen] = useState("");
+  // versionOrigenes fuerza a recalcular las listas cuando se agrega una mina o un acopio.
+  void versionOrigenes;
+  const minas = [...new Set([...leerMinas(), mina].filter(Boolean))];
+  const acopios = [...new Set([...(mina ? leerAcopios(mina) : []), acopio].filter(Boolean))];
+
+  const abrirOrigen = (tipo) => {
+    setAgregandoOrigen(tipo);
+    setNombreOrigen("");
+    setErrorOrigen("");
+  };
+  const cerrarOrigen = () => {
+    setAgregandoOrigen(null);
+    setNombreOrigen("");
+    setErrorOrigen("");
+  };
+  const cambiarMina = (valor) => {
+    if (valor === AGREGAR) {
+      abrirOrigen("mina");
+      return;
+    }
+    setMina(valor);
+    // El acopio solo vale si pertenece a la mina elegida.
+    if (!valor || !leerAcopios(valor).includes(acopio)) setAcopio("");
+  };
+  const cambiarAcopio = (valor) => {
+    if (valor === AGREGAR) {
+      abrirOrigen("acopio");
+      return;
+    }
+    setAcopio(valor);
+  };
+  const confirmarOrigen = () => {
+    const r = agregandoOrigen === "mina" ? agregarMina(nombreOrigen) : agregarAcopio(nombreOrigen, mina);
+    if (!r.ok) {
+      setErrorOrigen(r.error);
+      return;
+    }
+    setVersionOrigenes((v) => v + 1);
+    if (agregandoOrigen === "mina") {
+      setMina(r.nombre);
+      setAcopio("");
+    } else {
+      setAcopio(r.nombre);
+    }
+    cerrarOrigen();
+  };
+
 
   const [fechaPedido, setFechaPedido] = useState(
     datosIniciales.fecha_pedido || ""
@@ -252,17 +291,66 @@ export default function PedidoForm({
   };
 
   const [errorFecha, setErrorFecha] = useState("");
+  const [errorTasa, setErrorTasa] = useState("");
+  const [errorValor, setErrorValor] = useState("");
+  const [errorDetalles, setErrorDetalles] = useState("");
+  const [erroresPagos, setErroresPagos] = useState({});
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const msgFecha = validarCampo(fechaPedido, { requerido: true, tipo: "date" });
+    // La fecha del pedido no puede ser anterior a hoy (ni a más de un año adelante).
+    const msgFecha = validarCampo(fechaPedido, { requerido: true, tipo: "date", valorOriginal: datosIniciales.fecha_pedido });
+    const msgTasa =
+      moneda === "USD" && !(Number(tasaCambio) > 0) ? "Ingrese la tasa de cambio para convertir los dólares" : "";
+    const msgValor = !(valorTotal > 0) ? "El valor total debe ser mayor a 0" : "";
+
+    const msgDetalles =
+      detalles.length === 0
+        ? "Agregue al menos un producto al detalle del pedido"
+        : detalles.some(
+            (d) =>
+              !d.producto.trim() ||
+              !d.detalle_producto.trim() ||
+              !d.id_insumo ||
+              !(Number(d.cantidad) > 0) ||
+              !(Number(d.precio_unitario) >= 0) ||
+              d.precio_unitario === ""
+          )
+        ? "Complete producto, detalle, insumo, cantidad y precio en cada fila del detalle"
+        : "";
+
+    // Pagos: debe haber al menos uno, con fecha (de hoy y no futura), cuenta y comprobante.
+    const errPagos = {};
+    if (pagos.length === 0) {
+      errPagos.general = "Registre el pago inicial del pedido";
+    }
+    pagos.forEach((p, i) => {
+      const e = {};
+      if (!p.fecha_pago) e.fecha_pago = "Campo obligatorio";
+      else {
+        const d = fechaLocal(p.fecha_pago);
+        if (!d) e.fecha_pago = "Fecha no válida";
+        else if (d < fechaLocal(inicioDeHoyLocal())) e.fecha_pago = "La fecha no puede ser anterior a hoy";
+        else if (d.getTime() > Date.now() + 60000) e.fecha_pago = "La fecha de pago no puede ser futura";
+      }
+      if (!p.cuenta_bancaria) e.cuenta_bancaria = "Seleccione la cuenta";
+      if (!p.comprobante) e.comprobante = "Adjunte el comprobante";
+      if (Object.keys(e).length) errPagos[i] = e;
+    });
+
     setErrorFecha(msgFecha);
-    if (msgFecha) return;
+    setErrorTasa(msgTasa);
+    setErrorValor(msgValor);
+    setErrorDetalles(msgDetalles);
+    setErroresPagos(errPagos);
+    if (msgFecha || msgTasa || msgValor || msgDetalles || Object.keys(errPagos).length) return;
 
     const datos = {
       id_cliente: Number(cliente),
-      id_acopio: Number(acopio),
+      mina,
+      acopio,
+      id_acopio: ACOPIOS_PEDIDO.find((a) => a.nombre === acopio)?.id_acopio ?? null,
       fecha_pedido: fechaPedido,
       fecha_entrega: fechaEntrega,
       estado,
@@ -350,27 +438,35 @@ export default function PedidoForm({
           </div>
 
           <div className="form-campo">
+            <label>Mina de origen</label>
+
+            <select
+              value={mina}
+              onChange={(e) => cambiarMina(e.target.value)}
+              required
+            >
+              <option value="">Seleccionar mina</option>
+              {minas.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+              <option value={AGREGAR}>+ Agregar mina</option>
+            </select>
+          </div>
+
+          <div className="form-campo">
             <label>Acopio</label>
 
             <select
               value={acopio}
-              onChange={(e) =>
-                setAcopio(e.target.value)
-              }
+              onChange={(e) => cambiarAcopio(e.target.value)}
+              disabled={!mina}
               required
             >
-              <option value="">
-                Seleccionar acopio
-              </option>
-
-              {acopios.map((item) => (
-                <option
-                  key={item.id_acopio}
-                  value={item.id_acopio}
-                >
-                  {item.nombre}
-                </option>
+              <option value="">{mina ? "Seleccionar acopio" : "Primero selecciona la mina"}</option>
+              {acopios.map((a) => (
+                <option key={a} value={a}>{a}</option>
               ))}
+              {mina && <option value={AGREGAR}>+ Agregar acopio</option>}
             </select>
           </div>
 
@@ -379,6 +475,8 @@ export default function PedidoForm({
 
             <input
               type="datetime-local"
+              min={modo === "editar" ? undefined : inicioDeHoyLocal()}
+              max={modo === "editar" ? undefined : `${hoyMasAnios(1)}T23:59`}
               value={fechaPedido}
               onChange={(e) =>
                 setFechaPedido(e.target.value)
@@ -438,7 +536,9 @@ export default function PedidoForm({
                 setTasaCambio(e.target.value)
               }
               placeholder="Ingrese la tasa de cambio"
+              required={moneda === "USD"}
             />
+            {errorTasa && <span className="err">{errorTasa}</span>}
           </div>
 
           <div className="form-campo">
@@ -452,6 +552,7 @@ export default function PedidoForm({
               placeholder="Ingrese el valor total"
               required
             />
+            {errorValor && <span className="err">{errorValor}</span>}
             <small>Ingresa el valor del pedido; el 90 % y el 10 % se calculan solos.</small>
           </div>
 
@@ -626,6 +727,7 @@ export default function PedidoForm({
         >
           + Agregar producto
         </button>
+        {errorDetalles && <span className="err">{errorDetalles}</span>}
 
       </section>
 
@@ -649,11 +751,13 @@ export default function PedidoForm({
                 <label>Fecha de pago</label>
                 <input
                   type="datetime-local"
+                  min={modo === "editar" ? undefined : inicioDeHoyLocal()}
                   value={pago.fecha_pago}
                   onChange={(e) =>
                     actualizarPago(index, "fecha_pago", e.target.value)
                   }
                 />
+                {erroresPagos[index]?.fecha_pago && <span className="err">{erroresPagos[index].fecha_pago}</span>}
               </div>
 
               <div className="form-campo">
@@ -668,6 +772,7 @@ export default function PedidoForm({
                   <option value="BANCOLOMBIA">Bancolombia</option>
                   <option value="DAVIVIENDA">Davivienda</option>
                 </select>
+                {erroresPagos[index]?.cuenta_bancaria && <span className="err">{erroresPagos[index].cuenta_bancaria}</span>}
               </div>
 
               <div className="form-campo pedido-comprobante-campo">
@@ -693,10 +798,13 @@ export default function PedidoForm({
                     }
                   />
                 </label>
+                {erroresPagos[index]?.comprobante && <span className="err">{erroresPagos[index].comprobante}</span>}
               </div>
 
             </div>
           ))}
+
+          {erroresPagos.general && <span className="err">{erroresPagos.general}</span>}
 
         </div>
       </section>
@@ -723,6 +831,56 @@ export default function PedidoForm({
         </button>
 
       </div>
+
+      {agregandoOrigen &&
+        createPortal(
+          <div className="venta-modal-backdrop" role="presentation" onMouseDown={cerrarOrigen}>
+            <div
+              className="venta-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-origen-titulo"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <div className="venta-modal-header">
+                <div>
+                  <h3 id="modal-origen-titulo">{agregandoOrigen === "mina" ? "Agregar mina" : "Agregar acopio"}</h3>
+                  <p>
+                    {agregandoOrigen === "mina"
+                      ? "Escribe el nombre de la nueva mina."
+                      : `Escribe el nombre del nuevo acopio de ${mina}.`}
+                  </p>
+                </div>
+                <button type="button" className="venta-modal-cerrar" onClick={cerrarOrigen} aria-label="Cerrar">×</button>
+              </div>
+              <input
+                type="text"
+                autoFocus
+                value={nombreOrigen}
+                onChange={(e) => {
+                  setNombreOrigen(e.target.value);
+                  setErrorOrigen("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    confirmarOrigen();
+                  }
+                  if (e.key === "Escape") cerrarOrigen();
+                }}
+                placeholder={agregandoOrigen === "mina" ? "Ej. Mina Antioquia" : "Ej. Acopio Medellín"}
+              />
+              {errorOrigen && <span className="err">{errorOrigen}</span>}
+              <div className="venta-modal-acciones">
+                <button type="button" className="btn-cancelar-venta" onClick={cerrarOrigen}>Cancelar</button>
+                <button type="button" className="btn-guardar-venta" onClick={confirmarOrigen}>
+                  {agregandoOrigen === "mina" ? "Agregar mina" : "Agregar acopio"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
     </form>
   );

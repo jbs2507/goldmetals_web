@@ -3,48 +3,36 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BotonEliminar from "../../components/BotonEliminar";
 import Permiso from "../../components/Permiso.jsx";
-
-const usuariosIniciales = [
-  {
-    id_usuario: 1,
-    correo: "admin@mmmetalsgold.com",
-    nombre_completo: "Administrador",
-    telefono: "3001234567",
-    rol: "Administrador",
-    estado: "ACTIVO",
-  },
-  {
-    id_usuario: 2,
-    correo: "contador@mmmetalsgold.com",
-    nombre_completo: "Contador",
-    telefono: "3012345678",
-    rol: "Contador",
-    estado: "ACTIVO",
-  },
-  {
-    id_usuario: 3,
-    correo: "abogado@mmmetalsgold.com",
-    nombre_completo: "Abogado",
-    telefono: "3023456789",
-    rol: "Abogado",
-    estado: "ACTIVO",
-  }
-];
+import Tabla, { BotonIcono, Doble, InterruptorEstado } from "../../components/Tabla.jsx";
+import { actualizarUsuario, eliminarUsuario as eliminarUsuarioGuardado, listarUsuarios } from "../../auth.js";
 
 export default function Usuarios() {
   const navigate = useNavigate();
 
-  const [usuarios, setUsuarios] = useState(
-    usuariosIniciales
-  );
+  // Los usuarios se leen de los usuarios guardados (los mismos con los que se inicia sesión).
+  const [usuarios, setUsuarios] = useState(() => listarUsuarios());
 
   const [busqueda, setBusqueda] = useState("");
   const [estado, setEstado] = useState("TODOS");
 
   const eliminarUsuario = (id) => {
-    setUsuarios((actuales) =>
-      actuales.filter((u) => u.id_usuario !== id)
-    );
+    const r = eliminarUsuarioGuardado(id);
+    if (!r.ok) {
+      alert(r.error);
+      return;
+    }
+    setUsuarios(listarUsuarios());
+  };
+
+  const cambiarEstado = (usuario) => {
+    const r = actualizarUsuario(usuario.id_usuario, {
+      estado: usuario.estado === "ACTIVO" ? "INACTIVO" : "ACTIVO",
+    });
+    if (!r.ok) {
+      alert(r.error);
+      return;
+    }
+    setUsuarios(listarUsuarios());
   };
 
   const usuariosFiltrados = usuarios.filter((usuario) => {
@@ -171,138 +159,54 @@ export default function Usuarios() {
 
         <BarraListado pag={pag} archivo="usuarios" />
 
-        {usuariosFiltrados.length === 0 ? (
-
-          <div className="sin-usuarios">
-
-            <h3>
-              No se encontraron usuarios
-            </h3>
-
-            <p>
-              Intenta cambiar los filtros de búsqueda.
-            </p>
-
-          </div>
-
-        ) : (
-
-          pag.items.map((usuario) => (
-
-            <div
-              className="usuario-card"
-              key={usuario.id_usuario}
-            >
-
-              {/* CABECERA */}
-              <div className="usuario-card-header">
-
-                <div>
-
-                  <span className="usuario-label">
-                    Usuario
-                  </span>
-
-                  <h2>
-                    {usuario.nombre_completo}
-                  </h2>
-
-                </div>
-
-                <span
-                  className={`estado-usuario ${
-                    usuario.estado === "ACTIVO"
-                      ? "estado-usuario-activo"
-                      : "estado-usuario-inactivo"
-                  }`}
-                >
-                  {usuario.estado}
-                </span>
-
-              </div>
-
-              {/* INFORMACIÓN */}
-              <div className="usuario-card-body">
-
-                <div className="dato-usuario">
-
-                  <span>
-                    Nombre completo
-                  </span>
-
-                  <strong>
-                    {usuario.nombre_completo}
-                  </strong>
-
-                </div>
-
-                <div className="dato-usuario">
-
-                  <span>
-                    Correo
-                  </span>
-
-                  <strong>
-                    {usuario.correo}
-                  </strong>
-
-                </div>
-
-                <div className="dato-usuario">
-
-                  <span>
-                    Teléfono
-                  </span>
-
-                  <strong>
-                    {usuario.telefono || "No registrado"}
-                  </strong>
-
-                </div>
-
-              </div>
-
-              {/* ACCIONES */}
-              <div className="usuario-card-actions">
-
-                <button
-                  className="btn-consultar-usuario"
-                  onClick={() =>
-                    navigate(
-                      `/usuarios/consultar/${usuario.id_usuario}`
-                    )
-                  }
-                >
-                  Consultar
-                </button>
-
-                <Permiso accion="editar"><button
-                  className="btn-editar-usuario"
-                  onClick={() =>
-                    navigate(
-                      `/usuarios/editar/${usuario.id_usuario}`
-                    )
-                  }
-                >
-                  Editar
-                </button></Permiso>
-
-                <BotonEliminar
-                  entidad="usuario"
-                  nombre={usuario.nombre_completo}
-                  onConfirmar={() => eliminarUsuario(usuario.id_usuario)}
-                />
-
-              </div>
-
+        <Tabla
+          filas={pag.items}
+          clave={(u) => u.id_usuario}
+          vacio={
+            <div className="sin-usuarios">
+              <h3>No se encontraron usuarios</h3>
+              <p>Intenta cambiar los filtros de búsqueda.</p>
             </div>
-
-          ))
-
-        )}
-
+          }
+          columnas={[
+            { titulo: "Usuario", fuerte: true, render: (u) => u.nombre_completo },
+            { titulo: "Correo", render: (u) => u.correo },
+            { titulo: "Teléfono", sinSalto: true, render: (u) => u.telefono || "No registrado" },
+          ]}
+          interruptor={{
+            render: (u) => (
+              <InterruptorEstado
+                activo={u.estado === "ACTIVO"}
+                nombre={u.nombre_completo}
+                onCambiar={() => cambiarEstado(u)}
+              />
+            ),
+          }}
+          acciones={(u) => (
+            <>
+              <BotonIcono
+                icono="ver"
+                titulo="Consultar"
+                onClick={() => navigate(`/usuarios/consultar/${u.id_usuario}`)}
+              />
+              <Permiso accion="editar">
+                <BotonIcono
+                  icono="editar"
+                  titulo="Editar"
+                  tono="dorado"
+                  onClick={() => navigate(`/usuarios/editar/${u.id_usuario}`)}
+                />
+              </Permiso>
+              <BotonEliminar
+                icono
+                entidad="usuario"
+                nombre={u.nombre_completo}
+                onConfirmar={() => eliminarUsuario(u.id_usuario)}
+              />
+            </>
+          )}
+        />
       </div>
-
 
       <Paginador pag={pag} />
     </div>

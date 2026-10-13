@@ -70,14 +70,101 @@ function leerUsuarios() {
 
 const igual = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase()
 
+// Cada usuario lleva un id_usuario para poder consultarlo, editarlo y eliminarlo desde el módulo Usuarios.
+function conIds(usuarios) {
+  let max = usuarios.reduce((m, u) => Math.max(m, Number(u.id_usuario) || 0), 0)
+  let cambio = false
+  usuarios.forEach((u) => {
+    if (!u.id_usuario) {
+      max += 1
+      u.id_usuario = max
+      cambio = true
+    }
+  })
+  return cambio
+}
+
+function leerUsuariosConId() {
+  const usuarios = leerUsuarios()
+  if (conIds(usuarios)) localStorage.setItem(K_USUARIOS, JSON.stringify(usuarios))
+  return usuarios
+}
+
 /** Registra un usuario nuevo. Devuelve { ok } o { ok:false, error }. */
 export function registrarUsuario(datos) {
-  const usuarios = leerUsuarios()
+  const usuarios = leerUsuariosConId()
   if (usuarios.some((u) => igual(u.correo, datos.correo))) {
     return { ok: false, error: 'Este correo ya está registrado' }
   }
-  usuarios.push({ ...datos, rol: datos.rol || ROL_POR_DEFECTO })
+  const id = usuarios.reduce((m, u) => Math.max(m, Number(u.id_usuario) || 0), 0) + 1
+  usuarios.push({ ...datos, id_usuario: id, rol: datos.rol || ROL_POR_DEFECTO })
   localStorage.setItem(K_USUARIOS, JSON.stringify(usuarios))
+  return { ok: true }
+}
+
+/** Usuarios para el módulo Usuarios (nunca se expone la contraseña). */
+export function listarUsuarios() {
+  return leerUsuariosConId().map((u) => {
+    // eslint-disable-next-line no-unused-vars
+    const { contrasena, ...publico } = u
+    return publico
+  })
+}
+
+/** Actualiza nombre, correo, teléfono, rol y estado de un usuario. Devuelve { ok } o { ok:false, error }. */
+export function actualizarUsuario(id, cambios) {
+  const usuarios = leerUsuariosConId()
+  const i = usuarios.findIndex((u) => Number(u.id_usuario) === Number(id))
+  if (i === -1) return { ok: false, error: 'Usuario no encontrado' }
+  if (cambios.correo && usuarios.some((u, k) => k !== i && igual(u.correo, cambios.correo))) {
+    return { ok: false, error: 'Este correo ya está registrado' }
+  }
+  const anterior = usuarios[i]
+  usuarios[i] = { ...anterior, ...cambios, id_usuario: anterior.id_usuario }
+  localStorage.setItem(K_USUARIOS, JSON.stringify(usuarios))
+
+  // Si se edita al usuario con la sesión abierta, se actualizan los datos de la sesión.
+  const almacen = localStorage.getItem(K_USUARIO) ? localStorage : sessionStorage.getItem(K_USUARIO) ? sessionStorage : null
+  if (almacen) {
+    try {
+      const sesion = JSON.parse(almacen.getItem(K_USUARIO))
+      if (sesion && igual(sesion.correo || '', anterior.correo)) {
+        almacen.setItem(
+          K_USUARIO,
+          JSON.stringify({
+            ...sesion,
+            nombre_completo: usuarios[i].nombre_completo,
+            correo: usuarios[i].correo,
+            rol: usuarios[i].rol,
+          })
+        )
+      }
+    } catch {
+      /* sesión dañada: se ignora */
+    }
+  }
+  return { ok: true }
+}
+
+/** Elimina un usuario. No permite borrar la cuenta administradora principal ni la sesión actual. */
+export function eliminarUsuario(id) {
+  const usuarios = leerUsuariosConId()
+  const usuario = usuarios.find((u) => Number(u.id_usuario) === Number(id))
+  if (!usuario) return { ok: false, error: 'Usuario no encontrado' }
+  if (igual(usuario.correo, SEMILLA[0].correo)) {
+    return { ok: false, error: 'La cuenta del administrador principal no se puede eliminar' }
+  }
+  const sesion = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(K_USUARIO) || sessionStorage.getItem(K_USUARIO) || 'null')
+    } catch {
+      return null
+    }
+  })()
+  if (sesion && igual(sesion.correo || '', usuario.correo)) {
+    return { ok: false, error: 'No puedes eliminar el usuario con el que tienes la sesión abierta' }
+  }
+  localStorage.setItem(K_USUARIOS, JSON.stringify(usuarios.filter((u) => Number(u.id_usuario) !== Number(id))))
   return { ok: true }
 }
 

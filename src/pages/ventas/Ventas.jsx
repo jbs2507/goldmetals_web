@@ -8,8 +8,11 @@ import VentaFiltros from "../../components/ventas/VentaFiltros.jsx";
 import HistorialEstados from "../../components/HistorialEstados.jsx";
 import DocumentosCargados from "../../components/DocumentosCargados.jsx";
 import { formatearFecha } from "../../data/insumosVinculos.js";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES } from "../../data/semillas.js";
 import {
-  ventasVisibles as ventasIniciales,
+  ventasMock,
+  ventaVisible,
   fechaUltimoEstado,
   etiquetaEstadoVenta,
   totalesPorMoneda,
@@ -17,6 +20,7 @@ import {
 } from "../../data/ventasMock.js";
 import Permiso from "../../components/Permiso.jsx";
 import { puedeVerDato } from "../../permisos.js";
+import Tabla, { BotonIcono, Doble } from "../../components/Tabla.jsx";
 
 // Columnas del Excel: lo mismo que se ve en pantalla, con fechas y valores legibles.
 const columnasExcel = [
@@ -55,7 +59,9 @@ const filtrarColumnasExcel = () =>
 export default function Ventas() {
   const navigate = useNavigate();
 
-  const [ventas, setVentas] = useState(ventasIniciales);
+  // Las ventas se leen del almacén; solo se muestran las de pedidos pagados al 100 %.
+  const [todasLasVentas, setVentas] = useAlmacen(CLAVES.ventas, ventasMock);
+  const ventas = todasLasVentas.filter(ventaVisible);
 
   const [busqueda, setBusqueda] = useState("");
 
@@ -250,274 +256,73 @@ export default function Ventas() {
 
         <BarraListado pag={pag} archivo="ventas" excel columnas={filtrarColumnasExcel()} />
 
-        {ventasFiltradas.length > 0 ? (
-
-          pag.items.map((venta) => (
-
-            <div
-              className="venta-card"
-              key={venta.id_venta}
-            >
-
-              {/* =====================================
-                  CABECERA
-              ===================================== */}
-
-              <div className="venta-card-header">
-
-                <div>
-
-                  <span className="venta-label">
-                    Venta
-                  </span>
-
-                  <h3>
-                    {venta.tipo_material}
-                  </h3>
-
-                </div>
-
-                <span
-                  className={`estado-venta ${obtenerClaseEstado(
-                    venta.estado
-                  )}`}
-                >
-                  {venta.estado}
-                </span>
-
-              </div>
-
-              {/* =====================================
-                  DATOS
-              ===================================== */}
-
-              <div className="venta-card-body">
-
-                <div className="dato-venta">
-                  <span>
-                    Cliente
-                  </span>
-
-                  <strong>
-                    {venta.cliente}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    Pedido
-                  </span>
-
-                  <strong>
-                    {venta.pedido}
-                  </strong>
-                </div>
-
-                <Permiso dato="cantidades"><div className="dato-venta">
-                  <span>
-                    Cantidad
-                  </span>
-
-                  <strong>
-                    {venta.cantidad}
-                  </strong>
-                </div></Permiso>
-
-                <Permiso dato="precios"><div className="dato-venta">
-                  <span>
-                    Precio
-                  </span>
-
-                  <strong>
-                    {formatearPrecio(venta.precio)}{" "}
-                    {venta.moneda}
-                  </strong>
-                </div></Permiso>
-
-                <div className="dato-venta">
-                  <span>
-                    Fecha
-                  </span>
-
-                  <strong>
-                    {venta.fecha}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    País destino
-                  </span>
-
-                  <strong>
-                    {venta.pais_destino}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    Encargado transporte
-                  </span>
-
-                  <strong>
-                    {venta.encargado_transporte || "Pendiente de registrar"}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    Placa vehículo
-                  </span>
-
-                  <strong>
-                    {venta.placa_vehiculo || "Pendiente de registrar"}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    Dirección del puerto
-                  </span>
-
-                  <strong>
-                    {venta.direccion_puerto || "No registrada"}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    Cliente que recibe
-                  </span>
-
-                  <strong>
-                    {venta.contacto_entrega_nombre || "No registrado"}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    Teléfono de entrega
-                  </span>
-
-                  <strong>
-                    {venta.contacto_entrega_telefono || "No registrado"}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    Acopio de origen
-                  </span>
-
-                  <strong>
-                    {venta.acopio || "No registrado"}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    Mina de origen
-                  </span>
-
-                  <strong>
-                    {venta.mina || "No registrada"}
-                  </strong>
-                </div>
-
-                <div className="dato-venta">
-                  <span>
-                    Fecha del último estado
-                  </span>
-
-                  <strong>
-                    {formatearFecha(fechaUltimoEstado(venta))}
-                  </strong>
-                </div>
-
-              </div>
-
-              {/* =====================================
-                  DOCUMENTOS LEGALES
-              ===================================== */}
-
-              <div className="venta-documentos">
-
-                <span className="venta-label">
-                  Documentos legales
-                </span>
-
-                <strong
-                  className={
-                    venta.documentos
-                      ? "documentos-completos"
-                      : "documentos-pendientes"
-                  }
-                >
-                  {venta.documentos
-                    ? "Documentos registrados"
-                    : "Documentos pendientes"}
-                </strong>
-
-              </div>
-
-              {/* =====================================
-                  ACCIONES
-              ===================================== */}
-
-              <div className="venta-card-actions">
-
-                <button
-                  type="button"
-                  className="btn-consultar-venta"
-                  onClick={() =>
-                    navigate(
-                      `/ventas/consultar/${venta.id_venta}`
-                    )
-                  }
-                >
-                  Consultar
-                </button>
-
-                <DocumentosCargados
-                  titulo={`Documentos de la venta #${venta.id_venta}`}
-                  documentos={[
-                    { titulo: "Factura", valor: venta.factura },
-                    { titulo: "Resultado de laboratorio", valor: venta.resultado_laboratorio },
-                  ]}
-                />
-
-                <HistorialEstados
-                  titulo={`Historial de la venta #${venta.id_venta}`}
-                  historial={venta.historial || []}
-                  etiqueta={etiquetaEstadoVenta}
-                />
-
-                <BotonAnular entidad="venta" nombre={`la venta ${venta.pedido} de ${venta.cliente}`} deshabilitado={venta.estado === "ANULADA"} onConfirmar={(m) => anularVenta(venta.id_venta, m)} />
-
-              </div>
-
+        <Tabla
+          filas={pag.items}
+          clave={(v) => v.id_venta}
+          claseFila={(v) => (v.estado === "ANULADA" ? "fila-anulada" : "")}
+          vacio={
+            <div className="sin-ventas">
+              <h3>No se encontraron ventas</h3>
+              <p>Intenta cambiar los criterios de búsqueda.</p>
             </div>
-
-          ))
-
-        ) : (
-
-          <div className="sin-ventas">
-
-            <h3>
-              No se encontraron ventas
-            </h3>
-
-            <p>
-              Intenta cambiar los criterios de búsqueda.
-            </p>
-
-          </div>
-
-        )}
-
+          }
+          columnas={[
+            { titulo: "Pedido", fuerte: true, sinSalto: true, render: (v) => v.pedido },
+            { titulo: "Cliente", render: (v) => <Doble principal={v.cliente} secundario={v.tipo_material} /> },
+            { titulo: "Cantidad", dato: "cantidades", sinSalto: true, render: (v) => v.cantidad },
+            {
+              titulo: "Precio",
+              dato: "precios",
+              alinear: "der",
+              sinSalto: true,
+              render: (v) => (
+                <>
+                  {formatearPrecio(v.precio)}
+                  <span className="tabla-moneda">{v.moneda}</span>
+                </>
+              ),
+            },
+            { titulo: "Fecha", sinSalto: true, render: (v) => v.fecha },
+            { titulo: "País destino", render: (v) => v.pais_destino },
+            {
+              titulo: "Estado",
+              render: (v) => (
+                <span className={`estado-venta ${obtenerClaseEstado(v.estado)}`}>{v.estado}</span>
+              ),
+            },
+          ]}
+          acciones={(v) => (
+            <>
+              <BotonIcono
+                icono="ver"
+                titulo="Consultar"
+                onClick={() => navigate(`/ventas/consultar/${v.id_venta}`)}
+              />
+              <DocumentosCargados
+                icono
+                titulo={`Documentos de la venta #${v.id_venta}`}
+                documentos={[
+                  { titulo: "Factura", valor: v.factura },
+                  { titulo: "Resultado de laboratorio", valor: v.resultado_laboratorio },
+                ]}
+              />
+              <HistorialEstados
+                icono
+                titulo={`Historial de la venta #${v.id_venta}`}
+                historial={v.historial || []}
+                etiqueta={etiquetaEstadoVenta}
+              />
+              <BotonAnular
+                icono
+                entidad="venta"
+                nombre={`la venta ${v.pedido} de ${v.cliente}`}
+                deshabilitado={v.estado === "ANULADA"}
+                onConfirmar={(m) => anularVenta(v.id_venta, m)}
+              />
+            </>
+          )}
+        />
       </div>
-
 
       <Paginador pag={pag} />
     </div>

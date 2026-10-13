@@ -12596,3 +12596,134 @@ div:has(> input[required], > select[required], > textarea[required]) > label::af
   justify-content: center;
   overflow-y: auto;
 }
+
+/* =========================================================
+   MODAL GENERAL (formularios de registro cortos)
+========================================================= */
+.modal-gm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(3px);
+}
+
+.modal-gm {
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  color: var(--tx);
+  border: 1px solid var(--ln);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.modal-gm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--ln);
+}
+
+.modal-gm-header h2 {
+  margin: 0 0 4px;
+  font-size: 19px;
+  color: var(--tx);
+}
+
+.modal-gm-header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mu);
+}
+
+.modal-gm-cerrar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border: 1px solid var(--ln);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--tx);
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-gm-body {
+  padding: 20px 24px 24px;
+  overflow-y: auto;
+}
+
+/* Los formularios dentro del modal pierden su tarjeta propia (el modal ya es la tarjeta). */
+.modal-gm .insumo-polimetalico-form,
+.modal-gm .usuario-form,
+.modal-gm .empleado-form,
+.modal-gm .cliente-form,
+.modal-gm .proveedor-form,
+.modal-gm .compra-form,
+.modal-gm .pedido-form,
+.modal-gm .venta-form,
+.modal-gm .rol-form {
+  max-width: none;
+  margin: 0;
+  gap: 18px;
+}
+
+.modal-gm .insumo-polimetalico-form .form-seccion,
+.modal-gm .usuario-form .form-seccion,
+.modal-gm .empleado-form .form-seccion,
+.modal-gm .cliente-form .form-seccion,
+.modal-gm .proveedor-form .form-seccion,
+.modal-gm .compra-form .form-seccion,
+.modal-gm .pedido-form .form-seccion,
+.modal-gm .venta-form .form-seccion,
+.modal-gm .rol-form .form-seccion {
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.modal-gm .insumo-polimetalico-form .form-seccion + .form-seccion,
+.modal-gm .usuario-form .form-seccion + .form-seccion,
+.modal-gm .empleado-form .form-seccion + .form-seccion,
+.modal-gm .cliente-form .form-seccion + .form-seccion,
+.modal-gm .proveedor-form .form-seccion + .form-seccion,
+.modal-gm .compra-form .form-seccion + .form-seccion,
+.modal-gm .pedido-form .form-seccion + .form-seccion,
+.modal-gm .venta-form .form-seccion + .form-seccion,
+.modal-gm .rol-form .form-seccion + .form-seccion {
+  padding-top: 18px;
+  border-top: 1px solid var(--ln);
+}
+
+.modal-gm .insumo-polimetalico-form .form-seccion-titulo,
+.modal-gm .usuario-form .form-seccion-titulo,
+.modal-gm .empleado-form .form-seccion-titulo {
+  display: none;
+}
+
+.modal-gm .cliente-form .form-seccion-titulo,
+.modal-gm .proveedor-form .form-seccion-titulo,
+.modal-gm .compra-form .form-seccion-titulo,
+.modal-gm .pedido-form .form-seccion-titulo,
+.modal-gm .venta-form .form-seccion-titulo,
+.modal-gm .rol-form .form-seccion-titulo {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+}
+
+@media (max-width: 640px) {
+  .modal-gm-backdrop { padding: 10px; }
+  .modal-gm-header, .modal-gm-body { padding-left: 16px; padding-right: 16px; }
+}

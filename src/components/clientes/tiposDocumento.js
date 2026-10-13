@@ -17,9 +17,22 @@ export const etiquetaTipoDocumento = (valor) =>
 export const tipoDocumentoSoloDigitos = (valor) =>
   TIPOS_DOCUMENTO.find((t) => t.valor === valor)?.soloDigitos ?? true;
 
-// Todos los tipos de documento están disponibles para cualquier cliente
-// (una persona natural también puede tener NIT, y una jurídica extranjera usa Tax ID o similar).
-// El tipo de persona solo define cuál se propone por defecto.
-export const tiposDocumentoPorPersona = () => TIPOS_DOCUMENTO;
+// Proveedores: los tipos de documento dependen del tipo de persona.
+// - Jurídica: NIT (o el documento tributario de una empresa extranjera).
+// - Natural: documentos de identidad de una persona.
+const DOCUMENTOS_PROVEEDOR = {
+  JURIDICA: ["NIT", "EXTRANJERO"],
+  NATURAL: ["CC", "CE", "PASAPORTE", "PEP", "PPT"],
+};
 
-export const tipoDocumentoPorDefecto = (tipoPersona) => (tipoPersona === "NATURAL" ? "CC" : "NIT");
+export const tiposDocumentoProveedor = (tipoPersona) =>
+  (DOCUMENTOS_PROVEEDOR[tipoPersona] || [])
+    .map((valor) => TIPOS_DOCUMENTO.find((t) => t.valor === valor))
+    .filter(Boolean);
+
+export const documentoProveedorPorDefecto = (tipoPersona) =>
+  DOCUMENTOS_PROVEEDOR[tipoPersona]?.[0] || "";
+
+// Clientes: mismos tipos de documento según el tipo de persona.
+export const tiposDocumentoPorPersona = (tipoPersona) => tiposDocumentoProveedor(tipoPersona);
+export const tipoDocumentoPorDefecto = (tipoPersona) => documentoProveedorPorDefecto(tipoPersona);

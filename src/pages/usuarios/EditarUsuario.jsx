@@ -1,38 +1,13 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-const usuarios = [
-  {
-    id_usuario: 1,
-    correo: "admin@mmmetalsgold.com",
-    nombre_completo: "Administrador",
-    telefono: "3001234567",
-    rol: "Administrador",
-    estado: "ACTIVO",
-  },
-  {
-    id_usuario: 2,
-    correo: "contador@mmmetalsgold.com",
-    nombre_completo: "Contador",
-    telefono: "3012345678",
-    rol: "Contador",
-    estado: "ACTIVO",
-  },
-  {
-    id_usuario: 3,
-    correo: "abogado@mmmetalsgold.com",
-    nombre_completo: "Abogado",
-    telefono: "3023456789",
-    rol: "Abogado",
-    estado: "ACTIVO",
-  }
-];
+import { actualizarUsuario, listarUsuarios } from "../../auth.js";
+import { filtrarSoloDigitos, filtrarSoloLetras, validarCampo } from "../../utils/validaciones.js";
 
 export default function EditarUsuario() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const usuario = usuarios.find(
+  const usuario = listarUsuarios().find(
     (item) => item.id_usuario === Number(id)
   );
 
@@ -54,13 +29,18 @@ export default function EditarUsuario() {
     usuario?.estado || "ACTIVO"
   );
 
+  const [error, setError] = useState("");
+
   const manejarSubmit = (e) => {
     e.preventDefault();
+    setError("");
 
-    if (
-      !nombreCompleto.trim() ||
-      !correo.trim()
-    ) {
+    const mensaje =
+      validarCampo(nombreCompleto, { requerido: true, soloLetras: true, longitudMin: 3 }) ||
+      validarCampo(correo, { requerido: true, tipo: "email" }) ||
+      validarCampo(telefono, { soloDigitos: true, telefono: true });
+    if (mensaje) {
+      setError(mensaje);
       return;
     }
 
@@ -73,10 +53,17 @@ export default function EditarUsuario() {
       estado,
     };
 
-    console.log(
-      "Usuario actualizado:",
-      usuarioActualizado
-    );
+    const r = actualizarUsuario(Number(id), {
+      nombre_completo: usuarioActualizado.nombre_completo,
+      correo: usuarioActualizado.correo,
+      telefono: usuarioActualizado.telefono,
+      rol: usuarioActualizado.rol,
+      estado: usuarioActualizado.estado,
+    });
+    if (!r.ok) {
+      setError(r.error);
+      return;
+    }
 
     navigate("/usuarios");
   };
@@ -150,7 +137,7 @@ export default function EditarUsuario() {
                 type="text"
                 value={nombreCompleto}
                 onChange={(e) =>
-                  setNombreCompleto(e.target.value)
+                  setNombreCompleto(filtrarSoloLetras(e.target.value))
                 }
                 required
               />
@@ -182,7 +169,7 @@ export default function EditarUsuario() {
                 type="text"
                 value={telefono}
                 onChange={(e) =>
-                  setTelefono(e.target.value)
+                  setTelefono(filtrarSoloDigitos(e.target.value))
                 }
               />
             </div>
@@ -221,6 +208,8 @@ export default function EditarUsuario() {
             </div>
 
           </div>
+
+          {error && <div className="mensaje-error-usuario">{error}</div>}
         </section>
 
         <div className="form-acciones-usuario">

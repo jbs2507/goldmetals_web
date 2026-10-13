@@ -79,3 +79,9 @@ export const fechaAISO = (f) => {
   const m = String(f || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   return m ? `${m[3]}-${m[2]}-${m[1]}` : f || "";
 };
+
+/** "2026-09-23" -> "23/09/2026" (formato en que se guarda y se muestra la fecha de producción). */
+export const fechaDeISO = (f) => {
+  const m = String(f || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : f || "";
+};

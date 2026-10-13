@@ -1,38 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { formatearFecha, textoCompra, textoVenta } from "../../data/insumosVinculos.js";
-
-const insumosPolimetalicos = [
-  {
-    id_insumo: 1,
-    tipo_insumo: "POLIMETALICO",
-    nombre: "Arena polimetálica",
-    unidad_medida: "kg",
-    fecha_ingreso: "2026-09-22",
-    compra_asociada: "002",
-    venta_asociada: null,
-    mina: "Mina Chocó",
-  },
-  {
-    id_insumo: 2,
-    tipo_insumo: "POLIMETALICO",
-    nombre: "Arena polimetálica fina",
-    unidad_medida: "kg",
-    fecha_ingreso: "2026-09-23",
-    compra_asociada: "001",
-    venta_asociada: null,
-    mina: "Mina Bolívar",
-  },
-  {
-    id_insumo: 3,
-    tipo_insumo: "POLIMETALICO",
-    nombre: "Material polimetálico de acopio",
-    unidad_medida: "kg",
-    fecha_ingreso: "2026-09-20",
-    compra_asociada: "001",
-    venta_asociada: 2,
-    mina: "Acopio",
-  },
-];
+import Permiso from "../../components/Permiso.jsx";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, INSUMOS_POLI_SEMILLA } from "../../data/semillas.js";
 
 const formatearUnidad = (unidad) => {
   const unidades = {
@@ -48,6 +18,7 @@ const formatearUnidad = (unidad) => {
 export default function ConsultarInsumoPolimetalico() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [insumosPolimetalicos] = useAlmacen(CLAVES.insumosPoli, INSUMOS_POLI_SEMILLA);
 
   const insumo = insumosPolimetalicos.find(
     (item) =>
@@ -125,6 +96,13 @@ export default function ConsultarInsumoPolimetalico() {
               </strong>
             </div>
 
+            <Permiso dato="cantidades">
+              <div className="dato-insumo-polimetalico">
+                <span>Cantidad</span>
+                <strong>{insumo.cantidad}</strong>
+              </div>
+            </Permiso>
+
             <div className="dato-insumo-polimetalico">
               <span>Unidad de medida</span>
               <strong>
@@ -139,6 +117,11 @@ export default function ConsultarInsumoPolimetalico() {
               <strong>
                 {insumo.mina}
               </strong>
+            </div>
+
+            <div className="dato-insumo-polimetalico">
+              <span>Acopio</span>
+              <strong>{insumo.acopio}</strong>
             </div>
 
             <div className="dato-insumo-polimetalico">

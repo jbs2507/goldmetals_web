@@ -5,45 +5,9 @@ import BotonAnular from "../../components/BotonAnular.jsx";
 import { formatearFecha, textoCompra, textoVenta } from "../../data/insumosVinculos.js";
 import { conEstado } from "../../utils/listados.js";
 import Permiso from "../../components/Permiso.jsx";
-
-const insumosPolimetalicosIniciales = [
-  {
-    id_insumo: 1,
-    tipo_insumo: "POLIMETALICO",
-    nombre: "Arena polimetálica",
-    cantidad: 500,
-    unidad_medida: "kg",
-    fecha_ingreso: "2026-09-22",
-    compra_asociada: "002",
-    venta_asociada: null,
-    mina: "Mina Chocó",
-    acopio: "Acopio principal",
-  },
-  {
-    id_insumo: 2,
-    tipo_insumo: "POLIMETALICO",
-    nombre: "Arena polimetálica fina",
-    cantidad: 250,
-    unidad_medida: "kg",
-    fecha_ingreso: "2026-09-23",
-    compra_asociada: "001",
-    venta_asociada: null,
-    mina: "Mina Bolívar",
-    acopio: "Acopio Bolívar",
-  },
-  {
-    id_insumo: 3,
-    tipo_insumo: "POLIMETALICO",
-    nombre: "Material polimetálico de acopio",
-    cantidad: 100,
-    unidad_medida: "kg",
-    fecha_ingreso: "2026-09-20",
-    compra_asociada: "001",
-    venta_asociada: 2,
-    mina: "Mina Chocó",
-    acopio: "Acopio Chocó",
-  },
-];
+import Tabla, { BotonIcono, Doble } from "../../components/Tabla.jsx";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, INSUMOS_POLI_SEMILLA } from "../../data/semillas.js";
 
 const formatearUnidad = (unidad) => {
   const unidades = {
@@ -59,9 +23,7 @@ const formatearUnidad = (unidad) => {
 export default function InsumosPolimetalicos() {
   const navigate = useNavigate();
 
-  const [insumos, setInsumos] = useState(
-    insumosPolimetalicosIniciales
-  );
+  const [insumos, setInsumos] = useAlmacen(CLAVES.insumosPoli, INSUMOS_POLI_SEMILLA);
 
   const [busqueda, setBusqueda] = useState("");
 
@@ -137,143 +99,57 @@ export default function InsumosPolimetalicos() {
 
         <BarraListado pag={pag} archivo="insumos_polimetalicos" />
 
-        {insumosFiltrados.length === 0 ? (
-
-          <div className="sin-insumos-polimetalicos">
-            <h3>No se encontraron insumos</h3>
-
-            <p>
-              Intenta cambiar los filtros de búsqueda.
-            </p>
-          </div>
-
-        ) : (
-
-          pag.items.map((insumo) => (
-
-            <div
-              className="insumo-polimetalico-card"
-              key={insumo.id_insumo}
-            >
-
-              {/* CABECERA DE LA TARJETA */}
-              <div className="insumo-polimetalico-card-header">
-
-                <div>
-                  <span className="insumo-polimetalico-label">
-                    Insumo
-                  </span>
-
-                  <h2>
-                    {insumo.nombre}
-                  </h2>
-                </div>
-
-                {insumo.estado === "ANULADO" && (
-                  <span className="estado-insumo-polimetalico estado-insumo-polimetalico-inactivo">
-                    ANULADO
-                  </span>
-                )}
-
-              </div>
-
-              {/* INFORMACIÓN */}
-              <div className="insumo-polimetalico-card-body">
-
-                <div className="dato-insumo-polimetalico">
-                  <span>Tipo de insumo</span>
-
-                  <strong>
-                    Material polimetálico
-                  </strong>
-                </div>
-
-                <div className="dato-insumo-polimetalico">
-                  <span>Nombre</span>
-
-                  <strong>
-                    {insumo.nombre}
-                  </strong>
-                </div>
-
-                <Permiso dato="cantidades"><div className="dato-insumo-polimetalico">
-                  <span>Cantidad</span>
-
-                  <strong>
-                    {insumo.cantidad}{" "}
-                    {formatearUnidad(insumo.unidad_medida)}
-                  </strong>
-                </div></Permiso>
-
-                <div className="dato-insumo-polimetalico">
-                  <span>Unidad de medida</span>
-
-                  <strong>
-                    {formatearUnidad(
-                      insumo.unidad_medida
-                    )}
-                  </strong>
-                </div>
-
-                <div className="dato-insumo-polimetalico">
-                  <span>Mina de origen</span>
-
-                  <strong>
-                    {insumo.mina}
-                  </strong>
-                </div>
-
-                <div className="dato-insumo-polimetalico">
-                  <span>Acopio</span>
-
-                  <strong>
-                    {insumo.acopio}
-                  </strong>
-                </div>
-
-                <div className="dato-insumo-polimetalico">
-                  <span>Fecha de ingreso</span>
-                  <strong>{formatearFecha(insumo.fecha_ingreso)}</strong>
-                </div>
-
-                <div className="dato-insumo-polimetalico">
-                  <span>Compra asociada</span>
-                  <strong>{textoCompra(insumo.compra_asociada)}</strong>
-                </div>
-
-                <div className="dato-insumo-polimetalico">
-                  <span>Venta asociada</span>
-                  <strong>{textoVenta(insumo.venta_asociada)}</strong>
-                </div>
-
-              </div>
-
-              {/* ACCIONES */}
-              <div className="insumo-polimetalico-card-actions">
-
-                <button
-                  className="btn-consultar-insumo-polimetalico"
-                  onClick={() =>
-                    navigate(
-                      `/insumos-polimetalicos/consultar/${insumo.id_insumo}`
-                    )
-                  }
-                >
-                  Consultar
-                </button>
-
-                <BotonAnular entidad="insumo polimetálico" nombre={insumo.nombre} deshabilitado={insumo.estado === "ANULADO"} onConfirmar={(m) => anularInsumo(insumo.id_insumo, m)} />
-
-              </div>
-
+        <Tabla
+          filas={pag.items}
+          clave={(i) => i.id_insumo}
+          claseFila={(i) => (i.estado === "ANULADO" ? "fila-anulada" : "")}
+          vacio={
+            <div className="sin-insumos-polimetalicos">
+              <h3>No se encontraron insumos</h3>
+              <p>Intenta cambiar los filtros de búsqueda.</p>
             </div>
-
-          ))
-
-        )}
-
+          }
+          columnas={[
+            { titulo: "Insumo", render: (i) => <Doble principal={i.nombre} secundario="Material polimetálico" /> },
+            {
+              titulo: "Cantidad",
+              dato: "cantidades",
+              sinSalto: true,
+              render: (i) => `${i.cantidad} ${formatearUnidad(i.unidad_medida)}`,
+            },
+            { titulo: "Mina de origen", render: (i) => i.mina },
+            { titulo: "Acopio", render: (i) => i.acopio },
+            { titulo: "Fecha de ingreso", sinSalto: true, render: (i) => formatearFecha(i.fecha_ingreso) },
+            { titulo: "Compra asociada", sinSalto: true, render: (i) => textoCompra(i.compra_asociada) },
+            { titulo: "Venta asociada", sinSalto: true, render: (i) => textoVenta(i.venta_asociada) },
+            {
+              titulo: "Estado",
+              render: (i) =>
+                i.estado === "ANULADO" ? (
+                  <span className="estado-insumo-polimetalico estado-insumo-polimetalico-inactivo">ANULADO</span>
+                ) : (
+                  "Vigente"
+                ),
+            },
+          ]}
+          acciones={(i) => (
+            <>
+              <BotonIcono
+                icono="ver"
+                titulo="Consultar"
+                onClick={() => navigate(`/insumos-polimetalicos/consultar/${i.id_insumo}`)}
+              />
+              <BotonAnular
+                icono
+                entidad="insumo polimetálico"
+                nombre={i.nombre}
+                deshabilitado={i.estado === "ANULADO"}
+                onConfirmar={(m) => anularInsumo(i.id_insumo, m)}
+              />
+            </>
+          )}
+        />
       </div>
-
 
       <Paginador pag={pag} />
     </div>

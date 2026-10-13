@@ -5,18 +5,9 @@ import BotonAnular from "../../components/BotonAnular.jsx";
 import { formatearFecha, textoCompra, textoVenta } from "../../data/insumosVinculos.js";
 import { conEstado } from "../../utils/listados.js";
 import Permiso from "../../components/Permiso.jsx";
-
-const insumosOroIniciales = [
-  { id_insumo: 1, tipo_insumo: "ORO", nombre: "Oro", cantidad: 500, unidad_medida: "g", fecha_ingreso: "2026-09-23", compra_asociada: "001", venta_asociada: null },
-  { id_insumo: 2, tipo_insumo: "ORO", nombre: "Oro en polvo", cantidad: 250, unidad_medida: "g", fecha_ingreso: "2026-09-22", compra_asociada: "002", venta_asociada: null },
-  { id_insumo: 3, tipo_insumo: "ORO", nombre: "Oro en lingote", cantidad: 2, unidad_medida: "kg", fecha_ingreso: "2026-09-20", compra_asociada: "001", venta_asociada: 1 },
-];
-
-const insumosPolimetalicosIniciales = [
-  { id_insumo: 1, tipo_insumo: "POLIMETALICO", nombre: "Arena polimetálica", cantidad: 500, unidad_medida: "kg", fecha_ingreso: "2026-09-22", compra_asociada: "002", venta_asociada: null, mina: "Mina Chocó", acopio: "Acopio principal" },
-  { id_insumo: 2, tipo_insumo: "POLIMETALICO", nombre: "Arena polimetálica fina", cantidad: 250, unidad_medida: "kg", fecha_ingreso: "2026-09-23", compra_asociada: "001", venta_asociada: null, mina: "Mina Bolívar", acopio: "Acopio Bolívar" },
-  { id_insumo: 3, tipo_insumo: "POLIMETALICO", nombre: "Material polimetálico de acopio", cantidad: 100, unidad_medida: "kg", fecha_ingreso: "2026-09-20", compra_asociada: "001", venta_asociada: 2, mina: "Mina Chocó", acopio: "Acopio Chocó" },
-];
+import Tabla, { BotonIcono, Doble } from "../../components/Tabla.jsx";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, INSUMOS_ORO_SEMILLA, INSUMOS_POLI_SEMILLA } from "../../data/semillas.js";
 
 const formatearUnidad = (unidad) => ({
   g: "Gramos (g)",
@@ -30,8 +21,8 @@ export default function Insumos() {
   const [tipo, setTipo] = useState("ORO");
   const [busqueda, setBusqueda] = useState("");
 
-  const [insumosOro, setInsumosOro] = useState(insumosOroIniciales);
-  const [insumosPolimetalicos, setInsumosPolimetalicos] = useState(insumosPolimetalicosIniciales);
+  const [insumosOro, setInsumosOro] = useAlmacen(CLAVES.insumosOro, INSUMOS_ORO_SEMILLA);
+  const [insumosPolimetalicos, setInsumosPolimetalicos] = useAlmacen(CLAVES.insumosPoli, INSUMOS_POLI_SEMILLA);
 
   const listaActual = tipo === "ORO" ? insumosOro : insumosPolimetalicos;
 
@@ -129,81 +120,70 @@ export default function Insumos() {
       </div></Permiso>
 
       <div className="insumos-lista">
+
         <BarraListado pag={pag} archivo="insumos" />
-        {insumosFiltrados.length === 0 ? (
-          <div className="sin-insumos">
-            <h3>No se encontraron insumos</h3>
-            <p>Intenta cambiar los filtros de búsqueda.</p>
-          </div>
-        ) : (
-          pag.items.map((insumo) => (
-            <div className={`insumo-unificado-card ${tipo === "POLIMETALICO" ? "polimetalico" : ""}`} key={insumo.id_insumo}>
-              <div className="insumo-unificado-card-header">
-                <div>
-                  <span>Insumo</span>
-                  <h2>{insumo.nombre}</h2>
-                </div>
-                {insumo.estado === "ANULADO" && (
-                  <span className="estado-insumo-unificado inactivo">ANULADO</span>
-                )}
-              </div>
 
-              <div className="insumo-unificado-card-body">
-                <div className="dato-insumo-unificado">
-                  <span>Tipo de insumo</span>
-                  <strong>{tipo === "ORO" ? "Oro" : "Material polimetálico"}</strong>
-                </div>
-                <div className="dato-insumo-unificado">
-                  <span>Nombre</span>
-                  <strong>{insumo.nombre}</strong>
-                </div>
-                <Permiso dato="cantidades"><div className="dato-insumo-unificado">
-                  <span>Cantidad</span>
-                  <strong>{insumo.cantidad}</strong>
-                </div></Permiso>
-                <div className="dato-insumo-unificado">
-                  <span>Unidad de medida</span>
-                  <strong>{formatearUnidad(insumo.unidad_medida)}</strong>
-                </div>
-                <div className="dato-insumo-unificado">
-                  <span>Fecha de ingreso</span>
-                  <strong>{formatearFecha(insumo.fecha_ingreso)}</strong>
-                </div>
-                <div className="dato-insumo-unificado">
-                  <span>Compra asociada</span>
-                  <strong>{textoCompra(insumo.compra_asociada)}</strong>
-                </div>
-                <div className="dato-insumo-unificado">
-                  <span>Venta asociada</span>
-                  <strong>{textoVenta(insumo.venta_asociada)}</strong>
-                </div>
-                {tipo === "POLIMETALICO" && (
-                  <>
-                    <div className="dato-insumo-unificado">
-                      <span>Mina de origen</span>
-                      <strong>{insumo.mina}</strong>
-                    </div>
-                    <div className="dato-insumo-unificado">
-                      <span>Acopio</span>
-                      <strong>{insumo.acopio}</strong>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="insumo-unificado-card-actions">
-                <button
-                  type="button"
-                  className="btn-consultar-insumo-unificado"
-                  onClick={() => navigate(tipo === "ORO" ? `/insumos-oro/consultar/${insumo.id_insumo}` : `/insumos-polimetalicos/consultar/${insumo.id_insumo}`)}
-                >
-                  Consultar
-                </button>
-                <BotonAnular entidad="insumo" nombre={insumo.nombre} deshabilitado={insumo.estado === "ANULADO"} onConfirmar={(m) => anularInsumo(insumo.id_insumo, m)} />
-              </div>
+        <Tabla
+          filas={pag.items}
+          clave={(i) => i.id_insumo}
+          claseFila={(i) => (i.estado === "ANULADO" ? "fila-anulada" : "")}
+          vacio={
+            <div className="sin-insumos">
+              <h3>No se encontraron insumos</h3>
+              <p>Intenta cambiar los filtros de búsqueda.</p>
             </div>
-          ))
-        )}
+          }
+          columnas={[
+            {
+              titulo: "Insumo",
+              render: (i) => (
+                <Doble principal={i.nombre} secundario={tipo === "ORO" ? "Oro" : "Material polimetálico"} />
+              ),
+            },
+            {
+              titulo: "Cantidad",
+              dato: "cantidades",
+              sinSalto: true,
+              render: (i) => `${i.cantidad} ${formatearUnidad(i.unidad_medida)}`,
+            },
+            ...(tipo === "POLIMETALICO"
+              ? [
+                  { titulo: "Mina de origen", render: (i) => i.mina },
+                  { titulo: "Acopio", render: (i) => i.acopio },
+                ]
+              : []),
+            { titulo: "Fecha de ingreso", sinSalto: true, render: (i) => formatearFecha(i.fecha_ingreso) },
+            { titulo: "Compra asociada", sinSalto: true, render: (i) => textoCompra(i.compra_asociada) },
+            { titulo: "Venta asociada", sinSalto: true, render: (i) => textoVenta(i.venta_asociada) },
+            {
+              titulo: "Estado",
+              render: (i) =>
+                i.estado === "ANULADO" ? <span className="estado-insumo-unificado inactivo">ANULADO</span> : "Vigente",
+            },
+          ]}
+          acciones={(i) => (
+            <>
+              <BotonIcono
+                icono="ver"
+                titulo="Consultar"
+                onClick={() =>
+                  navigate(
+                    tipo === "ORO"
+                      ? `/insumos-oro/consultar/${i.id_insumo}`
+                      : `/insumos-polimetalicos/consultar/${i.id_insumo}`
+                  )
+                }
+              />
+              <BotonAnular
+                icono
+                entidad="insumo"
+                nombre={i.nombre}
+                deshabilitado={i.estado === "ANULADO"}
+                onConfirmar={(m) => anularInsumo(i.id_insumo, m)}
+              />
+            </>
+          )}
+        />
       </div>
 
       <Paginador pag={pag} />

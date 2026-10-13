@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Modal from "../../components/Modal.jsx";
+import Roles from "./Roles.jsx";
 import RolForm from "../../components/roles/RolForm.jsx";
 import { crearRol } from "../../permisos.js";
 
@@ -16,19 +18,18 @@ export default function RegistrarRol() {
     navigate("/roles");
   };
 
+  // El registro es una ventana emergente sobre la lista.
   return (
-    <div className="roles-page">
-      <div className="roles-header">
-        <div>
-          <h1>Registrar rol</h1>
-        </div>
-
-        <button type="button" className="btn-volver-rol" onClick={() => navigate("/roles")}>
-          Volver
-        </button>
-      </div>
-
-      <RolForm modo="registrar" onGuardar={guardar} onCancelar={() => navigate("/roles")} error={error} />
-    </div>
+    <>
+      <Roles />
+      <Modal
+        titulo="Registrar rol"
+        subtitulo="Define el nombre del rol y sus permisos"
+        ancho={1040}
+        onCerrar={() => navigate("/roles")}
+      >
+        <RolForm modo="registrar" onGuardar={guardar} onCancelar={() => navigate("/roles")} error={error} />
+      </Modal>
+    </>
   );
 }

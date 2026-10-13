@@ -2,30 +2,30 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DocumentoAdjunto from "../../components/DocumentoAdjunto.jsx";
 import Permiso from "../../components/Permiso.jsx";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, COMPRAS_SEMILLA } from "../../data/semillas.js";
+import { formatearFecha } from "../../data/insumosVinculos.js";
 
 const ConsultarCompra = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // Datos temporales del frontend
-  const compra = {
-    id: id,
-    proveedor: "Proveedor asociado 1",
-    acopio: "Acopio principal",
-    fechaCompra: "23/09/2026",
-    moneda: "COP",
-    tasaCambio: "1",
-    insumo: "Oro",
-    peso: "500",
-    ley: "90",
-    precioUnitario: "10000",
-    valorRegalias: "500000",
-    valorTotal: "5500000",
-    estado: "REGISTRADA",
-    certificadoOrigen: "certificado_origen.pdf",
-    resultadoLaboratorio: "resultado_laboratorio.pdf",
-    factura: "factura.pdf",
-  };
+  const [compras] = useAlmacen(CLAVES.compras, COMPRAS_SEMILLA);
+  const compra = compras.find((c) => c.id === id);
+
+  if (!compra) {
+    return (
+      <div className="compras-page">
+        <div className="sin-compras">
+          <h3>Compra no encontrada</h3>
+          <p>No fue posible encontrar la información solicitada.</p>
+          <button type="button" className="btn-volver-compra" onClick={() => navigate("/compras")}>
+            ← Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const formatoMoneda = (valor) => {
     return new Intl.NumberFormat("es-CO", {
@@ -55,26 +55,29 @@ const ConsultarCompra = () => {
         </button>
       </div>
 
-      {/* INFORMACIÓN GENERAL */}
-      <div className="consulta-compra-card">
-        <div className="consulta-titulo">
-          <div>
-            <span>Compra</span>
-            <h2>#{compra.id}</h2>
-          </div>
+      <div className="compra-form">
 
-          <span
-            className={`estado estado-${compra.estado.toLowerCase()}`}
-          >
-            {compra.estado}
-          </span>
+      {/* INFORMACIÓN GENERAL */}
+      <section className="form-seccion">
+        <div className="form-seccion-titulo">
+          <h2>Información de la compra #{compra.id}</h2>
+          <p>Datos registrados de la compra.</p>
         </div>
 
         <div className="consulta-grid">
 
           <div className="consulta-dato">
+            <span>Estado</span>
+            <strong>
+              <span className={`estado estado-${compra.estado.toLowerCase()}`}>
+                {compra.estado}
+              </span>
+            </strong>
+          </div>
+
+          <div className="consulta-dato">
             <span>Fecha de compra</span>
-            <strong>{compra.fechaCompra}</strong>
+            <strong>{formatearFecha(compra.fechaCompra)}</strong>
           </div>
 
           <div className="consulta-dato">
@@ -98,12 +101,13 @@ const ConsultarCompra = () => {
           </div></Permiso>
 
         </div>
-      </div>
+      </section>
 
       {/* DETALLE */}
-      <div className="consulta-compra-card">
-        <div className="consulta-seccion-titulo">
+      <section className="form-seccion">
+        <div className="form-seccion-titulo">
           <h2>Detalle de la compra</h2>
+          <p>Insumo, cantidades y valores.</p>
         </div>
 
         <div className="consulta-grid">
@@ -145,12 +149,13 @@ const ConsultarCompra = () => {
           </div></Permiso>
 
         </div>
-      </div>
+      </section>
 
       {/* DOCUMENTOS */}
-      <div className="consulta-compra-card">
-        <div className="consulta-seccion-titulo">
+      <section className="form-seccion">
+        <div className="form-seccion-titulo">
           <h2>Documentos de la compra</h2>
+          <p>Documentos cargados. Puedes verlos o descargarlos.</p>
         </div>
 
         <div className="documentos-unificados-grid">
@@ -175,6 +180,8 @@ const ConsultarCompra = () => {
             disabled
           />
         </div>
+      </section>
+
       </div>
 
     </div>

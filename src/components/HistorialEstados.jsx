@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { formatearFecha } from "../data/insumosVinculos.js";
+import { Ico } from "./Tabla.jsx";
 
 const capitalizar = (t) =>
   String(t || "")
@@ -17,15 +18,28 @@ export default function HistorialEstados({
   historial = [],
   etiqueta = capitalizar,
   className = "btn-historial-produccion",
+  icono = false,
 }) {
   const [abierto, setAbierto] = useState(false);
   const lista = [...historial].reverse();
 
   return (
     <>
-      <button type="button" className={className} onClick={() => setAbierto(true)}>
-        Historial
-      </button>
+      {icono ? (
+        <button
+          type="button"
+          className="ico-btn"
+          title="Historial"
+          aria-label="Historial"
+          onClick={() => setAbierto(true)}
+        >
+          <Ico nombre="historial" />
+        </button>
+      ) : (
+        <button type="button" className={className} onClick={() => setAbierto(true)}>
+          Historial
+        </button>
+      )}
 
       {abierto && createPortal(
         <div className="modal-eliminar-overlay" onClick={() => setAbierto(false)}>

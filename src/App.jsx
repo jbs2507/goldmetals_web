@@ -136,7 +136,7 @@ function LayoutApp() {
       <Sidebar />
       <div className="app-scrim" onClick={() => setMenuAbierto(false)} aria-hidden="true" />
 
-      <section className="main" id="contenido" tabIndex={-1} ref={mainRef}>
+      <section className={`main${/\/(consultar|editar)\//.test(pathname) ? ' vista-detalle' : ''}${/\/consultar\//.test(pathname) ? ' vista-consultar' : ''}${/\/editar\//.test(pathname) ? ' vista-editar' : ''}`} id="contenido" tabIndex={-1} ref={mainRef}>
         <Migas />
         <Outlet />
       </section>

@@ -1,38 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom";
 import Permiso from "../../components/Permiso.jsx";
-
-const pedidos = [
-  {
-    id_pedido: 1,
-    cliente: "M&M Trading S.A.S.",
-    acopio: "Acopio Chocó",
-    fecha_pedido: "2026-09-20T10:00",
-    fecha_entrega: "2026-10-20T10:00",
-    estado: "ABIERTO",
-    fecha_estado: "2026-09-20",
-    moneda: "COP",
-    tasa_cambio: "",
-    valor_total: 125000000,
-    valor_pagado: 112500000,
-    detalles: [
-      {
-        producto: "Oro en lingote",
-        detalle_producto: "Lingotes de 995 milésimas, empaque sellado",
-        insumo: "Oro",
-        cantidad: 500,
-        precio_unitario: 250000,
-        valor_total: 125000000,
-      },
-    ],
-    pagos: [
-      {
-        fecha_pago: "2026-09-20",
-        cuenta_bancaria: "BANCOLOMBIA",
-        comprobante: null,
-      },
-    ],
-  },
-];
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES } from "../../data/semillas.js";
+import { pedidosMock } from "../../data/pedidosMock.js";
 
 const formatearValor = (valor, moneda) => {
   if (moneda === "USD") {
@@ -48,6 +18,7 @@ const formatearValor = (valor, moneda) => {
 export default function ConsultarPedido() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [pedidos] = useAlmacen(CLAVES.pedidos, pedidosMock);
 
   const pedido = pedidos.find(
     (item) => item.id_pedido === Number(id)
@@ -105,6 +76,10 @@ export default function ConsultarPedido() {
               <strong>{pedido.cliente}</strong>
             </div>
 
+            <div className="dato-pedido">
+              <span>Mina de origen</span>
+              <strong>{pedido.mina || "—"}</strong>
+            </div>
             <div className="dato-pedido">
               <span>Acopio</span>
               <strong>{pedido.acopio}</strong>

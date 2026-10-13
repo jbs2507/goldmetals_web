@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { filtrarSoloDigitos, filtrarSoloLetras, validarFormulario } from "../../utils/validaciones.js";
+import { createPortal } from "react-dom";
+import { filtrarSoloDigitos, filtrarSoloLetras, hoyISO, hoyMasAnios, validarFormulario, validarPlaca } from "../../utils/validaciones.js";
 import DocumentoAdjunto from "../DocumentoAdjunto.jsx";
-import { pedidosParaVenta, codigoPedido, materialDeInsumo } from "../../data/pedidosMock.js";
-import { ACOPIOS, MINAS } from "../../data/origenes.js";
+import { pedidosMock, pagoCompletoPedido, codigoPedido, materialDeInsumo } from "../../data/pedidosMock.js";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES } from "../../data/semillas.js";
+import { agregarAcopio, agregarMina, leerAcopios, leerMinas, minaDeAcopio } from "../../data/origenes.js";
+import { cargarPaises } from "../../utils/paises.js";
 import { contactoDeCliente } from "../../data/clientesMock.js";
 
 const DATOS_INICIALES_VACIOS = Object.freeze({});
@@ -25,7 +29,7 @@ const unidadBaseDe = (material) =>
   material === ORO ? "Gramos" : material === ARENAS ? "Toneladas" : "";
 
 const crearFormularioVenta = (datos = DATOS_INICIALES_VACIOS) => {
-  const cantidadNum = numeroDe(datos.cantidad);
+  const cantidadNum = numeroDe(datos.cantidad_numero ?? datos.cantidad);
   const precioUnitario =
     datos.precio_unitario ??
     (cantidadNum > 0 && numeroDe(datos.precio) > 0
@@ -65,15 +69,15 @@ const reglasVenta = (material, directa) => ({
   ...(material === ARENAS ? { ley: { requerido: true, tipo: "number" } } : {}),
   precio_unitario: { requerido: true, tipo: "number" },
   fecha: { requerido: true, tipo: "date" },
-  pais_destino: { requerido: true, soloLetras: true },
+  pais_destino: { requerido: true },
   acopio: { requerido: true },
   mina: { requerido: true },
   // La venta solo existe cuando el pedido está 100 % pagado: el transporte se registra aquí.
-  encargado_transporte: { requerido: true, soloLetras: true },
+  encargado_transporte: { requerido: true, soloLetras: true, longitudMin: 3 },
   placa_vehiculo: { requerido: true },
   direccion_puerto: { requerido: true },
-  contacto_entrega_nombre: { requerido: true, soloLetras: true },
-  contacto_entrega_telefono: { requerido: true, soloDigitos: true },
+  contacto_entrega_nombre: { requerido: true, soloLetras: true, longitudMin: 3 },
+  contacto_entrega_telefono: { requerido: true, soloDigitos: true, telefono: true },
 });
 
 export default function VentaForm({
@@ -102,16 +106,35 @@ export default function VentaForm({
   }, [modoEdicion, datosIniciales]);
 
   const [errores, setErrores] = useState({});
-  const [paises, setPaises] = useState(() => {
+  // Países: salen de la API (con respaldo del navegador). Los que se agreguen a mano se guardan aparte.
+  const [paisesApi, setPaisesApi] = useState([]);
+  const [cargandoPaises, setCargandoPaises] = useState(true);
+  const [paisesExtra, setPaisesExtra] = useState(() => {
     try {
       const guardados = JSON.parse(localStorage.getItem("goldmetal_paises_destino"));
-      return Array.isArray(guardados) && guardados.length
-        ? guardados
-        : ["Singapur", "Estados Unidos", "China"];
+      return Array.isArray(guardados) ? guardados : [];
     } catch {
-      return ["Singapur", "Estados Unidos", "China"];
+      return [];
     }
   });
+  useEffect(() => {
+    let activo = true;
+    cargarPaises().then((lista) => {
+      if (!activo) return;
+      setPaisesApi(lista);
+      setCargandoPaises(false);
+    });
+    return () => {
+      activo = false;
+    };
+  }, []);
+  const paises = useMemo(
+    () =>
+      [...new Set([...paisesApi, ...paisesExtra, formulario.pais_destino].filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b, "es")
+      ),
+    [paisesApi, paisesExtra, formulario.pais_destino]
+  );
   const [mostrarNuevoPais, setMostrarNuevoPais] = useState(false);
   const [nuevoPais, setNuevoPais] = useState("");
   const [unidadesPersonalizadas, setUnidadesPersonalizadas] = useState(() => {
@@ -133,17 +156,26 @@ export default function VentaForm({
   const esArenas = material === ARENAS;
   const unidadBase = unidadBaseDe(material);
 
-  // Pedidos que se pueden relacionar con la venta (listos o entregados); en edición se conserva el actual.
+  // Pedidos que se pueden relacionar con la venta (listos o entregados y pagados al 100 %).
+  // Salen del módulo de pedidos, así que incluyen los pedidos registrados; en edición se conserva el actual.
+  const [pedidosAlmacen] = useAlmacen(CLAVES.pedidos, pedidosMock);
+  const pedidosParaVenta = useMemo(
+    () =>
+      pedidosAlmacen.filter(
+        (p) => (p.estado === "LISTO" || p.estado === "ENTREGADO") && pagoCompletoPedido(p)
+      ),
+    [pedidosAlmacen]
+  );
   const pedidoSeleccionado = useMemo(
     () => pedidosParaVenta.find((p) => codigoPedido(p.id_pedido) === formulario.pedido) || null,
-    [formulario.pedido]
+    [formulario.pedido, pedidosParaVenta]
   );
   const opcionesPedido = useMemo(() => {
     const codigos = pedidosParaVenta.map((p) => codigoPedido(p.id_pedido));
     return datosIniciales.pedido && datosIniciales.pedido !== "Venta directa" && !codigos.includes(datosIniciales.pedido)
       ? [...codigos, datosIniciales.pedido]
       : codigos;
-  }, [datosIniciales.pedido]);
+  }, [datosIniciales.pedido, pedidosParaVenta]);
 
   // Materiales que trae el pedido seleccionado.
   const materialesDelPedido = useMemo(() => {
@@ -162,8 +194,8 @@ export default function VentaForm({
   }, [unidadBase]);
 
   useEffect(() => {
-    localStorage.setItem("goldmetal_paises_destino", JSON.stringify(paises));
-  }, [paises]);
+    localStorage.setItem("goldmetal_paises_destino", JSON.stringify(paisesExtra));
+  }, [paisesExtra]);
 
   useEffect(() => {
     localStorage.setItem("goldmetal_unidades_medida", JSON.stringify(unidadesPersonalizadas));
@@ -207,10 +239,68 @@ export default function VentaForm({
       contacto_entrega_telefono: prev.contacto_entrega_telefono || contactoDeCliente(pedido.cliente)?.telefono || "",
       moneda: pedido.moneda,
       acopio: pedido.acopio || prev.acopio,
+      mina: pedido.mina || (pedido.acopio && minaDeAcopio(pedido.acopio)) || prev.mina,
       ley: "",
       ...datosDePedido(pedido, primerMaterial),
     }));
     setErrores((prev) => ({ ...prev, pedido: undefined, cliente: undefined }));
+  };
+
+  // Mina y acopio: primero se elige la mina y el acopio sale solo de esa mina.
+  // Ambas listas terminan con la opción de agregar una nueva.
+  const AGREGAR = "__AGREGAR__";
+  const [versionOrigenes, setVersionOrigenes] = useState(0);
+  const [agregandoOrigen, setAgregandoOrigen] = useState(null); // "mina" | "acopio" | null
+  const [nombreOrigen, setNombreOrigen] = useState("");
+  const [errorOrigen, setErrorOrigen] = useState("");
+  // versionOrigenes fuerza a recalcular las listas cuando se agrega una mina o un acopio.
+  void versionOrigenes;
+  const minas = [...new Set([...leerMinas(), formulario.mina].filter(Boolean))];
+  const acopios = [...new Set([...(formulario.mina ? leerAcopios(formulario.mina) : []), formulario.acopio].filter(Boolean))];
+
+  const abrirOrigen = (tipo) => {
+    setAgregandoOrigen(tipo);
+    setNombreOrigen("");
+    setErrorOrigen("");
+  };
+  const cerrarOrigen = () => {
+    setAgregandoOrigen(null);
+    setNombreOrigen("");
+    setErrorOrigen("");
+  };
+  const cambiarMina = (valor) => {
+    if (valor === AGREGAR) {
+      abrirOrigen("mina");
+      return;
+    }
+    setFormulario((prev) => ({
+      ...prev,
+      mina: valor,
+      // El acopio solo vale si pertenece a la mina elegida.
+      acopio: valor && leerAcopios(valor).includes(prev.acopio) ? prev.acopio : "",
+    }));
+    setErrores((prev) => ({ ...prev, mina: undefined }));
+  };
+  const cambiarAcopio = (valor) => {
+    if (valor === AGREGAR) {
+      abrirOrigen("acopio");
+      return;
+    }
+    setFormulario((prev) => ({ ...prev, acopio: valor }));
+    setErrores((prev) => ({ ...prev, acopio: undefined }));
+  };
+  const confirmarOrigen = () => {
+    const r =
+      agregandoOrigen === "mina" ? agregarMina(nombreOrigen) : agregarAcopio(nombreOrigen, formulario.mina);
+    if (!r.ok) {
+      setErrorOrigen(r.error);
+      return;
+    }
+    setVersionOrigenes((v) => v + 1);
+    setFormulario((prev) =>
+      agregandoOrigen === "mina" ? { ...prev, mina: r.nombre, acopio: "" } : { ...prev, acopio: r.nombre }
+    );
+    cerrarOrigen();
   };
 
   const agregarPais = () => {
@@ -220,7 +310,7 @@ export default function VentaForm({
     if (existente) {
       setFormulario((prev) => ({ ...prev, pais_destino: existente }));
     } else {
-      setPaises((prev) => [...prev, pais]);
+      setPaisesExtra((prev) => [...prev, pais]);
       setFormulario((prev) => ({ ...prev, pais_destino: pais }));
     }
     setNuevoPais("");
@@ -261,7 +351,7 @@ export default function VentaForm({
     }
 
     const limpio =
-      name === "pais_destino" || name === "encargado_transporte" || name === "contacto_entrega_nombre"
+      name === "encargado_transporte" || name === "contacto_entrega_nombre"
         ? filtrarSoloLetras(value)
         : name === "contacto_entrega_telefono"
         ? filtrarSoloDigitos(value)
@@ -281,7 +371,24 @@ export default function VentaForm({
   const manejarSubmit = (e) => {
     e.preventDefault();
 
-    const nuevosErrores = validarFormulario(formulario, reglasVenta(material, directa));
+    // La fecha de la venta no puede ser anterior a hoy; al editar solo se revisa si se cambió.
+    const reglas = reglasVenta(material, directa);
+    reglas.fecha = { ...reglas.fecha, valorOriginal: modoEdicion ? datosIniciales.fecha : undefined };
+    const nuevosErrores = validarFormulario(formulario, reglas);
+
+    if (!nuevosErrores.placa_vehiculo) {
+      const errPlaca = validarPlaca(formulario.placa_vehiculo);
+      if (errPlaca) nuevosErrores.placa_vehiculo = errPlaca;
+    }
+    // Una venta nunca puede superar lo que trae el pedido pagado.
+    if (!directa && pedidoSeleccionado && !nuevosErrores.cantidad) {
+      const maximo = pedidoSeleccionado.detalles
+        .filter((d) => materialDeInsumo(d.insumo) === material)
+        .reduce((acc, d) => acc + d.cantidad, 0);
+      if (maximo > 0 && Number(formulario.cantidad) > maximo) {
+        nuevosErrores.cantidad = `No puede superar la cantidad del pedido (${maximo})`;
+      }
+    }
 
     if (!formulario.factura) nuevosErrores.factura = "Adjunte la factura";
     if (!formulario.resultado_laboratorio) nuevosErrores.resultado_laboratorio = "Adjunte el resultado de laboratorio";
@@ -524,6 +631,8 @@ export default function VentaForm({
               id="fecha"
               name="fecha"
               type="date"
+              min={modoEdicion ? undefined : hoyISO()}
+              max={modoEdicion ? undefined : hoyMasAnios(1)}
               value={formulario.fecha}
               onChange={manejarCambio}
               required
@@ -547,8 +656,9 @@ export default function VentaForm({
                 manejarCambio(e);
               }}
               required
+              disabled={cargandoPaises && !formulario.pais_destino}
             >
-              <option value="">Seleccione el país destino</option>
+              <option value="">{cargandoPaises ? "Cargando países..." : "Seleccione el país destino"}</option>
               {paises.map((pais) => (
                 <option key={pais} value={pais}>{pais}</option>
               ))}
@@ -557,24 +667,7 @@ export default function VentaForm({
             {errores.pais_destino && <span className="err">{errores.pais_destino}</span>}
           </div>
 
-          {/* ACOPIO Y MINA DE ORIGEN */}
-
-          <div className="form-campo">
-            <label htmlFor="acopio">Acopio de origen</label>
-            <select
-              id="acopio"
-              name="acopio"
-              value={formulario.acopio}
-              onChange={manejarCambio}
-              required
-            >
-              <option value="">Seleccione el acopio</option>
-              {[...new Set([...ACOPIOS, formulario.acopio].filter(Boolean))].map((a) => (
-                <option key={a} value={a}>{a}</option>
-              ))}
-            </select>
-            {errores.acopio && <span className="err">{errores.acopio}</span>}
-          </div>
+          {/* MINA Y ACOPIO DE ORIGEN (el acopio depende de la mina) */}
 
           <div className="form-campo">
             <label htmlFor="mina">Mina de origen</label>
@@ -582,15 +675,35 @@ export default function VentaForm({
               id="mina"
               name="mina"
               value={formulario.mina}
-              onChange={manejarCambio}
+              onChange={(e) => cambiarMina(e.target.value)}
               required
             >
               <option value="">Seleccione la mina</option>
-              {[...new Set([...MINAS, formulario.mina].filter(Boolean))].map((m) => (
+              {minas.map((m) => (
                 <option key={m} value={m}>{m}</option>
               ))}
+              <option value={AGREGAR}>+ Agregar mina</option>
             </select>
             {errores.mina && <span className="err">{errores.mina}</span>}
+          </div>
+
+          <div className="form-campo">
+            <label htmlFor="acopio">Acopio de origen</label>
+            <select
+              id="acopio"
+              name="acopio"
+              value={formulario.acopio}
+              onChange={(e) => cambiarAcopio(e.target.value)}
+              disabled={!formulario.mina}
+              required
+            >
+              <option value="">{formulario.mina ? "Seleccione el acopio" : "Primero seleccione la mina"}</option>
+              {acopios.map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+              {formulario.mina && <option value={AGREGAR}>+ Agregar acopio</option>}
+            </select>
+            {errores.acopio && <span className="err">{errores.acopio}</span>}
           </div>
 
           {modoEdicion && (
@@ -804,6 +917,56 @@ export default function VentaForm({
           </div>
         </div>
       )}
+
+      {agregandoOrigen &&
+        createPortal(
+          <div className="venta-modal-backdrop" role="presentation" onMouseDown={cerrarOrigen}>
+            <div
+              className="venta-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-origen-titulo"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <div className="venta-modal-header">
+                <div>
+                  <h3 id="modal-origen-titulo">{agregandoOrigen === "mina" ? "Agregar mina" : "Agregar acopio"}</h3>
+                  <p>
+                    {agregandoOrigen === "mina"
+                      ? "Escribe el nombre de la nueva mina."
+                      : `Escribe el nombre del nuevo acopio de ${formulario.mina}.`}
+                  </p>
+                </div>
+                <button type="button" className="venta-modal-cerrar" onClick={cerrarOrigen} aria-label="Cerrar">×</button>
+              </div>
+              <input
+                type="text"
+                autoFocus
+                value={nombreOrigen}
+                onChange={(e) => {
+                  setNombreOrigen(e.target.value);
+                  setErrorOrigen("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    confirmarOrigen();
+                  }
+                  if (e.key === "Escape") cerrarOrigen();
+                }}
+                placeholder={agregandoOrigen === "mina" ? "Ej. Mina Antioquia" : "Ej. Acopio Medellín"}
+              />
+              {errorOrigen && <span className="err">{errorOrigen}</span>}
+              <div className="venta-modal-acciones">
+                <button type="button" className="btn-cancelar-venta" onClick={cerrarOrigen}>Cancelar</button>
+                <button type="button" className="btn-guardar-venta" onClick={confirmarOrigen}>
+                  {agregandoOrigen === "mina" ? "Agregar mina" : "Agregar acopio"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
     </form>
   );

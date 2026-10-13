@@ -1,7 +1,11 @@
 import React, { useState } from "react";
-import { filtrarSoloLetras, validarCampo } from "../../utils/validaciones.js";
+import { filtrarSoloLetras, hoyISO, hoyMasAnios, validarCampo } from "../../utils/validaciones.js";
 import { formatoMonto } from "../../data/produccionesMock.js";
 import { puedeVerDato } from "../../permisos.js";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, CLIENTES_SEMILLA } from "../../data/semillas.js";
+import { ACOPIOS_PEDIDO, codigoPedido, pedidosMock } from "../../data/pedidosMock.js";
+import { produccionesMock } from "../../data/produccionesMock.js";
 
 const ProduccionForm = ({
   modo = "registrar",
@@ -15,11 +19,28 @@ const ProduccionForm = ({
   const ocultarPrecios = esConsulta && !puedeVerDato("precios");
 
   const [cantidad, setCantidad] = useState(produccion.cantidad || "");
-  const [fecha, setFecha] = useState(produccion.fecha || "2026-09-23");
+  const [fecha, setFecha] = useState(produccion.fecha || hoyISO());
   const [cliente, setCliente] = useState(produccion.cliente || "");
   const [pedido, setPedido] = useState(produccion.pedido || "");
   const [mina, setMina] = useState(produccion.mina || "");
   const [errores, setErrores] = useState({});
+
+  // Las listas salen de los módulos de clientes, pedidos y producciones; si el registro ya traía
+  // un valor que no está en la lista (datos antiguos), se conserva como opción.
+  const [clientes] = useAlmacen(CLAVES.clientes, CLIENTES_SEMILLA);
+  const [pedidos] = useAlmacen(CLAVES.pedidos, pedidosMock);
+  const [producciones] = useAlmacen(CLAVES.producciones, produccionesMock);
+
+  const conActual = (lista, actual) => (actual && !lista.includes(actual) ? [actual, ...lista] : lista);
+  const opcionesCliente = conActual(clientes.map((c) => c.nombre), produccion.cliente);
+  const opcionesPedido = conActual(pedidos.map((p) => codigoPedido(p.id_pedido)), produccion.pedido);
+  const opcionesOrden = [...new Set([...producciones.map((p) => p.id_orden_produccion), produccion.id_orden_produccion].filter(Boolean))];
+  const opcionesAcopio = [
+    ...ACOPIOS_PEDIDO.map((a) => ({ id: a.id_acopio, nombre: a.nombre })),
+    ...(produccion.id_acopio && !ACOPIOS_PEDIDO.some((a) => a.id_acopio === Number(produccion.id_acopio))
+      ? [{ id: produccion.id_acopio, nombre: `Acopio ${produccion.id_acopio}` }]
+      : []),
+  ];
 
   return (
     <form
@@ -31,7 +52,8 @@ const ProduccionForm = ({
         const errCantidad = validarCampo(cantidad, { requerido: true, tipo: "number" });
         if (errCantidad) nuevosErrores.cantidad = errCantidad;
 
-        const errFecha = validarCampo(fecha, { requerido: true });
+        // La fecha no puede ser anterior a hoy; al editar solo se revisa si se cambió.
+        const errFecha = validarCampo(fecha, { requerido: true, tipo: "date", valorOriginal: produccion.fecha });
         if (errFecha) nuevosErrores.fecha = errFecha;
 
         const errCliente = validarCampo(cliente, { requerido: true });
@@ -45,7 +67,8 @@ const ProduccionForm = ({
         if (Object.keys(nuevosErrores).length > 0) return;
 
         if (onSubmit) {
-          onSubmit(e);
+          // Se entrega un objeto con los datos del formulario (en vez del evento) para poder guardarlos.
+          onSubmit(Object.fromEntries(new FormData(e.currentTarget).entries()));
         }
       }}
     >
@@ -75,9 +98,11 @@ const ProduccionForm = ({
                 Seleccionar orden de producción
               </option>
 
-              <option value="1">
-                Orden de producción disponible
-              </option>
+              {opcionesOrden.map((n) => (
+                <option key={n} value={n}>
+                  Orden de producción #{n}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -86,9 +111,9 @@ const ProduccionForm = ({
             <label>Cliente</label>
             <select name="cliente" value={cliente} onChange={(e) => setCliente(e.target.value)} disabled={esConsulta} required>
               <option value="">Seleccionar cliente</option>
-              <option value="Cliente 1">Cliente 1</option>
-              <option value="Cliente 2">Cliente 2</option>
-              <option value="Cliente 3">Cliente 3</option>
+              {opcionesCliente.map((nombre) => (
+                <option key={nombre} value={nombre}>{nombre}</option>
+              ))}
             </select>
             {errores.cliente && <span className="err">{errores.cliente}</span>}
           </div>
@@ -98,9 +123,9 @@ const ProduccionForm = ({
             <label>Pedido</label>
             <select name="pedido" value={pedido} onChange={(e) => setPedido(e.target.value)} disabled={esConsulta} required>
               <option value="">Seleccionar pedido</option>
-              <option value="Pedido 001">Pedido 001</option>
-              <option value="Pedido 002">Pedido 002</option>
-              <option value="Pedido 003">Pedido 003</option>
+              {opcionesPedido.map((codigo) => (
+                <option key={codigo} value={codigo}>{codigo}</option>
+              ))}
             </select>
             {errores.pedido && <span className="err">{errores.pedido}</span>}
           </div>
@@ -119,9 +144,9 @@ const ProduccionForm = ({
                 Seleccionar acopio
               </option>
 
-              <option value="1">
-                Acopio disponible
-              </option>
+              {opcionesAcopio.map((a) => (
+                <option key={a.id} value={a.id}>{a.nombre}</option>
+              ))}
             </select>
           </div>
 
@@ -174,6 +199,8 @@ const ProduccionForm = ({
             <input
               type="date"
               name="fecha"
+              min={modo === "editar" ? undefined : hoyISO()}
+              max={modo === "editar" ? undefined : hoyMasAnios(1)}
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
               disabled={esConsulta}

@@ -7,53 +7,14 @@ import { etiquetaTipoDocumento } from "../../components/clientes/tiposDocumento.
 import { formatearFecha } from "../../data/insumosVinculos.js";
 import RevincularEmpleado from "../../components/empleados/RevincularEmpleado.jsx";
 import Permiso from "../../components/Permiso.jsx";
-
-const empleadosIniciales = [
-  {
-    id_empleado: 1,
-    nombre_completo: "Carlos Andrés Gómez",
-    tipo_documento: "CC",
-    numero_documento: "1032456789",
-    telefono: "3001234567",
-    cargo: "Operario de fundición",
-    direccion: "Calle 45 # 23-18, Medellín",
-    correo: "carlos.gomez@mmmetalsgold.com",
-    fecha_ingreso: "2024-02-01",
-    fecha_finalizacion: null,
-    estado: "ACTIVO",
-  },
-  {
-    id_empleado: 2,
-    nombre_completo: "Laura Marcela Pérez",
-    tipo_documento: "CC",
-    numero_documento: "1012456788",
-    telefono: "3019876543",
-    cargo: "Auxiliar administrativa",
-    direccion: "Carrera 70 # 32-10, Medellín",
-    correo: "laura.perez@mmmetalsgold.com",
-    fecha_ingreso: "2025-06-16",
-    fecha_finalizacion: null,
-    estado: "ACTIVO",
-  },
-  {
-    id_empleado: 3,
-    nombre_completo: "Juan David Rodríguez",
-    tipo_documento: "CE",
-    numero_documento: "98567432",
-    telefono: "3154567890",
-    cargo: "Jefe de producción",
-    direccion: "Calle 10 # 40-25, Envigado",
-    correo: "juan.rodriguez@mmmetalsgold.com",
-    fecha_ingreso: "2023-08-10",
-    fecha_finalizacion: "2026-08-31",
-    estado: "INACTIVO",
-  },
-];
+import Tabla, { BotonIcono, Doble, InterruptorEstado } from "../../components/Tabla.jsx";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, EMPLEADOS_SEMILLA } from "../../data/semillas.js";
 
 export default function Empleados() {
   const navigate = useNavigate();
 
-  const [empleados, setEmpleados] = useState(empleadosIniciales);
+  const [empleados, setEmpleados] = useAlmacen(CLAVES.empleados, EMPLEADOS_SEMILLA);
 
   const eliminarEmpleado = (id) => {
     setEmpleados((actuales) =>
@@ -68,6 +29,18 @@ export default function Empleados() {
           ? { ...e, estado: "ACTIVO", fecha_ingreso: fecha, fecha_finalizacion: null }
           : e
       )
+    );
+  };
+  // Interruptor: inactivar registra la fecha de hoy como finalización; activar quita esa fecha.
+  const cambiarEstado = (id) => {
+    const hoy = new Date().toISOString().slice(0, 10);
+    setEmpleados((actuales) =>
+      actuales.map((e) => {
+        if (e.id_empleado !== id) return e;
+        return e.estado === "ACTIVO"
+          ? { ...e, estado: "INACTIVO", fecha_finalizacion: e.fecha_finalizacion || hoy }
+          : { ...e, estado: "ACTIVO", fecha_finalizacion: null };
+      })
     );
   };
   const [busqueda, setBusqueda] = useState("");
@@ -150,163 +123,82 @@ export default function Empleados() {
 
         <BarraListado pag={pag} archivo="empleados" />
 
-        {empleadosFiltrados.length > 0 ? (
-          pag.items.map((empleado) => (
-            <div
-              className="empleado-card"
-              key={empleado.id_empleado}
-            >
-
-              {/* CABECERA DE TARJETA */}
-              <div className="empleado-card-header">
-
-                <div>
-                  <span className="empleado-label">
-                    Empleado
-                  </span>
-
-                  <h3>
-                    {empleado.nombre_completo}
-                  </h3>
-                </div>
-
-                <span
-                  className={`estado-empleado ${
-                    empleado.estado === "ACTIVO"
-                      ? "estado-empleado-activo"
-                      : "estado-empleado-inactivo"
-                  }`}
-                >
-                  {empleado.estado}
-                </span>
-
-              </div>
-
-              {/* DATOS */}
-              <div className="empleado-card-body">
-
-                <div className="dato-empleado">
-                  <span>Nombre completo</span>
-                  <strong>
-                    {empleado.nombre_completo}
-                  </strong>
-                </div>
-
-
-                <div className="dato-empleado">
-                  <span>Tipo de documento</span>
-                  <strong>
-                    {etiquetaTipoDocumento(empleado.tipo_documento)}
-                  </strong>
-                </div>
-
-                <div className="dato-empleado">
-                  <span>Número de documento</span>
-                  <strong>
-                    {empleado.numero_documento || "No registrado"}
-                  </strong>
-                </div>
-
-                <div className="dato-empleado">
-                  <span>Teléfono</span>
-                  <strong>
-                    {empleado.telefono || "No registrado"}
-                  </strong>
-                </div>
-
-                <div className="dato-empleado">
-                  <span>Cargo</span>
-                  <strong>
-                    {empleado.cargo || "No registrado"}
-                  </strong>
-                </div>
-
-                <div className="dato-empleado">
-                  <span>Correo electrónico</span>
-                  <strong>
-                    {empleado.correo || "No registrado"}
-                  </strong>
-                </div>
-
-                <div className="dato-empleado">
-                  <span>Dirección</span>
-                  <strong>
-                    {empleado.direccion || "No registrado"}
-                  </strong>
-                </div>
-
-                <div className="dato-empleado">
-                  <span>Fecha de ingreso</span>
-                  <strong>
-                    {formatearFecha(empleado.fecha_ingreso)}
-                  </strong>
-                </div>
-
-                <div className="dato-empleado">
-                  <span>Fecha de finalización</span>
-                  <strong>
-                    {empleado.fecha_finalizacion
-                      ? formatearFecha(empleado.fecha_finalizacion)
-                      : "Sigue vinculado"}
-                  </strong>
-                </div>
-
-              </div>
-
-              {/* ACCIONES */}
-              <div className="empleado-card-actions">
-
-                <button
-                  className="btn-consultar-empleado"
-                  onClick={() =>
-                    navigate(
-                      `/empleados/consultar/${empleado.id_empleado}`
-                    )
-                  }
-                >
-                  Consultar
-                </button>
-
-                <Permiso accion="editar"><button
-                  type="button"
-                  className="btn-editar-empleado"
-                  onClick={() =>
-                    navigate(
-                      `/empleados/editar/${empleado.id_empleado}`
-                    )
-                  }
-                >
-                  Editar
-                </button></Permiso>
-
-                {empleado.estado === "INACTIVO" && (
-                  <RevincularEmpleado
-                    empleado={empleado}
-                    onConfirmar={(fecha) => revincularEmpleado(empleado.id_empleado, fecha)}
-                  />
-                )}
-
-                <BotonEliminar
-                  entidad="empleado"
-                  nombre={empleado.nombre_completo}
-                  onConfirmar={() => eliminarEmpleado(empleado.id_empleado)}
-                />
-
-              </div>
-
+        <Tabla
+          filas={pag.items}
+          clave={(e) => e.id_empleado}
+          vacio={
+            <div className="sin-empleados">
+              <h3>No se encontraron empleados</h3>
+              <p>Intenta cambiar los criterios de búsqueda.</p>
             </div>
-          ))
-        ) : (
-          <div className="sin-empleados">
-            <h3>No se encontraron empleados</h3>
-            <p>
-              Intenta cambiar los criterios de búsqueda.
-            </p>
-          </div>
-        )}
-
+          }
+          columnas={[
+            {
+              titulo: "Empleado",
+              render: (e) => <Doble principal={e.nombre_completo} secundario={e.cargo || "Sin cargo"} />,
+            },
+            {
+              titulo: "Documento",
+              sinSalto: true,
+              render: (e) => (
+                <Doble
+                  principal={e.numero_documento || "No registrado"}
+                  secundario={etiquetaTipoDocumento(e.tipo_documento)}
+                />
+              ),
+            },
+            {
+              titulo: "Contacto",
+              render: (e) => <Doble principal={e.telefono || "No registrado"} secundario={e.correo || "Sin correo"} />,
+            },
+            { titulo: "Ingreso", sinSalto: true, render: (e) => formatearFecha(e.fecha_ingreso) },
+            {
+              titulo: "Finalización",
+              sinSalto: true,
+              render: (e) => (e.fecha_finalizacion ? formatearFecha(e.fecha_finalizacion) : "Sigue vinculado"),
+            },
+          ]}
+          interruptor={{
+            render: (e) => (
+              <InterruptorEstado
+                activo={e.estado === "ACTIVO"}
+                nombre={e.nombre_completo}
+                onCambiar={() => cambiarEstado(e.id_empleado)}
+              />
+            ),
+          }}
+          acciones={(e) => (
+            <>
+              <BotonIcono
+                icono="ver"
+                titulo="Consultar"
+                onClick={() => navigate(`/empleados/consultar/${e.id_empleado}`)}
+              />
+              <Permiso accion="editar">
+                <BotonIcono
+                  icono="editar"
+                  titulo="Editar"
+                  tono="dorado"
+                  onClick={() => navigate(`/empleados/editar/${e.id_empleado}`)}
+                />
+              </Permiso>
+              {e.estado === "INACTIVO" && (
+                <RevincularEmpleado
+                  icono
+                  empleado={e}
+                  onConfirmar={(fecha) => revincularEmpleado(e.id_empleado, fecha)}
+                />
+              )}
+              <BotonEliminar
+                icono
+                entidad="empleado"
+                nombre={e.nombre_completo}
+                onConfirmar={() => eliminarEmpleado(e.id_empleado)}
+              />
+            </>
+          )}
+        />
       </div>
-
 
       <Paginador pag={pag} />
     </div>

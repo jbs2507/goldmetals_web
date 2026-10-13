@@ -93,9 +93,9 @@ export const ventasMock = [
 /**
  * Una venta solo existe/se muestra cuando el pedido está pagado al 100 %.
  * Mientras el pago no esté completo no aparece en ningún lado.
+ * (ventasMock es solo la semilla: las pantallas leen las ventas del almacén.)
  */
 export const ventaVisible = (venta) => venta.pago_completo === true;
-export const ventasVisibles = ventasMock.filter(ventaVisible);
 
 /** Fecha (ISO) del último estado por el que pasó la venta. */
 export const fechaUltimoEstado = (venta) => {
@@ -128,3 +128,26 @@ export const formatoDinero = (valor, moneda = "COP") =>
     minimumFractionDigits: moneda === "USD" ? 2 : 0,
     maximumFractionDigits: moneda === "USD" ? 2 : 0,
   })}`;
+
+const ABREVIATURA_UNIDAD = { Gramos: "g", Toneladas: "t" };
+
+/**
+ * Registro de venta listo para guardar a partir de lo que entrega el formulario.
+ * La cantidad se guarda legible ("500 g") y también como número para poder editarla.
+ */
+export const construirVenta = (datos) => {
+  const unidad = ABREVIATURA_UNIDAD[datos.unidad_medida] || datos.unidad_medida || "";
+  const copia = { ...datos };
+  [ "factura", "resultado_laboratorio" ].forEach((k) => {
+    if (typeof Blob !== "undefined" && copia[k] instanceof Blob) copia[k] = copia[k].name || `${k}.pdf`;
+  });
+  return {
+    ...copia,
+    cantidad_numero: Number(datos.cantidad) || 0,
+    cantidad: `${Number(datos.cantidad) || 0} ${unidad}`.trim(),
+    precio: String(datos.precio ?? datos.valor_total ?? ""),
+    documentos: Boolean(copia.factura && copia.resultado_laboratorio),
+    pago_completo: true,
+    produccion_lista: true,
+  };
+};

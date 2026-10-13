@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { comprasDisponibles, ventasDisponibles } from "../../data/insumosVinculos.js";
-import { filtrarSoloLetras, validarCampo } from "../../utils/validaciones.js";
+import { filtrarSoloLetras, hoyISO, validarCampo } from "../../utils/validaciones.js";
 
 export default function InsumoOroForm({
   modo = "registrar",
@@ -32,7 +32,8 @@ export default function InsumoOroForm({
     datosIniciales.venta_asociada ? String(datosIniciales.venta_asociada) : ""
   );
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  // Fecha local (toISOString usa UTC y en Colombia adelanta el día desde las 7 p. m.).
+  const hoy = hoyISO();
 
   const [error, setError] = useState("");
 
@@ -40,7 +41,7 @@ export default function InsumoOroForm({
     e.preventDefault();
     setError("");
 
-    const errNombre = validarCampo(nombre, { requerido: true, soloLetras: true });
+    const errNombre = validarCampo(nombre, { requerido: true, soloLetras: true, longitudMin: 3 });
     if (errNombre) {
       setError(errNombre);
       return;

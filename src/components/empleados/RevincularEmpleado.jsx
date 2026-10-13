@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-
-const hoyISO = () => new Date().toISOString().slice(0, 10);
+import { Ico } from "../Tabla.jsx";
+import { hoyISO } from "../../utils/validaciones.js";
 
 /**
  * Botón "Revincular" para empleados que ya no están vinculados.
  * Pide la nueva fecha de ingreso y, al confirmar, onConfirmar(fecha) deja al empleado
  * ACTIVO y sin fecha de finalización.
  */
-export default function RevincularEmpleado({ empleado, onConfirmar }) {
+export default function RevincularEmpleado({ empleado, onConfirmar, icono = false }) {
   const [abierto, setAbierto] = useState(false);
   const [fecha, setFecha] = useState(hoyISO());
   const [error, setError] = useState("");
 
-  const minima = empleado.fecha_finalizacion || undefined;
+  // La revinculación no puede ser anterior a hoy ni a la fecha de finalización.
+  const minima =
+    empleado.fecha_finalizacion && empleado.fecha_finalizacion > hoyISO() ? empleado.fecha_finalizacion : hoyISO();
 
   const abrir = () => {
     setFecha(hoyISO());
@@ -23,15 +25,23 @@ export default function RevincularEmpleado({ empleado, onConfirmar }) {
 
   const confirmar = () => {
     if (!fecha) return setError("Indica la fecha de revinculación");
-    if (minima && fecha < minima) return setError("No puede ser anterior a la fecha de finalización");
+    if (empleado.fecha_finalizacion && fecha < empleado.fecha_finalizacion)
+      return setError("No puede ser anterior a la fecha de finalización");
+    if (fecha < hoyISO()) return setError("La fecha no puede ser anterior a hoy");
     onConfirmar(fecha);
     setAbierto(false);
   };
 
   return (
     <>
-      <button type="button" className="btn-revincular-empleado" onClick={abrir}>
-        Revincular
+      <button
+        type="button"
+        className={icono ? "ico-btn dorado" : "btn-revincular-empleado"}
+        title={icono ? "Revincular" : undefined}
+        aria-label={icono ? "Revincular" : undefined}
+        onClick={abrir}
+      >
+        {icono ? <Ico nombre="revincular" /> : "Revincular"}
       </button>
 
       {abierto && createPortal(

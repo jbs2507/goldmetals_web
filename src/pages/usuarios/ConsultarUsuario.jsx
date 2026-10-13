@@ -1,37 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
-
-const usuarios = [
-  {
-    id_usuario: 1,
-    correo: "admin@mmmetalsgold.com",
-    nombre_completo: "Administrador",
-    telefono: "3001234567",
-    rol: "Administrador",
-    estado: "ACTIVO",
-  },
-  {
-    id_usuario: 2,
-    correo: "contador@mmmetalsgold.com",
-    nombre_completo: "Contador",
-    telefono: "3012345678",
-    rol: "Contador",
-    estado: "ACTIVO",
-  },
-  {
-    id_usuario: 3,
-    correo: "abogado@mmmetalsgold.com",
-    nombre_completo: "Abogado",
-    telefono: "3023456789",
-    rol: "Abogado",
-    estado: "ACTIVO",
-  }
-];
+import { listarUsuarios } from "../../auth.js";
 
 export default function ConsultarUsuario() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const usuario = usuarios.find(
+  const usuario = listarUsuarios().find(
     (item) => item.id_usuario === Number(id)
   );
 

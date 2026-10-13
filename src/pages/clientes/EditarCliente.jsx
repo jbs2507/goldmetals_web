@@ -1,39 +1,13 @@
 import { useNavigate, useParams } from "react-router-dom";
 
 import ClienteForm from "../../components/clientes/ClienteForm.jsx";
-
-const clientes = [
-  {
-    id_cliente: 1,
-    tipo_cliente: "JURIDICA",
-    tipo_documento: "NIT",
-    nombre: "M&M Trading S.A.S.",
-    identificacion_tributaria: "900123456-1",
-    pais: "Colombia",
-    telefono: "3001112233",
-    correo: "contacto@mmtrading.com",
-    camaraComercio: "camara_comercio.pdf",
-    contrato: "contrato.pdf",
-    estado: "ACTIVO",
-  },
-  {
-    id_cliente: 2,
-    tipo_cliente: "JURIDICA",
-    tipo_documento: "NIT",
-    nombre: "Global Metals International",
-    identificacion_tributaria: "901234567-8",
-    pais: "Estados Unidos",
-    telefono: "3104445566",
-    correo: "ventas@globalmetals.com",
-    camaraComercio: "camara_comercio.pdf",
-    contrato: "contrato.pdf",
-    estado: "ACTIVO",
-  },
-];
+import { actualizarRegistro, useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, CLIENTES_SEMILLA } from "../../data/semillas.js";
 
 export default function EditarCliente() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [clientes] = useAlmacen(CLAVES.clientes, CLIENTES_SEMILLA);
 
   const cliente = clientes.find(
     (item) => item.id_cliente === Number(id)
@@ -62,12 +36,10 @@ export default function EditarCliente() {
   }
 
   const handleGuardar = (datos) => {
-    console.log("Estado del cliente actualizado:", {
-      id_cliente: cliente.id_cliente,
-      ...datos,
+    // En edición solo cambia el estado; el resto de datos queda bloqueado.
+    actualizarRegistro(CLAVES.clientes, CLIENTES_SEMILLA, "id_cliente", cliente.id_cliente, {
+      estado: datos.estado,
     });
-
-    alert("Estado del cliente actualizado correctamente");
 
     navigate("/clientes");
   };

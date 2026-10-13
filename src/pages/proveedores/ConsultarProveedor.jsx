@@ -1,22 +1,29 @@
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ProveedorForm from "../../components/proveedores/ProveedorForm";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, PROVEEDORES_SEMILLA } from "../../data/semillas.js";
 
 const ConsultarProveedor = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const proveedor = {
-    id: id,
-    razon_social: "Proveedor Minero Chocó",
-    tipo_persona: "JURIDICA",
-    tipo_documento: "NIT",
-    numero_documento: "900123456",
-    estado: "ACTIVO",
-    camaraComercio: "camara_comercio.pdf",
-    rut: "rut.pdf",
-    certificadoRucom: "rucom.pdf",
-  };
+  const [proveedores] = useAlmacen(CLAVES.proveedores, PROVEEDORES_SEMILLA);
+  const proveedor = proveedores.find((p) => p.id === id);
+
+  if (!proveedor) {
+    return (
+      <div className="proveedores-page">
+        <div className="sin-proveedores">
+          <h3>Proveedor no encontrado</h3>
+          <p>No fue posible encontrar la información solicitada.</p>
+          <button type="button" className="btn-volver-proveedor" onClick={() => navigate("/proveedores")}>
+            ← Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="proveedores-page">

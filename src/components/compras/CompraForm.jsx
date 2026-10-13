@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { validarFormulario } from "../../utils/validaciones.js";
+import { hoyISO, hoyMasAnios, validarFormulario } from "../../utils/validaciones.js";
 import DocumentoAdjunto from "../DocumentoAdjunto.jsx";
+import { useAlmacen } from "../../utils/almacen.js";
+import { ACOPIOS_COMPRA, CLAVES, PROVEEDORES_SEMILLA } from "../../data/semillas.js";
 
 const REGLAS_COMPRA = {
   fechaCompra: { requerido: true, tipo: "date" },
@@ -34,6 +36,12 @@ const CompraForm = ({
     factura: compraInicial?.factura || null,
   });
 
+  // Proveedores registrados en el módulo de proveedores (solo activos; se conserva el actual al editar).
+  const [proveedores] = useAlmacen(CLAVES.proveedores, PROVEEDORES_SEMILLA);
+  const proveedoresDisponibles = proveedores.filter(
+    (p) => p.estado === "ACTIVO" || p.id === String(compraInicial?.idProveedor)
+  );
+
   const manejarCambio = (e) => {
     const { name, value } = e.target;
 
@@ -65,7 +73,21 @@ const CompraForm = ({
   const enviarFormulario = (e) => {
     e.preventDefault();
 
-    const nuevosErrores = validarFormulario(formulario, REGLAS_COMPRA);
+    // La fecha de compra no puede ser anterior a hoy; al editar solo se revisa si se cambió.
+    const nuevosErrores = validarFormulario(formulario, {
+      ...REGLAS_COMPRA,
+      fechaCompra: { ...REGLAS_COMPRA.fechaCompra, valorOriginal: compraInicial?.fechaCompra },
+    });
+    // En dólares la tasa de cambio es obligatoria.
+    if (formulario.moneda === "USD" && !(Number(formulario.tasaCambio) > 0)) {
+      nuevosErrores.tasaCambio = "Ingrese la tasa de cambio para convertir los dólares";
+    }
+    if (formulario.valorRegalias !== "" && Number(formulario.valorRegalias) < 0) {
+      nuevosErrores.valorRegalias = "No puede ser negativo";
+    }
+    if (formulario.ley !== "" && Number(formulario.ley) > 100) {
+      nuevosErrores.ley = "La ley no puede ser mayor a 100";
+    }
     if (!formulario.certificadoOrigen) nuevosErrores.certificadoOrigen = "Campo obligatorio";
     if (!formulario.resultadoLaboratorio) nuevosErrores.resultadoLaboratorio = "Campo obligatorio";
     if (!formulario.factura) nuevosErrores.factura = "Campo obligatorio";
@@ -104,6 +126,8 @@ const CompraForm = ({
             <input
               type="date"
               name="fechaCompra"
+              min={compraInicial ? undefined : hoyISO()}
+              max={compraInicial ? undefined : hoyMasAnios(1)}
               value={formulario.fechaCompra}
               onChange={manejarCambio}
               required
@@ -127,17 +151,11 @@ const CompraForm = ({
                 Seleccionar proveedor
               </option>
 
-              <option value="1">
-                Proveedor asociado 1
-              </option>
-
-              <option value="2">
-                Proveedor asociado 2
-              </option>
-
-              <option value="3">
-                Proveedor asociado 3
-              </option>
+              {proveedoresDisponibles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.razon_social}
+                </option>
+              ))}
             </select>
             {errores.idProveedor && <span className="err">{errores.idProveedor}</span>}
           </div>
@@ -158,13 +176,11 @@ const CompraForm = ({
                 Seleccionar acopio
               </option>
 
-              <option value="1">
-                Acopio principal
-              </option>
-
-              <option value="2">
-                Acopio secundario
-              </option>
+              {ACOPIOS_COMPRA.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nombre}
+                </option>
+              ))}
             </select>
             {errores.idAcopio && <span className="err">{errores.idAcopio}</span>}
           </div>
@@ -205,7 +221,9 @@ const CompraForm = ({
               placeholder="Ingrese la tasa de cambio"
               min="0"
               step="0.01"
+              required={formulario.moneda === "USD"}
             />
+            {errores.tasaCambio && <span className="err">{errores.tasaCambio}</span>}
           </div>
 
           {compraInicial && (

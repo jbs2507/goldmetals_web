@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { descargarArchivo, pdfEjemplo, verArchivo } from "../utils/documentos.js";
 import { usePermisos } from "../permisos.js";
+import { Ico } from "./Tabla.jsx";
 
 /**
  * Botón "Documentos" que abre una ventana con los documentos cargados en el registro.
@@ -13,6 +14,7 @@ export default function DocumentosCargados({
   titulo = "Documentos cargados",
   documentos = [],
   className = "btn-historial-produccion",
+  icono = false,
 }) {
   const [abierto, setAbierto] = useState(false);
   const { puede } = usePermisos();
@@ -23,9 +25,22 @@ export default function DocumentosCargados({
 
   return (
     <>
-      <button type="button" className={className} onClick={() => setAbierto(true)}>
-        Documentos ({cargados}/{documentos.length})
-      </button>
+      {icono ? (
+        <button
+          type="button"
+          className="ico-btn"
+          title={`Documentos (${cargados}/${documentos.length})`}
+          aria-label={`Documentos (${cargados} de ${documentos.length})`}
+          onClick={() => setAbierto(true)}
+        >
+          <Ico nombre="clip" />
+          <span className="ico-badge">{cargados}</span>
+        </button>
+      ) : (
+        <button type="button" className={className} onClick={() => setAbierto(true)}>
+          Documentos ({cargados}/{documentos.length})
+        </button>
+      )}
 
       {abierto && createPortal(
         <div className="modal-eliminar-overlay" onClick={() => setAbierto(false)}>

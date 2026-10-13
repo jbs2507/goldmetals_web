@@ -1,41 +1,43 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import Modal from "../../components/Modal.jsx";
+import Compras from "./Compras.jsx";
 import CompraForm from "../../components/compras/CompraForm";
+import { agregarRegistro, hoyISO, leerLista, siguienteIdTexto } from "../../utils/almacen.js";
+import { CLAVES, COMPRAS_SEMILLA } from "../../data/semillas.js";
+import { construirCompra } from "../../data/compras.js";
 
 const RegistrarCompra = () => {
   const navigate = useNavigate();
 
   const registrarCompra = (datosCompra) => {
-    console.log("Compra registrada:", datosCompra);
-
-    alert("Compra registrada correctamente");
+    const lista = leerLista(CLAVES.compras, COMPRAS_SEMILLA);
+    agregarRegistro(CLAVES.compras, COMPRAS_SEMILLA, {
+      ...construirCompra(datosCompra),
+      id: siguienteIdTexto(lista, "id"),
+      estado: datosCompra.estado || "REGISTRADA",
+      historial: [{ estado: "REGISTRADA", fecha: hoyISO(), motivo: "" }],
+    });
 
     navigate("/compras");
   };
 
+  // El registro es una ventana emergente sobre la lista.
   return (
-    <div className="compras-page">
-
-      <div className="compras-header">
-        <div>
-          <h1>Registrar compra</h1>
-        </div>
-
-        <button
-          type="button"
-          className="btn-volver-compra"
-          onClick={() => navigate("/compras")}
-        >
-          ← Volver
-        </button>
-      </div>
-
-      <CompraForm
-        onSubmit={registrarCompra}
-        onCancel={() => navigate("/compras")}
-      />
-
-    </div>
+    <>
+      <Compras />
+      <Modal
+        titulo="Registrar compra"
+        subtitulo="Completa los datos de la compra"
+        ancho={1040}
+        onCerrar={() => navigate("/compras")}
+      >
+        <CompraForm
+          onSubmit={registrarCompra}
+          onCancel={() => navigate("/compras")}
+        />
+      </Modal>
+    </>
   );
 };
 

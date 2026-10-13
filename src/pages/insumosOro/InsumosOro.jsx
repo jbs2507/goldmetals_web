@@ -5,39 +5,9 @@ import BotonAnular from "../../components/BotonAnular.jsx";
 import { formatearFecha, textoCompra, textoVenta } from "../../data/insumosVinculos.js";
 import { conEstado } from "../../utils/listados.js";
 import Permiso from "../../components/Permiso.jsx";
-
-const insumosOroIniciales = [
-  {
-    id_insumo: 1,
-    tipo_insumo: "ORO",
-    nombre: "Oro",
-    cantidad: 500,
-    unidad_medida: "g",
-    fecha_ingreso: "2026-09-23",
-    compra_asociada: "001",
-    venta_asociada: null,
-  },
-  {
-    id_insumo: 2,
-    tipo_insumo: "ORO",
-    nombre: "Oro en polvo",
-    cantidad: 250,
-    unidad_medida: "g",
-    fecha_ingreso: "2026-09-22",
-    compra_asociada: "002",
-    venta_asociada: null,
-  },
-  {
-    id_insumo: 3,
-    tipo_insumo: "ORO",
-    nombre: "Oro en lingote",
-    cantidad: 2,
-    unidad_medida: "kg",
-    fecha_ingreso: "2026-09-20",
-    compra_asociada: "001",
-    venta_asociada: 1,
-  },
-];
+import Tabla, { BotonIcono, Doble } from "../../components/Tabla.jsx";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, INSUMOS_ORO_SEMILLA } from "../../data/semillas.js";
 
 const formatearUnidad = (unidad) => {
   const unidades = {
@@ -53,9 +23,7 @@ const formatearUnidad = (unidad) => {
 export default function InsumosOro() {
   const navigate = useNavigate();
 
-  const [insumos, setInsumos] = useState(
-    insumosOroIniciales
-  );
+  const [insumos, setInsumos] = useAlmacen(CLAVES.insumosOro, INSUMOS_ORO_SEMILLA);
 
   const [busqueda, setBusqueda] = useState("");
 
@@ -128,132 +96,55 @@ export default function InsumosOro() {
 
         <BarraListado pag={pag} archivo="insumos_oro" />
 
-        {insumosFiltrados.length === 0 ? (
-
-          <div className="sin-insumos-oro">
-
-            <h3>
-              No se encontraron insumos
-            </h3>
-
-            <p>
-              Intenta cambiar los filtros de búsqueda.
-            </p>
-
-          </div>
-
-        ) : (
-
-          pag.items.map((insumo) => (
-
-            <div
-              className="insumo-oro-card"
-              key={insumo.id_insumo}
-            >
-
-              {/* CABECERA */}
-              <div className="insumo-oro-card-header">
-
-                <div>
-
-                  <span className="insumo-oro-label">
-                    Insumo
-                  </span>
-
-                  <h2>
-                    {insumo.nombre}
-                  </h2>
-
-                </div>
-
-                {insumo.estado === "ANULADO" && (
-                  <span className="estado-insumo-oro estado-insumo-oro-inactivo">
-                    ANULADO
-                  </span>
-                )}
-
-              </div>
-
-              {/* INFORMACIÓN */}
-              <div className="insumo-oro-card-body">
-
-                <div className="dato-insumo-oro">
-                  <span>Tipo de insumo</span>
-
-                  <strong>
-                    Oro
-                  </strong>
-                </div>
-
-                <div className="dato-insumo-oro">
-                  <span>Nombre</span>
-
-                  <strong>
-                    {insumo.nombre}
-                  </strong>
-                </div>
-
-                <Permiso dato="cantidades"><div className="dato-insumo-oro">
-                  <span>Cantidad</span>
-
-                  <strong>
-                    {insumo.cantidad}
-                  </strong>
-                </div></Permiso>
-
-                <div className="dato-insumo-oro">
-                  <span>Unidad de medida</span>
-
-                  <strong>
-                    {formatearUnidad(
-                      insumo.unidad_medida
-                    )}
-                  </strong>
-                </div>
-
-                <div className="dato-insumo-oro">
-                  <span>Fecha de ingreso</span>
-                  <strong>{formatearFecha(insumo.fecha_ingreso)}</strong>
-                </div>
-
-                <div className="dato-insumo-oro">
-                  <span>Compra asociada</span>
-                  <strong>{textoCompra(insumo.compra_asociada)}</strong>
-                </div>
-
-                <div className="dato-insumo-oro">
-                  <span>Venta asociada</span>
-                  <strong>{textoVenta(insumo.venta_asociada)}</strong>
-                </div>
-
-              </div>
-
-              {/* ACCIONES */}
-              <div className="insumo-oro-card-actions">
-
-                <button
-                  className="btn-consultar-insumo-oro"
-                  onClick={() =>
-                    navigate(
-                      `/insumos-oro/consultar/${insumo.id_insumo}`
-                    )
-                  }
-                >
-                  Consultar
-                </button>
-
-                <BotonAnular entidad="insumo de oro" nombre={insumo.nombre} deshabilitado={insumo.estado === "ANULADO"} onConfirmar={(m) => anularInsumo(insumo.id_insumo, m)} />
-
-              </div>
-
+        <Tabla
+          filas={pag.items}
+          clave={(i) => i.id_insumo}
+          claseFila={(i) => (i.estado === "ANULADO" ? "fila-anulada" : "")}
+          vacio={
+            <div className="sin-insumos-oro">
+              <h3>No se encontraron insumos</h3>
+              <p>Intenta cambiar los filtros de búsqueda.</p>
             </div>
-
-          ))
-
-        )}
-
+          }
+          columnas={[
+            { titulo: "Insumo", render: (i) => <Doble principal={i.nombre} secundario="Oro" /> },
+            {
+              titulo: "Cantidad",
+              dato: "cantidades",
+              sinSalto: true,
+              render: (i) => `${i.cantidad} ${formatearUnidad(i.unidad_medida)}`,
+            },
+            { titulo: "Fecha de ingreso", sinSalto: true, render: (i) => formatearFecha(i.fecha_ingreso) },
+            { titulo: "Compra asociada", sinSalto: true, render: (i) => textoCompra(i.compra_asociada) },
+            { titulo: "Venta asociada", sinSalto: true, render: (i) => textoVenta(i.venta_asociada) },
+            {
+              titulo: "Estado",
+              render: (i) =>
+                i.estado === "ANULADO" ? (
+                  <span className="estado-insumo-oro estado-insumo-oro-inactivo">ANULADO</span>
+                ) : (
+                  "Vigente"
+                ),
+            },
+          ]}
+          acciones={(i) => (
+            <>
+              <BotonIcono
+                icono="ver"
+                titulo="Consultar"
+                onClick={() => navigate(`/insumos-oro/consultar/${i.id_insumo}`)}
+              />
+              <BotonAnular
+                icono
+                entidad="insumo de oro"
+                nombre={i.nombre}
+                deshabilitado={i.estado === "ANULADO"}
+                onConfirmar={(m) => anularInsumo(i.id_insumo, m)}
+              />
+            </>
+          )}
+        />
       </div>
-
 
       <Paginador pag={pag} />
     </div>

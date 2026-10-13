@@ -1,39 +1,13 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { etiquetaTipoDocumento } from "../../components/clientes/tiposDocumento.js";
 import DocumentoAdjunto from "../../components/DocumentoAdjunto.jsx";
-
-const clientes = [
-  {
-    id_cliente: 1,
-    tipo_cliente: "JURIDICA",
-    tipo_documento: "NIT",
-    nombre: "M&M Trading S.A.S.",
-    identificacion_tributaria: "900123456-1",
-    pais: "Colombia",
-    telefono: "3001112233",
-    correo: "contacto@mmtrading.com",
-    camaraComercio: "camara_comercio.pdf",
-    contrato: "contrato.pdf",
-    estado: "ACTIVO",
-  },
-  {
-    id_cliente: 2,
-    tipo_cliente: "JURIDICA",
-    tipo_documento: "NIT",
-    nombre: "Global Metals International",
-    identificacion_tributaria: "901234567-8",
-    pais: "Estados Unidos",
-    telefono: "3104445566",
-    correo: "ventas@globalmetals.com",
-    camaraComercio: "camara_comercio.pdf",
-    contrato: "contrato.pdf",
-    estado: "ACTIVO",
-  },
-];
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES, CLIENTES_SEMILLA } from "../../data/semillas.js";
 
 export default function ConsultarCliente() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [clientes] = useAlmacen(CLAVES.clientes, CLIENTES_SEMILLA);
 
   const cliente = clientes.find(
     (item) => item.id_cliente === Number(id)
@@ -90,9 +64,10 @@ export default function ConsultarCliente() {
 
         <section className="form-seccion">
 
-          <h2 className="form-seccion-titulo">
-            Información del cliente
-          </h2>
+          <div className="form-seccion-titulo">
+            <h2>Información del cliente</h2>
+            <p>Datos registrados del cliente.</p>
+          </div>
 
           <div className="form-grid">
 
@@ -113,7 +88,7 @@ export default function ConsultarCliente() {
 
             <div className="form-campo">
               <label>
-                Nombre / Razón social
+                {cliente.tipo_cliente === "NATURAL" ? "Nombre" : "Razón social"}
               </label>
 
               <input
@@ -144,6 +119,32 @@ export default function ConsultarCliente() {
               />
             </div>
 
+            {cliente.tipo_cliente === "JURIDICA" && (
+              <>
+                <div className="form-campo">
+                  <label>
+                    Nombre del representante legal
+                  </label>
+
+                  <input
+                    value={cliente.representante_nombre || "No registrado"}
+                    readOnly
+                  />
+                </div>
+
+                <div className="form-campo">
+                  <label>
+                    Correo del representante legal
+                  </label>
+
+                  <input
+                    value={cliente.representante_correo || "No registrado"}
+                    readOnly
+                  />
+                </div>
+              </>
+            )}
+
             <div className="form-campo">
               <label>
                 País
@@ -168,7 +169,7 @@ export default function ConsultarCliente() {
 
             <div className="form-campo">
               <label>
-                Correo electrónico
+                {cliente.tipo_cliente === "JURIDICA" ? "Correo electrónico de la empresa" : "Correo electrónico"}
               </label>
 
               <input

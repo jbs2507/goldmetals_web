@@ -3,12 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import ProduccionForm from "../../components/produccion/ProduccionForm";
 import HistorialProduccion from "../../components/produccion/HistorialProduccion.jsx";
 import { produccionesMock, fechaAISO } from "../../data/produccionesMock.js";
+import { useAlmacen } from "../../utils/almacen.js";
+import { CLAVES } from "../../data/semillas.js";
 
 const ConsultarProduccion = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const encontrada = produccionesMock.find((p) => p.id === id);
+  const [producciones] = useAlmacen(CLAVES.producciones, produccionesMock);
+  const encontrada = producciones.find((p) => p.id === id);
 
   if (!encontrada) {
     return (

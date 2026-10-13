@@ -3,12 +3,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BotonEliminar from "../../components/BotonEliminar";
 import Permiso from "../../components/Permiso.jsx";
+import Tabla, { BotonIcono, Doble, InterruptorEstado } from "../../components/Tabla.jsx";
 import {
   ACCIONES,
   MODULOS,
-  DATOS_SENSIBLES,
   clavePermiso,
-  claveDato,
   listarRoles,
   eliminarRolGuardado,
   cambiarEstadoRol,
@@ -20,8 +19,7 @@ const resumenRol = (rol) => {
   const privilegios = ACCIONES.filter((a) =>
     modulos.some((m) => rol.permisos.includes(clavePermiso(m.id, a.id)))
   );
-  const datos = DATOS_SENSIBLES.filter((d) => rol.permisos.includes(claveDato(d.id)));
-  return { modulos, privilegios, datos };
+  return { modulos, privilegios };
 };
 
 export default function Roles() {
@@ -120,129 +118,66 @@ export default function Roles() {
 
         <BarraListado pag={pag} archivo="roles" />
 
-        {rolesFiltrados.length === 0 ? (
-          <div className="sin-roles">
-            <h3>
-              No se encontraron roles
-            </h3>
-
-            <p>
-              Intenta realizar otra búsqueda.
-            </p>
-          </div>
-        ) : (
-          pag.items.map((rol) => {
-            const resumen = resumenRol(rol);
-            return (
-            <div
-              className="rol-card"
-              key={rol.id_rol}
-            >
-
-              {/* CABECERA */}
-              <div className="rol-card-header">
-                <div>
-                  <span className="rol-label">
-                    Rol
-                  </span>
-
-                  <h2>
-                    {rol.nombre}
-                  </h2>
-                </div>
-
-                <span
-                  className={`estado-rol ${
-                    rol.estado === "ACTIVO" ? "estado-rol-activo" : "estado-rol-inactivo"
-                  }`}
-                >
-                  {rol.estado}
-                </span>
-              </div>
-
-              {/* INFORMACIÓN */}
-              <div className="rol-card-body">
-                <div className="dato-rol dato-rol-ancho">
-                  <span>Descripción</span>
-                  <strong>{rol.descripcion || "Sin descripción"}</strong>
-                </div>
-
-                <div className="dato-rol">
-                  <span>Módulos que puede ver</span>
-                  <strong>{resumen.modulos.length} de {MODULOS.length}</strong>
-                </div>
-
-                <div className="dato-rol">
-                  <span>Privilegios</span>
-                  <strong>
-                    {resumen.privilegios.length
-                      ? resumen.privilegios.map((a) => a.etiqueta).join(", ")
-                      : "Ninguno"}
-                  </strong>
-                </div>
-
-                <div className="dato-rol dato-rol-ancho">
-                  <span>Información sensible</span>
-                  <strong>
-                    {resumen.datos.length
-                      ? resumen.datos.map((d) => d.etiqueta).join(", ")
-                      : "Solo información general (sin precios, cantidades ni estadísticas)"}
-                  </strong>
-                </div>
-              </div>
-
-              {/* ACCIONES */}
-              <div className="rol-card-actions">
-
-                <button
-                  type="button"
-                  className="btn-consultar-rol"
-                  onClick={() =>
-                    navigate(
-                      `/roles/consultar/${rol.id_rol}`
-                    )
-                  }
-                >
-                  Consultar
-                </button>
-
-                {!rol.sistema && <Permiso accion="editar"><button
-                  type="button"
-                  className="btn-editar-rol"
-                  onClick={() =>
-                    navigate(
-                      `/roles/editar/${rol.id_rol}`
-                    )
-                  }
-                >
-                  Editar
-                </button></Permiso>}
-
-                {!rol.sistema && <Permiso accion="editar"><button
-                  type="button"
-                  className={`btn-estado-rol ${
-                    rol.estado === "ACTIVO" ? "btn-desactivar-rol" : "btn-activar-rol"
-                  }`}
-                  onClick={() => cambiarEstado(rol.id_rol)}
-                >
-                  {rol.estado === "ACTIVO" ? "Inactivar" : "Activar"}
-                </button></Permiso>}
-
-                {!rol.sistema && (
-                  <BotonEliminar
-                    entidad="rol"
-                    nombre={rol.nombre}
-                    onConfirmar={() => eliminarRol(rol.id_rol)}
-                  />
-                )}
-
-              </div>
-
+        <Tabla
+          filas={pag.items}
+          clave={(r) => r.id_rol}
+          vacio={
+            <div className="sin-roles">
+              <h3>No se encontraron roles</h3>
+              <p>Intenta realizar otra búsqueda.</p>
             </div>
-            );
-          })
-        )}
-
+          }
+          columnas={[
+            {
+              titulo: "Rol",
+              render: (r) => <Doble principal={r.nombre} secundario={r.descripcion || "Sin descripción"} />,
+            },
+            {
+              titulo: "Módulos",
+              sinSalto: true,
+              render: (r) => `${resumenRol(r).modulos.length} de ${MODULOS.length}`,
+            },
+            {
+              titulo: "Privilegios",
+              render: (r) => {
+                const { privilegios } = resumenRol(r);
+                return (
+                  <span className="tabla-largo">
+                    {privilegios.length ? privilegios.map((a) => a.etiqueta).join(", ") : "Ninguno"}
+                  </span>
+                );
+              },
+            },
+          ]}
+          interruptor={{
+            render: (r) => (
+              <InterruptorEstado
+                activo={r.estado === "ACTIVO"}
+                nombre={r.nombre}
+                deshabilitado={r.sistema}
+                onCambiar={() => cambiarEstado(r.id_rol)}
+              />
+            ),
+          }}
+          acciones={(r) => (
+            <>
+              <BotonIcono icono="ver" titulo="Consultar" onClick={() => navigate(`/roles/consultar/${r.id_rol}`)} />
+              {!r.sistema && (
+                <Permiso accion="editar">
+                  <BotonIcono
+                    icono="editar"
+                    titulo="Editar"
+                    tono="dorado"
+                    onClick={() => navigate(`/roles/editar/${r.id_rol}`)}
+                  />
+                </Permiso>
+              )}
+              {!r.sistema && (
+                <BotonEliminar icono entidad="rol" nombre={r.nombre} onConfirmar={() => eliminarRol(r.id_rol)} />
+              )}
+            </>
+          )}
+        />
       </div>
 
       <Paginador pag={pag} />
